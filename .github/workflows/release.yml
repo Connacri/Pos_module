@@ -16,14 +16,19 @@ permissions:
 
 jobs:
   release:
-    name: Créer la release
-    runs-on: ubuntu-latest
+    name: Créer la release (APK + Windows)
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
 
       - name: Extraire la version
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME.Substring(1) } else { $env:INPUT_VERSION }
+          echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
 
       - name: Créer le tag si déclenché manuellement
         if: github.event_name == 'workflow_dispatch'
@@ -32,8 +37,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
+          git tag "v$env:VERSION"
+          git push origin "v$env:VERSION"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -47,13 +52,25 @@ jobs:
         working-directory: app
         run: flutter build apk --release
 
-      - name: Build AppBundle
+      - name: Build Windows
         working-directory: app
-        run: flutter build appbundle --release
+        run: flutter build windows --release
 
-      - name: Build Web
-        working-directory: app
-        run: flutter build web --release
+      - name: Installer Inno Setup
+        run: choco install innosetup --yes --no-progress
+
+      - name: Mettre à jour la version dans le script Inno
+        shell: pwsh
+        run: |
+          $version = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME.Substring(1) } else { $env:INPUT_VERSION }
+          $iss = Get-Content 'app\windows\installer\pos_module.iss' -Raw
+          $iss = $iss -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`""
+          Set-Content 'app\windows\installer\pos_module.iss' $iss -NoNewline
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+
+      - name: Compiler l'installeur
+        run: ISCC.exe "app\windows\installer\pos_module.iss"
 
       - name: Créer la release GitHub
         uses: softprops/action-gh-release@v2
@@ -62,8 +79,7 @@ jobs:
           name: Release ${{ steps.version.outputs.version }}
           body: >
             Builds générés automatiquement par le workflow Release :
-            APK, AppBundle (AAB) et bundle Web.
+            APK Android et installeur Windows (Inno Setup).
           files: |
             app/build/app/outputs/flutter-apk/app-release.apk
-            app/build/app/outputs/bundle/release/app-release.aab
-            app/build/web/**
+            app/build/installer/POSModule-Setup-*.exe
