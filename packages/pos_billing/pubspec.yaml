@@ -1,0 +1,26 @@
+name: pos_billing
+description: Feature facturation
+version: 1.0.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  pos_core:
+    path: ../pos_core
+  pos_domain:
+    path: ../pos_domain
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

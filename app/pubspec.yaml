@@ -1,0 +1,39 @@
+name: app
+description: Application hôte du module POS - composition, DI, routing, thème
+publish_to: 'none'
+version: 1.0.0+1
+
+resolution: workspace
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  pos_core:
+    path: ../packages/pos_core
+  pos_domain:
+    path: ../packages/pos_domain
+  pos_data:
+    path: ../packages/pos_data
+  pos_pos:
+    path: ../packages/pos_pos
+  pos_inventory:
+    path: ../packages/pos_inventory
+  pos_billing:
+    path: ../packages/pos_billing
+  go_router: ^14.6.0
+  provider: ^6.1.2
+  shared_preferences: ^2.3.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

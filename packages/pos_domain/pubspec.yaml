@@ -1,0 +1,12 @@
+name: pos_domain
+description: Entités, use cases et interfaces de repositories - Clean Architecture
+version: 1.0.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.0

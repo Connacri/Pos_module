@@ -1,0 +1,15 @@
+targets:
+  $default:
+    builders:
+      objectbox_generator|resolver:
+        generate_for:
+          include:
+            - packages/pos_data/lib/**/*.dart
+      json_serializable:
+        generate_for:
+          include:
+            - packages/pos_domain/lib/**/*.dart
+            - packages/pos_data/lib/**/*.dart
+        options:
+          explicit_to_json: true
+          field_rename: snake

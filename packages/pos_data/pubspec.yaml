@@ -1,0 +1,35 @@
+name: pos_data
+description: Implémentations ObjectBox, Supabase et repositories concrets
+version: 1.0.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  pos_core:
+    path: ../pos_core
+  pos_domain:
+    path: ../pos_domain
+  objectbox: ^4.0.3
+  objectbox_flutter_libs: ^4.0.3
+  path: ^1.9.0
+  path_provider: ^2.1.4
+  supabase_flutter: ^2.8.0
+  shared_preferences: ^2.3.2
+  connectivity_plus: ^6.0.5
+
+dev_dependencies:
+  analyzer: '>=8.0.0 <8.3.0'
+  build_runner: ^2.4.13
+  objectbox_generator: ^4.0.3
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
