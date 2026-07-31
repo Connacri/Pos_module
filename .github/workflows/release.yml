@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version de la release (ex: 1.0.0)'
-        required: true
-        default: '1.0.0'
+        description: 'Version (ex: 1.2.3). Laisser vide pour incrémenter automatiquement la dernière version.'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -20,25 +20,41 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Extraire la version
+      - name: Déterminer la prochaine version
         id: version
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME.Substring(1) } else { $env:INPUT_VERSION }
+          $version = $null
+          if ($env:GITHUB_REF_NAME -match '^v(\d+\.\d+\.\d+)$') {
+            $version = $matches[1]
+          } elseif ($env:INPUT_VERSION) {
+            $version = $env:INPUT_VERSION
+          } else {
+            $versions = @()
+            foreach ($t in (git ls-remote --tags origin 2>$null)) {
+              if ($t -match 'refs/tags/v(\d+\.\d+\.\d+)$') {
+                $versions += [version]$matches[1]
+              }
+            }
+            $latest = $versions | Sort-Object | Select-Object -Last 1
+            if (-not $latest) { $latest = [version]'0.0.0' }
+            $version = "$($latest.Major).$($latest.Minor).$($latest.Build + 1)"
+          }
           echo "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          echo "tag=v$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
         env:
           INPUT_VERSION: ${{ github.event.inputs.version }}
 
       - name: Créer le tag si déclenché manuellement
         if: github.event_name == 'workflow_dispatch'
-        env:
-          VERSION: ${{ github.event.inputs.version }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v$env:VERSION"
-          git push origin "v$env:VERSION"
+          git tag "v${{ steps.version.outputs.version }}"
+          git push origin "v${{ steps.version.outputs.version }}"
 
       - uses: subosito/flutter-action@v2
         with:
@@ -62,12 +78,11 @@ jobs:
       - name: Mettre à jour la version dans le script Inno
         shell: pwsh
         run: |
-          $version = if ($env:GITHUB_REF_NAME -match '^v') { $env:GITHUB_REF_NAME.Substring(1) } else { $env:INPUT_VERSION }
           $iss = Get-Content 'app\windows\installer\pos_module.iss' -Raw
-          $iss = $iss -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$version`""
+          $iss = $iss -replace '#define MyAppVersion ".*"', "#define MyAppVersion `"$env:VERSION`""
           Set-Content 'app\windows\installer\pos_module.iss' $iss -NoNewline
         env:
-          INPUT_VERSION: ${{ github.event.inputs.version }}
+          VERSION: ${{ steps.version.outputs.version }}
 
       - name: Compiler l'installeur
         run: ISCC.exe "app\windows\installer\pos_module.iss"
@@ -75,7 +90,7 @@ jobs:
       - name: Créer la release GitHub
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event_name == 'workflow_dispatch' && format('v{0}', github.event.inputs.version) || github.ref_name }}
+          tag_name: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.version }}
           body: >
             Builds générés automatiquement par le workflow Release :
