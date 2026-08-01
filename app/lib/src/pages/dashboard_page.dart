@@ -176,7 +176,7 @@ class _KpiGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: ResponsiveLayout.isDesktop(context) ? 2.4 : 1.5,
+      childAspectRatio: ResponsiveLayout.isDesktop(context) ? 2.3 : 1.4,
       children: [for (final kpi in kpis) _KpiCard(kpi: kpi)],
     );
   }

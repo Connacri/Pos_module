@@ -2,14 +2,17 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [master]
   workflow_dispatch:
     inputs:
       version:
         description: 'Version (ex: 1.2.3). Laisser vide pour incrémenter automatiquement la dernière version.'
         required: false
         default: ''
+
+concurrency:
+  group: release
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -48,13 +51,19 @@ jobs:
         env:
           INPUT_VERSION: ${{ github.event.inputs.version }}
 
-      - name: Créer le tag si déclenché manuellement
-        if: github.event_name == 'workflow_dispatch'
+      - name: Créer le tag (automatique sur master ou manuel)
+        shell: pwsh
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ steps.version.outputs.version }}"
-          git push origin "v${{ steps.version.outputs.version }}"
+          $tag = "${{ steps.version.outputs.tag }}"
+          if (git rev-parse $tag > $null 2>&1) {
+            Write-Host "Le tag $tag existe déjà, skip."
+          } else {
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag $tag
+            git push origin $tag
+            Write-Host "Tag $tag créé et poussé."
+          }
 
       - uses: subosito/flutter-action@v2
         with:
