@@ -21,7 +21,7 @@ class SupabaseStorageService {
       final buckets = await storage.listBuckets();
       final exists = buckets.any((b) => b.name == bucket);
       if (!exists) {
-        await storage.createBucket(bucket, public: true);
+        await storage.createBucket(bucket, const BucketOptions(public: true));
       }
     } catch (error, stack) {
       AppLogger.error('ensureBucket', error, stack);

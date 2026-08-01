@@ -41,7 +41,7 @@ class QrCodeView extends StatelessWidget {
         size: size,
         backgroundColor: backgroundColor ?? Colors.white,
         errorCorrectionLevel: QrErrorCorrectLevel.M,
-        eyeStyle: QrEyeStyle(
+        eyeStyle: const QrEyeStyle(
           eyeShape: QrEyeShape.square,
           color: Colors.black,
         ),

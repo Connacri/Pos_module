@@ -53,7 +53,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
         IconButton(
           icon: const Icon(Icons.qr_code_scanner),
           tooltip: l10n.barcode,
-          onPressed: () => _scanBarcode(context),
+          onPressed: _scanBarcode,
         ),
       ],
       floatingActionButton: FloatingActionButton(
@@ -136,13 +136,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Future<void> _scanBarcode(BuildContext context) async {
+  Future<void> _scanBarcode() async {
     final scanned = await Navigator.of(context).push<String>(
       MaterialPageRoute(
         builder: (_) => const ScannerScreen(title: 'Scanner un code-barres'),
       ),
     );
-    if (scanned == null || !mounted) return;
+    if (scanned == null) return;
+    if (!mounted) return;
     setState(() {
       _query = scanned;
       _filter = InventoryFilter.all;
@@ -342,12 +343,12 @@ class _ProductCard extends StatelessWidget {
               }
             },
             itemBuilder: (context) => [
-              PopupMenuItem(
+              const PopupMenuItem(
                 value: 'barcode',
                 child: ListTile(
-                  leading: const Icon(Icons.qr_code_2),
+                  leading: Icon(Icons.qr_code_2),
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('Code-barres'),
+                  title: Text('Code-barres'),
                   dense: true,
                 ),
               ),

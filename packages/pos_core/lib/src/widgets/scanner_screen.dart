@@ -81,7 +81,7 @@ class _ScannerScreenState extends State<ScannerScreen> {
                                 color: theme.colorScheme.error,
                               ),
                               const SizedBox(height: 12),
-                              Text(
+                              const Text(
                                 'Caméra indisponible',
                                 style: TextStyle(color: Colors.white),
                               ),

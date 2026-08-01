@@ -54,8 +54,7 @@ class InvoiceDetailScreen extends StatelessWidget {
             ],
           ),
         ],
-      ),
-      body: ListView(
+        body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Row(
