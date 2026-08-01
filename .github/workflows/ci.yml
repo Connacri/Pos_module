@@ -64,7 +64,7 @@ jobs:
         run: flutter test
 
   build:
-    name: Build APK
+    name: Build APK signé
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -82,6 +82,29 @@ jobs:
         working-directory: packages/pos_data
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build APK
+      - name: Restaurer le keystore et la config de signature
+        shell: bash
+        run: |
+          set -e
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 --decode > app/android/app/upload-keystore.jks
+            echo "storePassword=$KEYSTORE_PASSWORD" > app/android/key.properties
+            echo "keyPassword=$KEY_PASSWORD" >> app/android/key.properties
+            echo "keyAlias=$KEY_ALIAS" >> app/android/key.properties
+            echo "storeFile=upload-keystore.jks" >> app/android/key.properties
+          fi
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      - name: Build APK signé
         working-directory: app
         run: flutter build apk --release
+
+      - name: Uploader l'APK signé
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release.apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk

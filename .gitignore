@@ -23,6 +23,9 @@ Thumbs.db
 # Secrets / environnement
 .env
 .env.local
+keystore_base64.txt
+upload-keystore.jks
+key.properties
 
 # Couverture
 coverage/

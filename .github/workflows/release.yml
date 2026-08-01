@@ -68,7 +68,28 @@ jobs:
         working-directory: packages/pos_data
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build APK
+      - name: Restaurer le keystore et la config de signature
+        shell: pwsh
+        run: |
+          if ($env:KEYSTORE_B64) {
+            [IO.File]::WriteAllBytes(
+              'app/android/app/upload-keystore.jks',
+              [Convert]::FromBase64String($env:KEYSTORE_B64))
+            $props = "storePassword=$env:KEYSTORE_PASSWORD`n" +
+                     "keyPassword=$env:KEY_PASSWORD`n" +
+                     "keyAlias=$env:KEY_ALIAS`n" +
+                     "storeFile=upload-keystore.jks"
+            Set-Content -Path 'app/android/key.properties' -Value $props -NoNewline
+          } else {
+            Write-Host 'Aucun keystore fourni, build avec la signature debug.'
+          }
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+
+      - name: Build APK signé
         working-directory: app
         run: flutter build apk --release
 
@@ -90,6 +111,21 @@ jobs:
 
       - name: Compiler l'installeur
         run: ISCC.exe "app\windows\installer\pos_module.iss"
+
+      - name: Signer l'installeur Windows (Authenticode)
+        if: env.WIN_CERT_B64 != ''
+        shell: pwsh
+        run: |
+          [IO.File]::WriteAllBytes(
+            'app\windows\installer\cert.pfx',
+            [Convert]::FromBase64String($env:WIN_CERT_B64))
+          $signtool = Get-ChildItem "$env:ProgramFiles (x86)\Windows Kits\10\bin" -Recurse -Filter signtool.exe | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $signtool) { throw "signtool.exe introuvable" }
+          $exe = Get-ChildItem 'app\build\installer\POSModule-Setup-*.exe' | Select-Object -First 1
+          & $signtool.FullName sign /f app\windows\installer\cert.pfx /p $env:WIN_CERT_PASSWORD /tr http://timestamp.digicert.com /td sha256 /fd sha256 $exe.FullName
+        env:
+          WIN_CERT_B64: ${{ secrets.WINDOWS_CERT_BASE64 }}
+          WIN_CERT_PASSWORD: ${{ secrets.WINDOWS_CERT_PASSWORD }}
 
       - name: Créer la release GitHub
         uses: softprops/action-gh-release@v2
