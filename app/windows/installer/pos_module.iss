@@ -4,7 +4,7 @@
 #define MyAppName "POS Module"
 #define MyAppVersion "1.0.0"
 #define MyAppExeName "app.exe"
-#define MyAppId "{B7A9C2E4-3F5D-4E8A-9C1B-6D2F8A0E5C34}"
+#define MyAppId "{{B7A9C2E4-3F5D-4E8A-9C1B-6D2F8A0E5C34}"
 
 [Setup]
 AppId={#MyAppId}
