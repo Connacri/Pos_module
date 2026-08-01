@@ -5,6 +5,7 @@ import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
 
 import 'inventory_controller.dart';
+import 'inventory_pdf_service.dart';
 import 'widgets/product_form.dart';
 
 enum InventoryFilter { all, lowStock, outOfStock }
@@ -55,6 +56,28 @@ class _InventoryScreenState extends State<InventoryScreen> {
           tooltip: l10n.barcode,
           onPressed: _scanBarcode,
         ),
+        PopupMenuButton<String>(
+          icon: const Icon(Icons.picture_as_pdf_outlined),
+          tooltip: 'Exporter en PDF',
+          onSelected: (value) {
+            switch (value) {
+              case 'all':
+                _exportPdf(filtered: false);
+              case 'filtered':
+                _exportPdf(filtered: true);
+            }
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: 'all',
+              child: Text('Exporter tout l\'inventaire'),
+            ),
+            PopupMenuItem(
+              value: 'filtered',
+              child: Text('Exporter la liste affichée'),
+            ),
+          ],
+        ),
       ],
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openProductForm(context),
@@ -100,35 +123,36 @@ class _InventoryScreenState extends State<InventoryScreen> {
                     setState(() => _filter = selection.first),
               ),
             ),
+            _InventorySummary(controller: controller),
             Expanded(
               child: controller.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : products.isEmpty
-                      ? const EmptyState(
-                          icon: Icons.inventory_2_outlined,
-                          title: 'Aucun produit',
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: products.length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final product = products[index];
-                            return _ProductCard(
-                              product: product,
-                              categoryName: controller.categories
-                                  .where((c) => c.id == product.categoryId)
-                                  .map((c) => c.name)
-                                  .firstOrNull,
-                              onEdit: () => _openProductForm(context, product),
-                              onDelete: () => _confirmDelete(context, product),
-                              onStockAdjust: (delta) =>
-                                  controller.adjustStock(product.id, delta),
-                              onShowBarcode: () =>
-                                  _showBarcodeDialog(context, product),
-                            );
-                          },
-                        ),
+                  ? const EmptyState(
+                      icon: Icons.inventory_2_outlined,
+                      title: 'Aucun produit',
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: products.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final product = products[index];
+                        return _ProductCard(
+                          product: product,
+                          categoryName: controller.categories
+                              .where((c) => c.id == product.categoryId)
+                              .map((c) => c.name)
+                              .firstOrNull,
+                          onEdit: () => _openProductForm(context, product),
+                          onDelete: () => _confirmDelete(context, product),
+                          onStockAdjust: (delta) =>
+                              controller.adjustStock(product.id, delta),
+                          onShowBarcode: () =>
+                              _showBarcodeDialog(context, product),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -148,9 +172,9 @@ class _InventoryScreenState extends State<InventoryScreen> {
       _query = scanned;
       _filter = InventoryFilter.all;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Code scanné : $scanned')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Code scanné : $scanned')));
   }
 
   void _showBarcodeDialog(BuildContext context, Product product) {
@@ -179,7 +203,10 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
-  Future<void> _openProductForm(BuildContext context, [Product? product]) async {
+  Future<void> _openProductForm(
+    BuildContext context, [
+    Product? product,
+  ]) async {
     final controller = context.read<InventoryController>();
     final messenger = ScaffoldMessenger.of(context);
     final l10n = AppLocalizations.of(context);
@@ -190,7 +217,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (context) => ProductForm(
         product: product,
         categories: controller.categories,
-        onSave: (draft) => controller.saveProduct(draft, isNew: product == null),
+        onSave: (draft) =>
+            controller.saveProduct(draft, isNew: product == null),
       ),
     );
     if (!mounted) return;
@@ -234,6 +262,31 @@ class _InventoryScreenState extends State<InventoryScreen> {
       messenger.showSnackBar(SnackBar(content: Text(controller.error!)));
     }
   }
+
+  Future<void> _exportPdf({required bool filtered}) async {
+    final controller = context.read<InventoryController>();
+    final messenger = ScaffoldMessenger.of(context);
+    final products = filtered
+        ? _filterProducts(controller.products)
+        : controller.products;
+    final categoryNames = {for (final c in controller.categories) c.id: c.name};
+    final title = filtered
+        ? 'Inventaire - liste affichée'
+        : 'Inventaire complet';
+    final bytes = await InventoryPdfService.generate(
+      products: products,
+      categoryNames: categoryNames,
+      title: title,
+    );
+    final date = DateTime.now().toIso8601String().split('T').first;
+    final path = await FilePickerService.savePdfFile(
+      fileName: 'inventaire_$date.pdf',
+      bytes: bytes,
+    );
+    if (path != null && messenger.mounted) {
+      messenger.showSnackBar(SnackBar(content: Text('PDF enregistré : $path')));
+    }
+  }
 }
 
 class _ProductCard extends StatelessWidget {
@@ -261,8 +314,8 @@ class _ProductCard extends StatelessWidget {
     final accent = product.isOutOfStock
         ? theme.colorScheme.error
         : product.isLowStock
-            ? AppColors.warning
-            : theme.colorScheme.primary;
+        ? AppColors.warning
+        : theme.colorScheme.primary;
 
     return AppCard(
       padding: const EdgeInsets.all(12),
@@ -320,9 +373,7 @@ class _ProductCard extends StatelessWidget {
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline),
                 tooltip: l10n.removeFromCart,
-                onPressed: product.stock <= 0
-                    ? null
-                    : () => onStockAdjust(-1),
+                onPressed: product.stock <= 0 ? null : () => onStockAdjust(-1),
               ),
               IconButton(
                 icon: const Icon(Icons.add_circle_outline),
@@ -362,6 +413,107 @@ class _ProductCard extends StatelessWidget {
   }
 }
 
+class _InventorySummary extends StatelessWidget {
+  const _InventorySummary({required this.controller});
+
+  final InventoryController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final products = controller.products;
+    final totalProducts = products.length;
+    final stockValue = products.fold<double>(
+      0,
+      (s, p) => s + p.stock * (p.costPrice > 0 ? p.costPrice : p.price),
+    );
+    final outOfStock = products.where((p) => p.isOutOfStock).length;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: _SummaryCell(
+              label: 'Produits',
+              value: '$totalProducts',
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _SummaryCell(
+              label: 'Valeur stock',
+              value: CurrencyUtils.format(stockValue),
+              color: theme.colorScheme.tertiary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _SummaryCell(
+              label: 'Ruptures',
+              value: '$outOfStock',
+              color: theme.colorScheme.error,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SummaryCell extends StatelessWidget {
+  const _SummaryCell({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.16),
+            color.withValues(alpha: 0.04),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTextStyles.money(color),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _StockBadge extends StatelessWidget {
   const _StockBadge({required this.product});
 
@@ -373,8 +525,8 @@ class _StockBadge extends StatelessWidget {
     final color = product.isOutOfStock
         ? theme.colorScheme.error
         : product.isLowStock
-            ? AppColors.warning
-            : theme.colorScheme.primary;
+        ? AppColors.warning
+        : theme.colorScheme.primary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(

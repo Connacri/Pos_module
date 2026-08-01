@@ -54,6 +54,21 @@ class FilePickerService {
     return path;
   }
 
+  static Future<String?> savePdfFile({
+    required String fileName,
+    required Uint8List bytes,
+  }) async {
+    final path = await FilePicker.saveFile(
+      dialogTitle: 'Enregistrer $fileName',
+      fileName: fileName,
+      type: FileType.custom,
+      allowedExtensions: const ['pdf'],
+      bytes: bytes,
+    );
+    if (path == null) return null;
+    return path;
+  }
+
   static PickedFileData? _fromResult(
     FilePickerResult? result, {
     String? mimeType,

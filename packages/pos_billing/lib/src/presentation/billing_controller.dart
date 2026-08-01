@@ -8,33 +8,41 @@ class BillingController extends ChangeNotifier {
   BillingController({
     required this.invoiceUseCases,
     required this.customerUseCases,
+    required this.saleUseCases,
   }) {
     init();
   }
 
   final InvoiceUseCases invoiceUseCases;
   final CustomerUseCases customerUseCases;
+  final SaleUseCases saleUseCases;
 
   List<Invoice> _invoices = [];
   List<Customer> _customers = [];
+  List<Sale> _sales = [];
   StreamSubscription<List<Invoice>>? _invoiceSubscription;
   StreamSubscription<List<Customer>>? _customerSubscription;
+  StreamSubscription<List<Sale>>? _saleSubscription;
   bool _isLoading = true;
   String? _error;
   String? _successMessage;
 
   List<Invoice> get invoices => _invoices;
   List<Customer> get customers => _customers;
+  List<Sale> get sales => _sales;
   bool get isLoading => _isLoading;
   String? get error => _error;
   String? get successMessage => _successMessage;
 
   double get totalOutstanding => _invoices
-      .where((i) => i.status == InvoiceStatus.issued || i.status == InvoiceStatus.overdue)
+      .where(
+        (i) =>
+            i.status == InvoiceStatus.issued ||
+            i.status == InvoiceStatus.overdue,
+      )
       .fold(0, (sum, i) => sum + i.total);
 
-  int get overdueCount =>
-      _invoices.where((i) => i.isOverdue).length;
+  int get overdueCount => _invoices.where((i) => i.isOverdue).length;
 
   void init() {
     _invoiceSubscription = invoiceUseCases.watchInvoices().listen((invoices) {
@@ -42,9 +50,14 @@ class BillingController extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     });
-    _customerSubscription =
-        customerUseCases.watchCustomers().listen((customers) {
+    _customerSubscription = customerUseCases.watchCustomers().listen((
+      customers,
+    ) {
       _customers = customers;
+      notifyListeners();
+    });
+    _saleSubscription = saleUseCases.watchSales().listen((sales) {
+      _sales = sales;
       notifyListeners();
     });
   }
@@ -99,6 +112,7 @@ class BillingController extends ChangeNotifier {
   void dispose() {
     _invoiceSubscription?.cancel();
     _customerSubscription?.cancel();
+    _saleSubscription?.cancel();
     super.dispose();
   }
 }

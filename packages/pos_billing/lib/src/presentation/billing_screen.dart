@@ -24,11 +24,12 @@ class _BillingScreenState extends State<BillingScreen> {
     if (_query.trim().isEmpty) return invoices;
     final q = _query.trim().toLowerCase();
     return invoices
-        .where((i) =>
-            i.invoiceNumber.toLowerCase().contains(q) ||
-            (i.customerId != null &&
-                i.customerId.toString().contains(q)) ||
-            i.status.label.toLowerCase().contains(q))
+        .where(
+          (i) =>
+              i.invoiceNumber.toLowerCase().contains(q) ||
+              (i.customerId != null && i.customerId.toString().contains(q)) ||
+              i.status.label.toLowerCase().contains(q),
+        )
         .toList();
   }
 
@@ -67,31 +68,32 @@ class _BillingScreenState extends State<BillingScreen> {
               child: controller.isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : _filter(controller.invoices).isEmpty
-                      ? const EmptyState(
-                          icon: Icons.receipt_long_outlined,
-                          title: 'Aucune facture',
-                        )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filter(controller.invoices).length,
-                          separatorBuilder: (_, _) => const SizedBox(height: 8),
-                          itemBuilder: (context, index) {
-                            final invoice = _filter(controller.invoices)[index];
-                            return _InvoiceCard(
-                              invoice: invoice,
-                              customerName:
-                                  controller.customerName(invoice.customerId),
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        InvoiceDetailScreen(invoice: invoice),
-                                  ),
-                                );
-                              },
+                  ? const EmptyState(
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Aucune facture',
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filter(controller.invoices).length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 8),
+                      itemBuilder: (context, index) {
+                        final invoice = _filter(controller.invoices)[index];
+                        return _InvoiceCard(
+                          invoice: invoice,
+                          customerName: controller.customerName(
+                            invoice.customerId,
+                          ),
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    InvoiceDetailScreen(invoice: invoice),
+                              ),
                             );
                           },
-                        ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
@@ -106,8 +108,9 @@ class _BillingScreenState extends State<BillingScreen> {
       isScrollControlled: true,
       showDragHandle: true,
       builder: (context) => InvoiceForm(
+        sales: controller.sales,
         customers: controller.customers,
-        onCreate: (customerId) => controller.createFromSale(0),
+        onCreate: (saleId) => controller.createFromSale(saleId),
       ),
     );
   }

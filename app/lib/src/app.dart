@@ -8,6 +8,7 @@ import 'package:pos_domain/pos_domain.dart';
 import 'package:pos_inventory/pos_inventory.dart';
 import 'package:pos_pos/pos_pos.dart';
 
+import 'dashboard/dashboard_controller.dart';
 import 'di/app_dependencies.dart';
 import 'settings/settings_controller.dart';
 
@@ -22,6 +23,15 @@ class PosApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => SettingsController()),
         ChangeNotifierProvider.value(value: dependencies.connectivityService),
+        ChangeNotifierProvider<DashboardController>(
+          create: (_) => DashboardController(
+            saleUseCases: dependencies.saleUseCases,
+            productUseCases: dependencies.productUseCases,
+            categoryUseCases: dependencies.categoryUseCases,
+            customerUseCases: dependencies.customerUseCases,
+            invoiceUseCases: dependencies.invoiceUseCases,
+          ),
+        ),
         ChangeNotifierProvider<PosController>(
           create: (_) => PosController(
             productUseCases: dependencies.productUseCases,
@@ -38,6 +48,7 @@ class PosApp extends StatelessWidget {
           create: (_) => BillingController(
             invoiceUseCases: dependencies.invoiceUseCases,
             customerUseCases: dependencies.customerUseCases,
+            saleUseCases: dependencies.saleUseCases,
           ),
         ),
         Provider<SyncUseCases>.value(value: dependencies.syncUseCases),
