@@ -43,7 +43,7 @@ class InventoryPdfService {
             children: [
               pw.Text(
                 title,
-                style: const pw.TextStyle(
+                style: pw.TextStyle(
                   fontSize: 18,
                   fontWeight: pw.FontWeight.bold,
                 ),
@@ -98,7 +98,7 @@ class InventoryPdfService {
           pw.SizedBox(height: 16),
           pw.Text(
             'Détail par catégorie',
-            style: const pw.TextStyle(
+            style: pw.TextStyle(
               fontSize: 12,
               fontWeight: pw.FontWeight.bold,
             ),
@@ -118,7 +118,7 @@ class InventoryPdfService {
             children: [
               pw.TableRow(
                 decoration: const pw.BoxDecoration(color: PdfColors.blueGrey50),
-                children: const [
+                children: [
                   _Cell(pw.Text('SKU', style: _headerStyle)),
                   _Cell(pw.Text('Nom', style: _headerStyle)),
                   _Cell(pw.Text('Catégorie', style: _headerStyle)),
@@ -148,10 +148,10 @@ class InventoryPdfService {
                       ),
                     ),
                   ),
-                  const _Cell(pw.SizedBox.shrink()),
-                  const _Cell(pw.SizedBox.shrink()),
-                  const _Cell(pw.SizedBox.shrink()),
-                  const _Cell(pw.SizedBox.shrink()),
+                  _Cell(pw.SizedBox.shrink()),
+                  _Cell(pw.SizedBox.shrink()),
+                  _Cell(pw.SizedBox.shrink()),
+                  _Cell(pw.SizedBox.shrink()),
                   _Cell(
                     pw.Text(
                       '${totalUnits.round()}',
@@ -239,8 +239,8 @@ class InventoryPdfService {
       pw.TableRow(
         decoration: const pw.BoxDecoration(color: PdfColors.blueGrey50),
         children: [
-          const _Cell(pw.SizedBox.shrink()),
-          const _Cell(pw.SizedBox.shrink()),
+          _Cell(pw.SizedBox.shrink()),
+          _Cell(pw.SizedBox.shrink()),
           _Cell(
             pw.Text(
               'Sous-total $categoryLabel',
@@ -251,8 +251,8 @@ class InventoryPdfService {
               ),
             ),
           ),
-          const _Cell(pw.SizedBox.shrink()),
-          const _Cell(pw.SizedBox.shrink()),
+          _Cell(pw.SizedBox.shrink()),
+          _Cell(pw.SizedBox.shrink()),
           _Cell(
             pw.Text(
               '${products.fold<double>(0, (s, p) => s + p.stock).round()}',
@@ -273,7 +273,7 @@ class InventoryPdfService {
   }
 }
 
-const _headerStyle = pw.TextStyle(
+final _headerStyle = pw.TextStyle(
   fontSize: 8,
   fontWeight: pw.FontWeight.bold,
   color: PdfColors.grey800,
@@ -282,7 +282,7 @@ const _headerStyle = pw.TextStyle(
 const _cellStyle = pw.TextStyle(fontSize: 8);
 
 class _Cell extends pw.StatelessWidget {
-  const _Cell(this.child, {this.alignRight = false});
+  _Cell(this.child, {this.alignRight = false});
 
   final pw.Widget child;
   final bool alignRight;
