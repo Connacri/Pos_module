@@ -191,16 +191,20 @@ class SeedService {
     final subtotal = invoice.items.fold<double>(
       0,
       (sum, item) =>
-          sum + (item.unitPrice! * item.quantity) - item.discount,
+          sum + (_invoiceUnitPrice(item) * item.quantity) - item.discount,
     );
     final tax = invoice.items.fold<double>(
       0,
       (sum, item) {
-        final line = (item.unitPrice! * item.quantity) - item.discount;
+        final line = (_invoiceUnitPrice(item) * item.quantity) - item.discount;
         return sum + line * item.taxRate;
       },
     );
     return (subtotal + tax) - invoice.discountTotal;
+  }
+
+  static double _invoiceUnitPrice(SeedInvoiceItem item) {
+    return item.unitPrice ?? _unitPrice(item.productId);
   }
 
   static double _unitPrice(int productId) {
