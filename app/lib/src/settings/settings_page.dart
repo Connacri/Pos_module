@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pos_core/pos_core.dart';
@@ -83,17 +84,48 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             const _StorageSection(),
             const SizedBox(height: 16),
-            AppCard(
-              child: Center(
-                child: Text(
-                  '${AppConstants.appName} v${AppConstants.appVersion}',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ),
+            const _VersionSection(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VersionSection extends StatefulWidget {
+  const _VersionSection();
+
+  @override
+  State<_VersionSection> createState() => _VersionSectionState();
+}
+
+class _VersionSectionState extends State<_VersionSection> {
+  String? _version;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final info = await PackageInfo.fromPlatform();
+    if (!mounted) return;
+    setState(() {
+      _version = info.version;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      child: Center(
+        child: Text(
+          '${AppConstants.appName} v${_version ?? AppConstants.appVersion}',
+          style: theme.textTheme.labelMedium?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
         ),
       ),
     );

@@ -21,10 +21,7 @@ class CartPanel extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Text(
-                l10n.checkout,
-                style: theme.textTheme.titleMedium,
-              ),
+              Text(l10n.checkout, style: theme.textTheme.titleMedium),
               const Spacer(),
               IconButton(
                 onPressed: controller.isCartEmpty ? null : controller.clearCart,
@@ -62,12 +59,14 @@ class CartPanel extends StatelessWidget {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
-                            onPressed: () => controller.decrement(item.productId),
+                            onPressed: () =>
+                                controller.decrement(item.productId),
                             icon: const Icon(Icons.remove_circle_outline),
                             visualDensity: VisualDensity.compact,
                           ),
                           IconButton(
-                            onPressed: () => controller.increment(item.productId),
+                            onPressed: () =>
+                                controller.increment(item.productId),
                             icon: const Icon(Icons.add_circle_outline),
                             visualDensity: VisualDensity.compact,
                           ),
@@ -100,7 +99,7 @@ class CartPanel extends StatelessWidget {
                 loading: controller.isCheckingOut,
                 onPressed: controller.isCartEmpty
                     ? null
-                    : () => _showPaymentDialog(context, controller),
+                    : () => showPaymentSheet(context, controller),
               ),
             ],
           ),
@@ -108,15 +107,16 @@ class CartPanel extends StatelessWidget {
       ],
     );
   }
+}
 
-  Future<void> _showPaymentDialog(BuildContext context, PosController controller) {
-    return showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) => _PaymentSheet(controller: controller),
-    );
-  }
+Future<void> showPaymentSheet(BuildContext context, PosController controller) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) =>
+        SafeArea(child: _PaymentSheet(controller: controller)),
+  );
 }
 
 class _TotalRow extends StatelessWidget {
@@ -190,10 +190,7 @@ class _PaymentSheetState extends State<_PaymentSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            l10n.payment,
-            style: theme.textTheme.titleLarge,
-          ),
+          Text(l10n.payment, style: theme.textTheme.titleLarge),
           const SizedBox(height: 16),
           Wrap(
             spacing: 8,

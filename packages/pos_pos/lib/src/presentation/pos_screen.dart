@@ -111,11 +111,11 @@ class _WidePosLayout extends StatelessWidget {
                         padding: const EdgeInsets.all(12),
                         gridDelegate:
                             const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 220,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          childAspectRatio: 1,
-                        ),
+                              maxCrossAxisExtent: 220,
+                              mainAxisSpacing: 8,
+                              crossAxisSpacing: 8,
+                              childAspectRatio: 1,
+                            ),
                         itemCount: controller.filteredProducts.length,
                         itemBuilder: (context, index) {
                           final product = controller.filteredProducts[index];
@@ -130,10 +130,7 @@ class _WidePosLayout extends StatelessWidget {
           ),
         ),
         const VerticalDivider(width: 1),
-        SizedBox(
-          width: 360,
-          child: CartPanel(controller: controller),
-        ),
+        SizedBox(width: 360, child: CartPanel(controller: controller)),
       ],
     );
   }
@@ -154,15 +151,33 @@ class CartSummaryBar extends StatelessWidget {
       color: theme.colorScheme.surfaceContainerHighest,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-        child: Row(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(Icons.shopping_cart, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
-            Text('${controller.itemCount} ${l10n.products}'),
-            const Spacer(),
-            Text(
-              CurrencyUtils.format(controller.total),
-              style: AppTextStyles.money(theme.colorScheme.primary),
+            Row(
+              children: [
+                Icon(Icons.shopping_cart, color: theme.colorScheme.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '${controller.itemCount} ${l10n.products}',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Text(
+                  CurrencyUtils.format(controller.total),
+                  style: AppTextStyles.money(theme.colorScheme.primary),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            AppButton(
+              label: l10n.checkout,
+              icon: Icons.point_of_sale,
+              expanded: true,
+              loading: controller.isCheckingOut,
+              onPressed: () => showPaymentSheet(context, controller),
             ),
           ],
         ),

@@ -68,6 +68,22 @@ jobs:
         working-directory: packages/pos_data
         run: dart run build_runner build --delete-conflicting-outputs
 
+      - name: Mettre à jour la version selon le tag
+        shell: pwsh
+        run: |
+          $buildNumber = 1
+          $tags = git tag --list 'v*' 2>$null
+          if ($tags) { $buildNumber = $tags.Count }
+          $versionLine = "version: $env:VERSION+$buildNumber"
+          foreach ($f in @('pubspec.yaml', 'app/pubspec.yaml')) {
+            $content = Get-Content $f -Raw
+            $content = [regex]::Replace($content, '(?m)^version: .*$', $versionLine)
+            Set-Content -Path $f -Value $content -NoNewline
+            Write-Host "$f -> $versionLine"
+          }
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+
       - name: Restaurer le keystore et la config de signature
         shell: pwsh
         run: |

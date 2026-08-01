@@ -16,45 +16,47 @@ class DashboardPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(l10n.appTitle)),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _SyncCard(syncUseCases: syncUseCases),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: ResponsiveLayout.isDesktop(context) ? 4 : 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            children: [
-              _ActionCard(
-                icon: Icons.point_of_sale,
-                label: l10n.pos,
-                color: theme.colorScheme.primary,
-                onTap: () => context.go(Routes.pos),
-              ),
-              _ActionCard(
-                icon: Icons.inventory_2_outlined,
-                label: l10n.inventory,
-                color: theme.colorScheme.secondary,
-                onTap: () => context.go(Routes.inventory),
-              ),
-              _ActionCard(
-                icon: Icons.receipt_long_outlined,
-                label: l10n.billing,
-                color: theme.colorScheme.tertiary,
-                onTap: () => context.go(Routes.billing),
-              ),
-              _ActionCard(
-                icon: Icons.settings_outlined,
-                label: l10n.settings,
-                color: theme.colorScheme.outline,
-                onTap: () => context.go(Routes.settings),
-              ),
-            ],
-          ),
-        ],
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            _SyncCard(syncUseCases: syncUseCases),
+            const SizedBox(height: 16),
+            GridView.count(
+              crossAxisCount: ResponsiveLayout.isDesktop(context) ? 4 : 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              children: [
+                _ActionCard(
+                  icon: Icons.point_of_sale,
+                  label: l10n.pos,
+                  color: theme.colorScheme.primary,
+                  onTap: () => context.go(Routes.pos),
+                ),
+                _ActionCard(
+                  icon: Icons.inventory_2_outlined,
+                  label: l10n.inventory,
+                  color: theme.colorScheme.secondary,
+                  onTap: () => context.go(Routes.inventory),
+                ),
+                _ActionCard(
+                  icon: Icons.receipt_long_outlined,
+                  label: l10n.billing,
+                  color: theme.colorScheme.tertiary,
+                  onTap: () => context.go(Routes.billing),
+                ),
+                _ActionCard(
+                  icon: Icons.settings_outlined,
+                  label: l10n.settings,
+                  color: theme.colorScheme.outline,
+                  onTap: () => context.go(Routes.settings),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
