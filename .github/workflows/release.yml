@@ -64,6 +64,10 @@ jobs:
       - name: Résolution du workspace
         run: flutter pub get
 
+      - name: Génération ObjectBox
+        working-directory: packages/pos_data
+        run: dart run build_runner build --delete-conflicting-outputs
+
       - name: Build APK
         working-directory: app
         run: flutter build apk --release

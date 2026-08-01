@@ -15,8 +15,8 @@ dependencies:
     path: ../pos_core
   pos_domain:
     path: ../pos_domain
-  objectbox: ^4.0.3
-  objectbox_flutter_libs: ^4.0.3
+  objectbox: ^5.3.2
+  objectbox_flutter_libs: ^5.3.2
   path: ^1.9.0
   path_provider: ^2.1.4
   supabase_flutter: ^2.8.0
@@ -26,7 +26,7 @@ dependencies:
 dev_dependencies:
   analyzer: '>=8.0.0 <8.3.0'
   build_runner: ^2.4.13
-  objectbox_generator: ^4.0.3
+  objectbox_generator: ^5.3.2
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0

@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, develop]
+    branches: [master, develop]
   pull_request:
-    branches: [main, develop]
+    branches: [master, develop]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -24,6 +24,10 @@ jobs:
 
       - name: Résolution du workspace
         run: flutter pub get
+
+      - name: Génération ObjectBox
+        working-directory: packages/pos_data
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Analyse
         run: flutter analyze
@@ -66,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [android, web]
+        platform: [android]
     steps:
       - uses: actions/checkout@v4
 
@@ -77,6 +81,10 @@ jobs:
 
       - name: Résolution du workspace
         run: flutter pub get
+
+      - name: Génération ObjectBox
+        working-directory: packages/pos_data
+        run: dart run build_runner build --delete-conflicting-outputs
 
       - name: Build ${{ matrix.platform }}
         working-directory: app
