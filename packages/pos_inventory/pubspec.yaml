@@ -15,7 +15,7 @@ dependencies:
     path: ../pos_core
   pos_domain:
     path: ../pos_domain
-  provider: ^6.1.2
+  provider: ^6.1.5+1
 
 dev_dependencies:
   flutter_test:

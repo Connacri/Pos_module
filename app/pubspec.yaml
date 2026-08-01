@@ -26,9 +26,9 @@ dependencies:
     path: ../packages/pos_inventory
   pos_billing:
     path: ../packages/pos_billing
-  go_router: ^14.6.0
-  provider: ^6.1.2
-  shared_preferences: ^2.3.2
+  go_router: ^17.3.0
+  provider: ^6.1.5+1
+  shared_preferences: ^2.5.5
 
 dev_dependencies:
   flutter_test:
