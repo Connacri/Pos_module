@@ -655,7 +655,7 @@ write_file "packages/pos_core/lib/src/utils/currency_utils.dart" "import 'packag
 class CurrencyUtils {
   CurrencyUtils._();
 
-  static String format(double amount, {String locale = 'fr_FR', String symbol = '€'}) {
+  static String format(double amount, {String locale = 'fr_FR', String symbol = 'DA'}) {
     final formatter = NumberFormat.currency(
       locale: locale,
       symbol: symbol,
@@ -733,8 +733,8 @@ write_file "packages/pos_core/lib/src/constants/app_constants.dart" "class AppCo
   static const int lowStockThreshold = 5;
   static const int criticalStockThreshold = 2;
 
-  static const double defaultTaxRate = 0.20;
-  static const String defaultCurrency = 'EUR';
+  static const double defaultTaxRate = 0.19;
+  static const String defaultCurrency = 'DZD';
 }"
 
 write_file "packages/pos_core/lib/src/widgets/app_button.dart" "import 'package:flutter/material.dart';
@@ -1473,7 +1473,7 @@ class Money extends Equatable {
   final double amount;
   final String currency;
 
-  const Money(this.amount, [this.currency = 'EUR']);
+  const Money(this.amount, [this.currency = 'DZD']);
 
   Money operator +(Money other) => Money(amount + other.amount, currency);
   Money operator -(Money other) => Money(amount - other.amount, currency);

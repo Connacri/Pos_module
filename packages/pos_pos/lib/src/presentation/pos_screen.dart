@@ -8,14 +8,17 @@ import 'widgets/cart_panel.dart';
 import 'widgets/product_tile.dart';
 
 class PosScreen extends StatelessWidget {
-  const PosScreen({super.key});
+  const PosScreen({super.key, this.showBackButton = false});
+
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.pos)),
+    return AppScaffold(
+      title: l10n.pos,
+      showBack: showBackButton,
       body: ResponsiveBuilder(
         builder: (context, isMobile, isTablet, isDesktop) {
           if (isMobile) {

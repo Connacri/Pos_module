@@ -18,10 +18,9 @@ class InvoiceDetailScreen extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final controller = context.watch<BillingController>();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('#${invoice.invoiceNumber}'),
-        actions: [
+    return AppScaffold(
+      title: '#${invoice.invoiceNumber}',
+      actions: [
           IconButton(
             icon: const Icon(Icons.print_outlined),
             tooltip: l10n.print,
@@ -100,6 +99,8 @@ class InvoiceDetailScreen extends StatelessWidget {
               style: theme.textTheme.bodyMedium,
             ),
           ],
+          const SizedBox(height: 24),
+          _QrSection(invoice: invoice),
           const SizedBox(height: 24),
           AppButton(
             label: 'Marquer comme payée',
@@ -273,6 +274,56 @@ class _TotalRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _QrSection extends StatelessWidget {
+  const _QrSection({required this.invoice});
+
+  final Invoice invoice;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final payload =
+        'FACTURE:#${invoice.invoiceNumber}\n'
+        'MONTANT:${CurrencyUtils.format(invoice.total)}\n'
+        'ETAT:${invoice.status.label}\n'
+        'DEVIS:DZD';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Paiement rapide', style: theme.textTheme.titleMedium),
+        const SizedBox(height: 8),
+        AppCard(
+          child: Row(
+            children: [
+              QrCodeView(data: payload, size: 96),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      invoice.invoiceNumber,
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      payload,
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

@@ -21,19 +21,19 @@ List<GoRoute> buildAppRoutes() {
     ),
     GoRoute(
       path: Routes.pos,
-      builder: (context, state) => const PosScreen(),
+      builder: (context, state) => const PosScreen(showBackButton: true),
     ),
     GoRoute(
       path: Routes.inventory,
-      builder: (context, state) => const InventoryScreen(),
+      builder: (context, state) => const InventoryScreen(showBackButton: true),
     ),
     GoRoute(
       path: Routes.billing,
-      builder: (context, state) => const BillingScreen(),
+      builder: (context, state) => const BillingScreen(showBackButton: true),
     ),
     GoRoute(
       path: Routes.settings,
-      builder: (context, state) => const SettingsPage(),
+      builder: (context, state) => const SettingsPage(showBackButton: true),
     ),
   ];
 }

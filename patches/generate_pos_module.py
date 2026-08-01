@@ -653,7 +653,7 @@ write_file(f"{PROJECT_NAME}/packages/pos_core/lib/src/utils/currency_utils.dart"
     class CurrencyUtils {
       CurrencyUtils._();
     
-      static String format(double amount, {String locale = 'fr_FR', String symbol = '€'}) {
+      static String format(double amount, {String locale = 'fr_FR', String symbol = 'DA'}) {
         final formatter = NumberFormat.currency(
           locale: locale,
           symbol: symbol,
@@ -735,8 +735,8 @@ write_file(f"{PROJECT_NAME}/packages/pos_core/lib/src/constants/app_constants.da
       static const int lowStockThreshold = 5;
       static const int criticalStockThreshold = 2;
     
-      static const double defaultTaxRate = 0.20;
-      static const String defaultCurrency = 'EUR';
+      static const double defaultTaxRate = 0.19;
+      static const String defaultCurrency = 'DZD';
     }
 """)
 

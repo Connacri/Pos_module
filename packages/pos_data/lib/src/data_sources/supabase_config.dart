@@ -7,22 +7,21 @@ class SupabaseConfig {
 
   static const String url = String.fromEnvironment(
     'SUPABASE_URL',
-    defaultValue: 'https://VOTRE-PROJET.supabase.co',
+    defaultValue: 'https://fexvpescpgpcqgjpdmzo.supabase.co',
   );
 
-  static const String anonKey = String.fromEnvironment(
-    'SUPABASE_ANON_KEY',
-    defaultValue: 'VOTRE-CLE-ANON',
+  static const String publishableKey = String.fromEnvironment(
+    'SUPABASE_PUBLISHABLE_KEY',
+    defaultValue: 'sb_publishable_FdeJGPk4VjtE8EsiVAQzXQ_Gx-H_eyD',
   );
 
-  static bool get isConfigured =>
-      url.contains('.supabase.co') && anonKey != 'VOTRE-CLE-ANON';
+  static bool get isConfigured => url.contains('.supabase.co');
 
   static Future<void> initialize() async {
     if (!isConfigured) {
       AppLogger.warning('Supabase non configuré : mode hors-ligne uniquement');
       return;
     }
-    await Supabase.initialize(url: url, publishableKey: anonKey);
+    await Supabase.initialize(url: url, publishableKey: publishableKey);
   }
 }

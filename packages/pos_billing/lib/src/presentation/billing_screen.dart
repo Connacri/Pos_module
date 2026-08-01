@@ -9,7 +9,9 @@ import 'invoice_detail_screen.dart';
 import 'invoice_form.dart';
 
 class BillingScreen extends StatefulWidget {
-  const BillingScreen({super.key});
+  const BillingScreen({super.key, this.showBackButton = false});
+
+  final bool showBackButton;
 
   @override
   State<BillingScreen> createState() => _BillingScreenState();
@@ -35,54 +37,64 @@ class _BillingScreenState extends State<BillingScreen> {
     final l10n = AppLocalizations.of(context);
     final controller = context.watch<BillingController>();
 
-    return Scaffold(
-      appBar: AppBar(title: Text(l10n.billing)),
+    return AppScaffold(
+      title: l10n.billing,
+      showBack: widget.showBackButton,
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openCreateSheet(context),
         child: const Icon(Icons.note_add_outlined),
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-            child: AppTextField(
-              label: l10n.search,
-              prefixIcon: const Icon(Icons.search),
-              onChanged: (value) => setState(() => _query = value),
-            ),
-          ),
-          _SummaryCards(controller: controller),
-          Expanded(
-            child: controller.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _filter(controller.invoices).isEmpty
-                    ? const EmptyState(
-                        icon: Icons.receipt_long_outlined,
-                        title: 'Aucune facture',
+      body: AppResponsiveBody(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+              child: AppTextField(
+                label: l10n.search,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => setState(() => _query = ''),
                       )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _filter(controller.invoices).length,
-                        separatorBuilder: (_, _) => const SizedBox(height: 8),
-                        itemBuilder: (context, index) {
-                          final invoice = _filter(controller.invoices)[index];
-                          return _InvoiceCard(
-                            invoice: invoice,
-                            customerName:
-                                controller.customerName(invoice.customerId),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      InvoiceDetailScreen(invoice: invoice),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                      ),
-          ),
-        ],
+                    : null,
+                onChanged: (value) => setState(() => _query = value),
+              ),
+            ),
+            _SummaryCards(controller: controller),
+            Expanded(
+              child: controller.isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filter(controller.invoices).isEmpty
+                      ? const EmptyState(
+                          icon: Icons.receipt_long_outlined,
+                          title: 'Aucune facture',
+                        )
+                      : ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _filter(controller.invoices).length,
+                          separatorBuilder: (_, _) => const SizedBox(height: 8),
+                          itemBuilder: (context, index) {
+                            final invoice = _filter(controller.invoices)[index];
+                            return _InvoiceCard(
+                              invoice: invoice,
+                              customerName:
+                                  controller.customerName(invoice.customerId),
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (_) =>
+                                        InvoiceDetailScreen(invoice: invoice),
+                                  ),
+                                );
+                              },
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -160,27 +172,43 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: AppTextStyles.money(color),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.05),
           ],
         ),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.circle, size: 8, color: color),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: AppTextStyles.money(color),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
       ),
     );
   }
@@ -201,69 +229,88 @@ class _InvoiceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            '#${invoice.invoiceNumber}',
-                            style: theme.textTheme.titleSmall,
-                          ),
-                        ),
-                        StatusChip(status: invoice.status),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      customerName ?? 'Client inconnu',
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      invoice.createdAt != null
-                          ? AppDateUtils.formatDate(invoice.createdAt!)
-                          : '-',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    CurrencyUtils.format(invoice.total),
-                    style: AppTextStyles.money(theme.colorScheme.primary),
-                  ),
-                  if (invoice.isOverdue)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        'En retard',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: theme.colorScheme.error,
-                        ),
-                      ),
-                    ),
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.primary.withValues(alpha: 0.25),
+                  theme.colorScheme.tertiary.withValues(alpha: 0.15),
                 ],
               ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              invoice.isOverdue
+                  ? Icons.warning_amber_rounded
+                  : Icons.receipt_long_outlined,
+              color: invoice.isOverdue
+                  ? theme.colorScheme.error
+                  : theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '#${invoice.invoiceNumber}',
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                    StatusChip(status: invoice.status),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  customerName ?? 'Client inconnu',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  invoice.createdAt != null
+                      ? AppDateUtils.formatDate(invoice.createdAt!)
+                      : '-',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                CurrencyUtils.format(invoice.total),
+                style: AppTextStyles.money(theme.colorScheme.primary),
+              ),
+              if (invoice.isOverdue)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    'En retard',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
+                ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }

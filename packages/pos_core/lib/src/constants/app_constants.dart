@@ -20,6 +20,6 @@ class AppConstants {
   static const int lowStockThreshold = 5;
   static const int criticalStockThreshold = 2;
 
-  static const double defaultTaxRate = 0.20;
-  static const String defaultCurrency = 'EUR';
+  static const double defaultTaxRate = 0.19;
+  static const String defaultCurrency = 'DZD';
 }

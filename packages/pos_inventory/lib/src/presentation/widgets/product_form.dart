@@ -114,6 +114,16 @@ class _ProductFormState extends State<ProductForm> {
   static double _parse(String value) =>
       double.tryParse(value.replaceAll(',', '.')) ?? 0;
 
+  Future<void> _scanBarcode() async {
+    final scanned = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (_) => const ScannerScreen(title: 'Scanner un code-barres'),
+      ),
+    );
+    if (scanned == null || !mounted) return;
+    setState(() => _barcodeController.text = scanned);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -160,6 +170,11 @@ class _ProductFormState extends State<ProductForm> {
                 controller: _barcodeController,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                suffixIcon: IconButton(
+                  icon: const Icon(Icons.qr_code_scanner),
+                  tooltip: 'Scanner',
+                  onPressed: _scanBarcode,
+                ),
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<int>(

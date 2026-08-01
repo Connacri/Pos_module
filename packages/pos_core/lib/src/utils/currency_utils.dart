@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 class CurrencyUtils {
   CurrencyUtils._();
 
-  static String format(double amount, {String locale = 'fr_FR', String symbol = '€'}) {
+  static String format(double amount, {String locale = 'fr_FR', String symbol = 'DA'}) {
     final formatter = NumberFormat.currency(
       locale: locale,
       symbol: symbol,
