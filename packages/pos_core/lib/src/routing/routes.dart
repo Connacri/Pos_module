@@ -12,6 +12,7 @@ class Routes {
   static const String sales = '/sales';
   static const String saleDetail = '/sales/:id';
   static const String billing = '/billing';
+  static const String returns = '/returns';
   static const String invoices = '/billing/invoices';
   static const String invoiceDetail = '/billing/invoices/:id';
   static const String reports = '/reports';

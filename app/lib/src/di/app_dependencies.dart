@@ -9,6 +9,7 @@ class AppDependencies {
     required this.customerUseCases,
     required this.saleUseCases,
     required this.invoiceUseCases,
+    required this.returnUseCases,
     required this.syncUseCases,
     required this.connectivityService,
   });
@@ -18,6 +19,7 @@ class AppDependencies {
   final CustomerUseCases customerUseCases;
   final SaleUseCases saleUseCases;
   final InvoiceUseCases invoiceUseCases;
+  final ReturnUseCases returnUseCases;
   final SyncUseCases syncUseCases;
   final ConnectivityService connectivityService;
 
@@ -31,6 +33,7 @@ class AppDependencies {
     final customerRepository = ObjectboxCustomerRepository();
     final saleRepository = ObjectboxSaleRepository();
     final invoiceRepository = ObjectboxInvoiceRepository();
+    final returnRepository = ObjectboxReturnRepository();
     final syncRepository = SupabaseSyncRepository(
       connectivityService: connectivity,
     );
@@ -42,6 +45,11 @@ class AppDependencies {
       customerUseCases: CustomerUseCases(customerRepository),
       saleUseCases: SaleUseCases(saleRepository, productRepository),
       invoiceUseCases: InvoiceUseCases(invoiceRepository, saleRepository),
+      returnUseCases: ReturnUseCases(
+        returnRepository,
+        saleRepository,
+        productRepository,
+      ),
       syncUseCases: SyncUseCases(syncRepository, authRepository),
       connectivityService: connectivity,
     );

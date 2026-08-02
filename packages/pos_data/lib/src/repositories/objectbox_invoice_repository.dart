@@ -17,13 +17,20 @@ class ObjectboxInvoiceRepository implements InvoiceRepository {
   Stream<List<Invoice>> watchAll() {
     return _box
         .query()
+        .order(InvoiceEntity_.id, flags: Order.descending)
         .watch(triggerImmediately: true)
         .map((query) => query.find().map(_toDomain).toList());
   }
 
   @override
   Future<List<Invoice>> getAll() async {
-    return _box.getAll().map(_toDomain).toList();
+    return _box
+        .query()
+        .order(InvoiceEntity_.id, flags: Order.descending)
+        .build()
+        .find()
+        .map(_toDomain)
+        .toList();
   }
 
   @override

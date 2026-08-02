@@ -7,6 +7,7 @@ export 'src/repositories/objectbox_category_repository.dart';
 export 'src/repositories/objectbox_customer_repository.dart';
 export 'src/repositories/objectbox_sale_repository.dart';
 export 'src/repositories/objectbox_invoice_repository.dart';
+export 'src/repositories/objectbox_return_repository.dart';
 export 'src/repositories/supabase_auth_repository.dart';
 export 'src/repositories/supabase_sync_repository.dart';
 
@@ -18,6 +19,8 @@ export 'src/models/objectbox/payment_entity.dart';
 export 'src/models/objectbox/product_entity.dart';
 export 'src/models/objectbox/sale_entity.dart';
 export 'src/models/objectbox/sale_item_entity.dart';
+export 'src/models/objectbox/return_record_entity.dart';
+export 'src/models/objectbox/return_item_entity.dart';
 
 export 'src/seed/seed_data.dart';
 export 'src/seed/seed_service.dart';

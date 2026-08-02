@@ -7,6 +7,7 @@ import 'package:pos_pos/pos_pos.dart';
 
 import '../pages/home_shell.dart';
 import '../pages/splash_page.dart';
+import '../returns/returns_screen.dart';
 import '../settings/settings_page.dart';
 
 List<GoRoute> buildAppRoutes() {
@@ -30,6 +31,10 @@ List<GoRoute> buildAppRoutes() {
     GoRoute(
       path: Routes.billing,
       builder: (context, state) => const BillingScreen(showBackButton: true),
+    ),
+    GoRoute(
+      path: Routes.returns,
+      builder: (context, state) => const ReturnsScreen(showBackButton: true),
     ),
     GoRoute(
       path: Routes.settings,

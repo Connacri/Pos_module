@@ -119,6 +119,12 @@ class DashboardPage extends StatelessWidget {
                         onTap: () => context.go(Routes.billing),
                       ),
                       _ActionCard(
+                        icon: Icons.replay_outlined,
+                        label: 'Retours',
+                        color: theme.colorScheme.error,
+                        onTap: () => context.go(Routes.returns),
+                      ),
+                      _ActionCard(
                         icon: Icons.settings_outlined,
                         label: l10n.settings,
                         color: theme.colorScheme.outline,

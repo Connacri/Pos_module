@@ -17,8 +17,24 @@ class BillingScreen extends StatefulWidget {
   State<BillingScreen> createState() => _BillingScreenState();
 }
 
-class _BillingScreenState extends State<BillingScreen> {
+class _BillingScreenState extends State<BillingScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+  )..addListener(_onTabChanged);
   String _query = '';
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (!mounted) return;
+    setState(() {});
+  }
 
   List<Invoice> _filter(List<Invoice> invoices) {
     if (_query.trim().isEmpty) return invoices;
@@ -41,63 +57,121 @@ class _BillingScreenState extends State<BillingScreen> {
     return AppScaffold(
       title: l10n.billing,
       showBack: widget.showBackButton,
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _openCreateSheet(context),
-        child: const Icon(Icons.note_add_outlined),
-      ),
-      body: AppResponsiveBody(
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: AppTextField(
-                label: l10n.search,
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _query.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () => setState(() => _query = ''),
-                      )
-                    : null,
-                onChanged: (value) => setState(() => _query = value),
-              ),
+      floatingActionButton: _tabController.index == 0
+          ? FloatingActionButton(
+              onPressed: () => _openCreateSheet(context),
+              child: const Icon(Icons.note_add_outlined),
+            )
+          : null,
+      body: Column(
+        children: [
+          Material(
+            color: Theme.of(context).colorScheme.surface,
+            child: TabBar(
+              controller: _tabController,
+              tabs: [
+                Tab(text: l10n.invoices, icon: const Icon(Icons.receipt_long_outlined)),
+                Tab(text: l10n.sales, icon: const Icon(Icons.point_of_sale_outlined)),
+              ],
             ),
-            _SummaryCards(controller: controller),
-            Expanded(
-              child: controller.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _filter(controller.invoices).isEmpty
-                  ? const EmptyState(
-                      icon: Icons.receipt_long_outlined,
-                      title: 'Aucune facture',
+          ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildInvoicesTab(controller, l10n),
+                _buildSalesTab(controller, l10n),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInvoicesTab(
+    BillingController controller,
+    AppLocalizations l10n,
+  ) {
+    return AppResponsiveBody(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: AppTextField(
+              label: l10n.search,
+              prefixIcon: const Icon(Icons.search),
+              suffixIcon: _query.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _query = ''),
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _filter(controller.invoices).length,
-                      separatorBuilder: (_, _) => const SizedBox(height: 8),
-                      itemBuilder: (context, index) {
-                        final invoice = _filter(controller.invoices)[index];
-                        return _InvoiceCard(
-                          invoice: invoice,
-                          customerName: controller.customerName(
-                            invoice.customerId,
-                          ),
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    InvoiceDetailScreen(invoice: invoice),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
+                  : null,
+              onChanged: (value) => setState(() => _query = value),
             ),
-          ],
-        ),
+          ),
+          _SummaryCards(controller: controller),
+          Expanded(
+            child: controller.isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _filter(controller.invoices).isEmpty
+                ? const EmptyState(
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Aucune facture',
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filter(controller.invoices).length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final invoice = _filter(controller.invoices)[index];
+                      return _InvoiceCard(
+                        invoice: invoice,
+                        customerName: controller.customerName(
+                          invoice.customerId,
+                        ),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  InvoiceDetailScreen(invoice: invoice),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSalesTab(
+    BillingController controller,
+    AppLocalizations l10n,
+  ) {
+    final sales = controller.sales;
+    return AppResponsiveBody(
+      padding: EdgeInsets.zero,
+      child: sales.isEmpty
+          ? const EmptyState(
+              icon: Icons.point_of_sale_outlined,
+              title: 'Aucune vente',
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: sales.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 8),
+              itemBuilder: (context, index) {
+                final sale = sales[index];
+                return _SaleCard(
+                  sale: sale,
+                  customerName: controller.customerName(sale.customerId),
+                );
+              },
+            ),
     );
   }
 
@@ -314,6 +388,134 @@ class _InvoiceCard extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SaleCard extends StatelessWidget {
+  const _SaleCard({required this.sale, required this.customerName});
+
+  final Sale sale;
+  final String? customerName;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return AppCard(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  theme.colorScheme.tertiary.withValues(alpha: 0.25),
+                  theme.colorScheme.primary.withValues(alpha: 0.15),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              switch (sale.status) {
+                SaleStatus.cancelled => Icons.cancel_outlined,
+                SaleStatus.returned => Icons.replay_outlined,
+                _ => Icons.point_of_sale_outlined,
+              },
+              color: switch (sale.status) {
+                SaleStatus.cancelled => theme.colorScheme.error,
+                _ => theme.colorScheme.primary,
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '#${sale.saleNumber}',
+                        style: theme.textTheme.titleSmall,
+                      ),
+                    ),
+                    _SaleStatusChip(status: sale.status),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  customerName ?? 'Client inconnu',
+                  style: theme.textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  sale.createdAt != null
+                      ? AppDateUtils.formatDateTime(sale.createdAt!)
+                      : '-',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                CurrencyUtils.format(sale.total),
+                style: AppTextStyles.money(theme.colorScheme.primary),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                sale.paymentMethod.label,
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SaleStatusChip extends StatelessWidget {
+  const _SaleStatusChip({required this.status});
+
+  final SaleStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = switch (status) {
+      SaleStatus.pending => theme.colorScheme.outline,
+      SaleStatus.completed => Colors.green,
+      SaleStatus.cancelled => theme.colorScheme.error,
+      SaleStatus.returned => theme.colorScheme.tertiary,
+    };
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        status.label,
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

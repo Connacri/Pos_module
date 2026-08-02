@@ -10,6 +10,7 @@ import 'package:pos_pos/pos_pos.dart';
 
 import 'dashboard/dashboard_controller.dart';
 import 'di/app_dependencies.dart';
+import 'returns/return_controller.dart';
 import 'settings/settings_controller.dart';
 
 class PosApp extends StatelessWidget {
@@ -50,6 +51,13 @@ class PosApp extends StatelessWidget {
             invoiceUseCases: dependencies.invoiceUseCases,
             customerUseCases: dependencies.customerUseCases,
             saleUseCases: dependencies.saleUseCases,
+          ),
+        ),
+        ChangeNotifierProvider<ReturnController>(
+          create: (_) => ReturnController(
+            returnUseCases: dependencies.returnUseCases,
+            saleUseCases: dependencies.saleUseCases,
+            customerUseCases: dependencies.customerUseCases,
           ),
         ),
         Provider<SyncUseCases>.value(value: dependencies.syncUseCases),
