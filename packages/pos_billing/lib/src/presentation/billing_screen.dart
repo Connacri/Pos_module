@@ -9,9 +9,10 @@ import 'invoice_detail_screen.dart';
 import 'invoice_form.dart';
 
 class BillingScreen extends StatefulWidget {
-  const BillingScreen({super.key, this.showBackButton = false});
+  const BillingScreen({super.key, this.showBackButton = false, this.onOpenSale});
 
   final bool showBackButton;
+  final void Function(Sale sale)? onOpenSale;
 
   @override
   State<BillingScreen> createState() => _BillingScreenState();
@@ -169,6 +170,9 @@ class _BillingScreenState extends State<BillingScreen>
                 return _SaleCard(
                   sale: sale,
                   customerName: controller.customerName(sale.customerId),
+                  onTap: widget.onOpenSale == null
+                      ? null
+                      : () => widget.onOpenSale!(sale),
                 );
               },
             ),
@@ -394,16 +398,18 @@ class _InvoiceCard extends StatelessWidget {
 }
 
 class _SaleCard extends StatelessWidget {
-  const _SaleCard({required this.sale, required this.customerName});
+  const _SaleCard({required this.sale, required this.customerName, this.onTap});
 
   final Sale sale;
   final String? customerName;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return AppCard(
+      onTap: onTap,
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [

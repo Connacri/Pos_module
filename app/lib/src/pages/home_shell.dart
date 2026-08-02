@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:pos_billing/pos_billing.dart';
 import 'package:pos_core/pos_core.dart';
+import 'package:pos_domain/pos_domain.dart';
 import 'package:pos_inventory/pos_inventory.dart';
 import 'package:pos_pos/pos_pos.dart';
 
+import '../sales/sale_detail_screen.dart';
 import '../settings/settings_page.dart';
 import 'dashboard_page.dart';
 
@@ -18,11 +20,17 @@ class HomeShell extends StatefulWidget {
 class _HomeShellState extends State<HomeShell> {
   int _index = 0;
 
-  static const _pages = [
+  void _openSale(Sale sale) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => SaleDetailScreen(sale: sale)),
+    );
+  }
+
+  List<Widget> get _pages => [
     DashboardPage(),
     PosScreen(),
     InventoryScreen(),
-    BillingScreen(),
+    BillingScreen(onOpenSale: _openSale),
     SettingsPage(),
   ];
 

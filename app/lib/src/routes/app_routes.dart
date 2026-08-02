@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:pos_billing/pos_billing.dart';
@@ -8,6 +9,7 @@ import 'package:pos_pos/pos_pos.dart';
 import '../pages/home_shell.dart';
 import '../pages/splash_page.dart';
 import '../returns/returns_screen.dart';
+import '../sales/sale_detail_screen.dart';
 import '../settings/settings_page.dart';
 
 List<GoRoute> buildAppRoutes() {
@@ -30,7 +32,12 @@ List<GoRoute> buildAppRoutes() {
     ),
     GoRoute(
       path: Routes.billing,
-      builder: (context, state) => const BillingScreen(showBackButton: true),
+      builder: (context, state) => BillingScreen(
+        showBackButton: true,
+        onOpenSale: (sale) => Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => SaleDetailScreen(sale: sale)),
+        ),
+      ),
     ),
     GoRoute(
       path: Routes.returns,
