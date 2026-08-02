@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
+import 'package:pos_inventory/pos_inventory.dart';
 
 import '../returns/return_controller.dart';
 import '../returns/return_form_screen.dart';
@@ -22,6 +23,12 @@ class SaleDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final controller = context.watch<ReturnController>();
+    final inventory = context.watch<InventoryController>();
+    final photoByProductId = {
+      for (final p in inventory.products)
+        if (p.id != 0)
+          p.id: p.primaryImageUrl ?? '',
+    };
 
     return AppScaffold(
       title: 'Vente #${sale.saleNumber}',
@@ -82,7 +89,8 @@ class SaleDetailScreen extends StatelessWidget {
             padding: EdgeInsets.zero,
             child: Column(
               children: [
-                for (final item in sale.items) _SaleLine(item: item),
+                for (final item in sale.items)
+                  _SaleLine(item: item, photoUrl: photoByProductId[item.productId]),
               ],
             ),
           ),
@@ -146,36 +154,44 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _SaleLine extends StatelessWidget {
-  const _SaleLine({required this.item});
+  const _SaleLine({required this.item, this.photoUrl});
 
   final SaleItem item;
+  final String? photoUrl;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(item.productName, style: theme.textTheme.bodyMedium),
-              ),
-              Text(
-                CurrencyUtils.format(item.lineTotal),
-                style: AppTextStyles.money(theme.colorScheme.onSurface),
-              ),
-            ],
+          AppImageThumb(
+            url: photoUrl,
+            size: 40,
+            borderRadius: BorderRadius.circular(10),
+            fallbackIcon: Icons.shopping_bag_outlined,
           ),
-          const SizedBox(height: 2),
-          Text(
-            '${CurrencyUtils.format(item.unitPrice)} x ${item.quantity}'
-            '${item.taxRate > 0 ? ' • TVA ${(item.taxRate * 100).toStringAsFixed(0)}%' : ''}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.productName, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 2),
+                Text(
+                  '${CurrencyUtils.format(item.unitPrice)} x ${item.quantity}'
+                  '${item.taxRate > 0 ? ' • TVA ${(item.taxRate * 100).toStringAsFixed(0)}%' : ''}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
             ),
+          ),
+          Text(
+            CurrencyUtils.format(item.lineTotal),
+            style: AppTextStyles.money(theme.colorScheme.onSurface),
           ),
         ],
       ),

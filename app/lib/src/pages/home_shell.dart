@@ -38,6 +38,13 @@ class _HomeShellState extends State<HomeShell> {
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
       builder: (context, isMobile, isTablet, isDesktop) {
+        final content = PageFadeTransition(
+          child: IndexedStack(
+            key: ValueKey(_index),
+            index: _index,
+            children: _pages,
+          ),
+        );
         if (isDesktop) {
           return Scaffold(
             body: Row(
@@ -50,14 +57,14 @@ class _HomeShellState extends State<HomeShell> {
                   destinations: _railDestinations,
                 ),
                 const VerticalDivider(width: 1),
-                Expanded(child: IndexedStack(index: _index, children: _pages)),
+                Expanded(child: content),
               ],
             ),
           );
         }
 
         return Scaffold(
-          body: IndexedStack(index: _index, children: _pages),
+          body: content,
           bottomNavigationBar: NavigationBar(
             selectedIndex: _index,
             onDestinationSelected: (index) => setState(() => _index = index),

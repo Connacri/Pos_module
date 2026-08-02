@@ -47,17 +47,21 @@ class CartPanel extends StatelessWidget {
                     final item = controller.cartItems[index];
                     return ListTile(
                       dense: true,
-                      title: Text(item.productName),
-                      subtitle: Text(
-                        '${CurrencyUtils.format(item.unitPrice)} x ${item.quantity}',
-                      ),
-                      trailing: Text(
-                        CurrencyUtils.format(item.lineTotal),
-                        style: AppTextStyles.money(theme.colorScheme.onSurface),
-                      ),
                       leading: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          Hero(
+                            tag: 'cart-thumb-${item.productId}',
+                            child: AppImageThumb(
+                              url: controller
+                                  .productById(item.productId)
+                                  ?.primaryImageUrl,
+                              size: 40,
+                              borderRadius: BorderRadius.circular(10),
+                              fallbackIcon: Icons.shopping_bag_outlined,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
                           IconButton(
                             onPressed: () =>
                                 controller.decrement(item.productId),
@@ -71,6 +75,14 @@ class CartPanel extends StatelessWidget {
                             visualDensity: VisualDensity.compact,
                           ),
                         ],
+                      ),
+                      title: Text(item.productName),
+                      subtitle: Text(
+                        '${CurrencyUtils.format(item.unitPrice)} x ${item.quantity}',
+                      ),
+                      trailing: Text(
+                        CurrencyUtils.format(item.lineTotal),
+                        style: AppTextStyles.money(theme.colorScheme.onSurface),
                       ),
                     );
                   },

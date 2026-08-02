@@ -1,19 +1,30 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' hide Category;
 
 import 'package:pos_domain/pos_domain.dart';
 
+/// Uploads a product photo, returning a public URL (or null on failure).
+/// Injected from the app host so the inventory package stays decoupled from
+/// the data/storage layer.
+typedef ProductImageUploader = Future<String?> Function(
+  Uint8List bytes,
+  String fileName,
+);
+
 class InventoryController extends ChangeNotifier {
   InventoryController({
     required this.productUseCases,
     required this.categoryUseCases,
+    this.uploader,
   }) {
     init();
   }
 
   final ProductUseCases productUseCases;
   final CategoryUseCases categoryUseCases;
+  final ProductImageUploader? uploader;
 
   List<Product> _products = [];
   List<Category> _categories = [];

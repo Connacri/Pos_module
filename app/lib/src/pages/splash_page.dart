@@ -51,35 +51,52 @@ class _SplashPageState extends State<SplashPage> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        theme.colorScheme.primary.withValues(alpha: 0.2),
-                        theme.colorScheme.primary.withValues(alpha: 0.05),
-                      ],
+                AnimatedEntrance(
+                  delay: const Duration(milliseconds: 100),
+                  animationPx: 16,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.2),
+                          theme.colorScheme.primary.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      shape: BoxShape.circle,
                     ),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.point_of_sale,
-                    size: 96,
-                    color: theme.colorScheme.primary,
+                    child: Icon(
+                      Icons.point_of_sale,
+                      size: 96,
+                      color: theme.colorScheme.primary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                Text(
-                  l10n.appTitle,
-                  style: AppTextStyles.headlineMedium(
-                    theme.colorScheme.primary,
+                AnimatedEntrance(
+                  delay: const Duration(milliseconds: 250),
+                  child: Text(
+                    l10n.appTitle,
+                    style: AppTextStyles.headlineMedium(
+                      theme.colorScheme.primary,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 48),
-                const CircularProgressIndicator(),
+                AnimatedEntrance(
+                  delay: const Duration(milliseconds: 400),
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 3,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

@@ -1,6 +1,7 @@
 export 'src/theme/app_theme.dart';
 export 'src/theme/app_colors.dart';
 export 'src/theme/app_text_styles.dart';
+export 'src/animations/app_animations.dart';
 export 'src/i18n/app_localizations.dart';
 export 'src/i18n/l10n/app_localizations.dart';
 export 'src/routing/app_router.dart';
@@ -14,6 +15,7 @@ export 'src/constants/app_constants.dart';
 export 'src/widgets/app_button.dart';
 export 'src/widgets/app_text_field.dart';
 export 'src/widgets/app_card.dart';
+export 'src/widgets/app_image_thumb.dart';
 export 'src/widgets/responsive_layout.dart';
 export 'src/widgets/loading_overlay.dart';
 export 'src/widgets/empty_state.dart';

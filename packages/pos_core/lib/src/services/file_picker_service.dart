@@ -25,6 +25,26 @@ class FilePickerService {
     return _fromResult(result);
   }
 
+  /// Picks one or more images. Returns the selected files (empty when the
+  /// user cancels).
+  static Future<List<PickedFileData>> pickImages() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.image,
+      allowMultiple: true,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return [];
+    return [
+      for (final file in result.files)
+        if (file.bytes != null)
+          PickedFileData(
+            name: file.name,
+            bytes: file.bytes!,
+            mimeType: '',
+          ),
+    ];
+  }
+
   static Future<PickedFileData?> pickCsv() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import 'package:pos_billing/pos_billing.dart';
 import 'package:pos_core/pos_core.dart';
+import 'package:pos_data/pos_data.dart';
 import 'package:pos_domain/pos_domain.dart';
 import 'package:pos_inventory/pos_inventory.dart';
 import 'package:pos_pos/pos_pos.dart';
@@ -44,6 +45,7 @@ class PosApp extends StatelessWidget {
           create: (_) => InventoryController(
             productUseCases: dependencies.productUseCases,
             categoryUseCases: dependencies.categoryUseCases,
+            uploader: SupabaseStorageService.uploadImage,
           ),
         ),
         ChangeNotifierProvider<BillingController>(

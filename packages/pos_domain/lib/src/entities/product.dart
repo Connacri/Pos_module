@@ -37,9 +37,26 @@ class Product {
   final DateTime? updatedAt;
   final SyncStatus syncStatus;
 
+  static const _imageSeparator = '\n';
+
   bool get isLowStock => stock <= lowStockThreshold;
   bool get isOutOfStock => stock <= 0;
   double get margin => price - costPrice;
+
+  /// All stored photo URLs. [imageUrl] may hold several URLs joined by a
+  /// newline; this exposes them as a clean list.
+  List<String> get imageUrls => (imageUrl ?? '')
+      .split(_imageSeparator)
+      .map((e) => e.trim())
+      .where((e) => e.isNotEmpty)
+      .toSet()
+      .toList();
+
+  /// First photos, to render a thumbnail or a cover in a carousel.
+  String? get primaryImageUrl => imageUrls.isEmpty ? null : imageUrls.first;
+  String get fallbackImageUrl => imageUrls.isNotEmpty ? imageUrls.first : '';
+
+  static String joinImages(List<String> urls) => urls.join(_imageSeparator);
 
   bool matchesQuery(String query) {
     final q = query.trim().toLowerCase();

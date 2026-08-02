@@ -48,6 +48,13 @@ class PosController extends ChangeNotifier {
     return _products.where((p) => p.matchesQuery(_query)).toList();
   }
 
+  Product? productById(int id) {
+    for (final p in _products) {
+      if (p.id == id) return p;
+    }
+    return null;
+  }
+
   void init() {
     _subscription = productUseCases.watchProducts().listen((products) {
       _products = products;

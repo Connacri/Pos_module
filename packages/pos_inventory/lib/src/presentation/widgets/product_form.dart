@@ -1,8 +1,12 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
+
+import '../inventory_controller.dart';
 
 class ProductForm extends StatefulWidget {
   const ProductForm({
@@ -10,11 +14,13 @@ class ProductForm extends StatefulWidget {
     this.product,
     required this.categories,
     required this.onSave,
+    this.uploader,
   });
 
   final Product? product;
   final List<Category> categories;
   final Future<bool> Function(Product draft) onSave;
+  final ProductImageUploader? uploader;
 
   @override
   State<ProductForm> createState() => _ProductFormState();
@@ -31,6 +37,8 @@ class _ProductFormState extends State<ProductForm> {
   late final TextEditingController _stockController;
   late final TextEditingController _thresholdController;
   late final TextEditingController _barcodeController;
+  late final List<String> _photos = [];
+  late bool _uploading;
   int? _categoryId;
   bool _isActive = true;
   bool _saving = false;
@@ -51,6 +59,8 @@ class _ProductFormState extends State<ProductForm> {
     _barcodeController = TextEditingController(text: p?.barcode ?? '');
     _categoryId = p?.categoryId;
     _isActive = p?.isActive ?? true;
+    _photos.addAll(p?.imageUrls ?? const []);
+    _uploading = false;
   }
 
   static String _fmt(double? value) {
@@ -93,6 +103,7 @@ class _ProductFormState extends State<ProductForm> {
       barcode: _barcodeController.text.trim().isEmpty
           ? null
           : _barcodeController.text.trim(),
+      imageUrl: _photos.isEmpty ? null : Product.joinImages([..._photos]),
       isActive: _isActive,
       createdAt: existing?.createdAt,
       updatedAt: existing?.updatedAt,
@@ -124,17 +135,57 @@ class _ProductFormState extends State<ProductForm> {
     setState(() => _barcodeController.text = scanned);
   }
 
+  Future<void> _pickPhotos() async {
+    final uploader = widget.uploader;
+    final picked = await FilePickerService.pickImages();
+    if (picked.isEmpty || !mounted) return;
+    if (uploader == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Photos désactivées : stockage non configuré'),
+        ),
+      );
+      return;
+    }
+    setState(() => _uploading = true);
+    int added = 0;
+    for (final image in picked) {
+      final url = await uploader(image.bytes, image.name);
+      if (url != null) {
+        _photos.add(url);
+        added++;
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Échec du téléversement de ${image.name}')),
+        );
+      }
+    }
+    if (!mounted) return;
+    setState(_uploading = false);
+    if (added > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$added photo(s) ajoutée(s)')),
+      );
+    }
+  }
+
+  void _removePhoto(String url) {
+    setState(() => _photos.remove(url));
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 16,
-        right: 16,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
-      ),
-      child: SingleChildScrollView(
+    return SafeArea(
+      top: false,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 16,
+          right: 16,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 16,
+        ),
+        child: SingleChildScrollView(
         child: Form(
           key: _formKey,
           child: Column(
@@ -177,6 +228,13 @@ class _ProductFormState extends State<ProductForm> {
                 ),
               ),
               const SizedBox(height: 12),
+              _PhotoPicker(
+                photos: _photos,
+                uploading: _uploading,
+                onPick: _pickPhotos,
+                onRemove: _removePhoto,
+              ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<int>(
                 initialValue: _categoryId,
                 decoration: InputDecoration(
@@ -277,6 +335,123 @@ class _ProductFormState extends State<ProductForm> {
               ),
             ],
           ),
+        ),
+      ),
+      ),
+      ),
+    );
+  }
+}
+
+class _PhotoPicker extends StatelessWidget {
+  const _PhotoPicker({
+    required this.photos,
+    required this.uploading,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final List<String> photos;
+  final bool uploading;
+  final VoidCallback onPick;
+  final ValueChanged<String> onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Photos du produit', style: theme.textTheme.titleSmall),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final url in photos)
+              _PhotoThumb(url: url, onRemove: () => onRemove(url)),
+            _AddPhotoTile(uploading: uploading, onTap: onPick),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _PhotoThumb extends StatelessWidget {
+  const _PhotoThumb({required this.url, required this.onRemove});
+
+  final String url;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(
+            url,
+            width: 72,
+            height: 72,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) => Container(
+              width: 72,
+              height: 72,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: const Icon(Icons.broken_image_outlined),
+            ),
+          ),
+        ),
+        Positioned(
+          top: 2,
+          right: 2,
+          child: InkWell(
+            onTap: onRemove,
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 14, color: Colors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AddPhotoTile extends StatelessWidget {
+  const _AddPhotoTile({required this.uploading, required this.onTap});
+
+  final bool uploading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: uploading ? null : onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: theme.colorScheme.outlineVariant),
+          color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        ),
+        child: Center(
+          child: uploading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Icon(Icons.add_a_photo_outlined, color: theme.colorScheme.primary),
         ),
       ),
     );

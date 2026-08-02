@@ -18,123 +18,214 @@ class DashboardPage extends StatelessWidget {
     final controller = context.watch<DashboardController>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l10n.appTitle),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: Center(
-              child: Text(
-                AppDateUtils.formatDate(DateTime.now()),
-                style: theme.textTheme.labelMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
       body: SafeArea(
+        bottom: false,
         child: controller.isLoading
             ? const Center(child: CircularProgressIndicator())
-            : ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _KpiGrid(controller: controller),
-                  const SizedBox(height: 16),
-                  _ChartCard(
-                    title: 'Chiffre d\'affaires (7 derniers jours)',
-                    subtitle:
-                        '${CurrencyUtils.format(controller.totalRevenue)} au total',
-                    child: SizedBox(
-                      height: 220,
-                      child: _RevenueChart(data: controller.revenueByDay),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isDesktop = constraints.maxWidth >= 900;
-                      final categoryChart = _ChartCard(
-                        title: 'Ventes par catégorie',
-                        child: SizedBox(
-                          height: 220,
-                          child: _CategoryChart(
-                            data: controller.revenueByCategory,
+            : CustomScrollView(
+                slivers: [
+                  SliverAppBar(
+                    pinned: true,
+                    expandedHeight:
+                        ResponsiveLayout.isDesktop(context) ? 200 : 168,
+                    title: Text(l10n.appTitle),
+                    actions: [
+                      Padding(
+                        padding: const EdgeInsets.only(right: 16),
+                        child: Center(
+                          child: Text(
+                            AppDateUtils.formatDate(DateTime.now()),
+                            style: theme.textTheme.labelMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
-                      );
-                      final topProducts = _ChartCard(
-                        title: 'Top produits',
-                        subtitle: 'Par quantité vendue',
-                        child: _TopProducts(data: controller.topProducts),
-                      );
-                      if (isDesktop) {
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(child: categoryChart),
-                            const SizedBox(width: 16),
-                            Expanded(child: topProducts),
-                          ],
-                        );
-                      }
-                      return Column(
-                        children: [
-                          categoryChart,
-                          const SizedBox(height: 16),
-                          topProducts,
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _SecondaryMetrics(controller: controller),
-                  const SizedBox(height: 16),
-                  _SyncCard(syncUseCases: context.watch<SyncUseCases>()),
-                  const SizedBox(height: 16),
-                  GridView.count(
-                    crossAxisCount: ResponsiveLayout.isDesktop(context) ? 4 : 2,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    children: [
-                      _ActionCard(
-                        icon: Icons.point_of_sale,
-                        label: l10n.pos,
-                        color: theme.colorScheme.primary,
-                        onTap: () => context.go(Routes.pos),
-                      ),
-                      _ActionCard(
-                        icon: Icons.inventory_2_outlined,
-                        label: l10n.inventory,
-                        color: theme.colorScheme.secondary,
-                        onTap: () => context.go(Routes.inventory),
-                      ),
-                      _ActionCard(
-                        icon: Icons.receipt_long_outlined,
-                        label: l10n.billing,
-                        color: theme.colorScheme.tertiary,
-                        onTap: () => context.go(Routes.billing),
-                      ),
-                      _ActionCard(
-                        icon: Icons.replay_outlined,
-                        label: 'Retours',
-                        color: theme.colorScheme.error,
-                        onTap: () => context.go(Routes.returns),
-                      ),
-                      _ActionCard(
-                        icon: Icons.settings_outlined,
-                        label: l10n.settings,
-                        color: theme.colorScheme.outline,
-                        onTap: () => context.go(Routes.settings),
                       ),
                     ],
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: _ParallaxHeader(
+                        primary: theme.colorScheme.primary,
+                        secondary: theme.colorScheme.secondary,
+                        tertiary: theme.colorScheme.tertiary,
+                      ),
+                    ),
+                  ),
+                  SliverPadding(
+                    padding: const EdgeInsets.all(16),
+                    sliver: SliverList.list(
+                      children: [
+                        AnimatedEntrance(
+                          child: _KpiGrid(controller: controller),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
+                          delay: const Duration(milliseconds: 100),
+                          child: _ChartCard(
+                            title: 'Chiffre d\'affaires (7 derniers jours)',
+                            subtitle:
+                                '${CurrencyUtils.format(controller.totalRevenue)} au total',
+                            child: SizedBox(
+                              height: 220,
+                              child: _RevenueChart(
+                                data: controller.revenueByDay,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
+                          delay: const Duration(milliseconds: 180),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final isDesktop = constraints.maxWidth >= 900;
+                              final categoryChart = _ChartCard(
+                                title: 'Ventes par catégorie',
+                                child: SizedBox(
+                                  height: 220,
+                                  child: _CategoryChart(
+                                    data: controller.revenueByCategory,
+                                  ),
+                                ),
+                              );
+                              final topProducts = _ChartCard(
+                                title: 'Top produits',
+                                subtitle: 'Par quantité vendue',
+                                child: _TopProducts(
+                                  data: controller.topProducts,
+                                ),
+                              );
+                              if (isDesktop) {
+                                return Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: categoryChart),
+                                    const SizedBox(width: 16),
+                                    Expanded(child: topProducts),
+                                  ],
+                                );
+                              }
+                              return Column(
+                                children: [
+                                  categoryChart,
+                                  const SizedBox(height: 16),
+                                  topProducts,
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
+                          delay: const Duration(milliseconds: 240),
+                          child: _SecondaryMetrics(controller: controller),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
+                          delay: const Duration(milliseconds: 320),
+                          child: _SyncCard(
+                            syncUseCases: context.watch<SyncUseCases>(),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
+                          delay: const Duration(milliseconds: 400),
+                          child: GridView.count(
+                            crossAxisCount:
+                                ResponsiveLayout.isDesktop(context) ? 4 : 2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            children: [
+                              _ActionCard(
+                                icon: Icons.point_of_sale,
+                                label: l10n.pos,
+                                color: theme.colorScheme.primary,
+                                onTap: () => context.go(Routes.pos),
+                              ),
+                              _ActionCard(
+                                icon: Icons.inventory_2_outlined,
+                                label: l10n.inventory,
+                                color: theme.colorScheme.secondary,
+                                onTap: () => context.go(Routes.inventory),
+                              ),
+                              _ActionCard(
+                                icon: Icons.receipt_long_outlined,
+                                label: l10n.billing,
+                                color: theme.colorScheme.tertiary,
+                                onTap: () => context.go(Routes.billing),
+                              ),
+                              _ActionCard(
+                                icon: Icons.replay_outlined,
+                                label: 'Retours',
+                                color: theme.colorScheme.error,
+                                onTap: () => context.go(Routes.returns),
+                              ),
+                              _ActionCard(
+                                icon: Icons.settings_outlined,
+                                label: l10n.settings,
+                                color: theme.colorScheme.outline,
+                                onTap: () => context.go(Routes.settings),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
       ),
+    );
+  }
+}
+
+class _ParallaxHeader extends StatelessWidget {
+  const _ParallaxHeader({
+    required this.primary,
+    required this.secondary,
+    required this.tertiary,
+  });
+
+  final Color primary;
+  final Color secondary;
+  final Color tertiary;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                primary.withValues(alpha: 0.12),
+                tertiary.withValues(alpha: 0.06),
+                secondary.withValues(alpha: 0.12),
+              ],
+            ),
+          ),
+        ),
+        Positioned(
+          top: -60,
+          right: -30,
+          child: GlowOrb(color: primary, size: 200),
+        ),
+        Positioned(
+          bottom: -90,
+          left: -40,
+          child: GlowOrb(color: secondary, size: 220),
+        ),
+        Positioned(
+          top: 10,
+          left: 60,
+          child: GlowOrb(color: tertiary, size: 90),
+        ),
+      ],
     );
   }
 }

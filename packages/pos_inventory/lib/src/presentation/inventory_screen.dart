@@ -144,6 +144,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               .where((c) => c.id == product.categoryId)
                               .map((c) => c.name)
                               .firstOrNull,
+                          onTap: () => _openDetail(context, product),
                           onEdit: () => _openProductForm(context, product),
                           onDelete: () => _confirmDelete(context, product),
                           onStockAdjust: (delta) =>
@@ -203,6 +204,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
     );
   }
 
+  void _openDetail(BuildContext context, Product product) {
+    final controller = context.read<InventoryController>();
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ProductDetailScreen(
+          product: product,
+          categoryName: controller.categories
+              .where((c) => c.id == product.categoryId)
+              .map((c) => c.name)
+              .firstOrNull,
+        ),
+      ),
+    );
+  }
+
   Future<void> _openProductForm(
     BuildContext context, [
     Product? product,
@@ -217,6 +233,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (context) => ProductForm(
         product: product,
         categories: controller.categories,
+        uploader: controller.uploader,
         onSave: (draft) =>
             controller.saveProduct(draft, isNew: product == null),
       ),
@@ -293,6 +310,7 @@ class _ProductCard extends StatelessWidget {
   const _ProductCard({
     required this.product,
     required this.categoryName,
+    required this.onTap,
     required this.onEdit,
     required this.onDelete,
     required this.onStockAdjust,
@@ -301,6 +319,7 @@ class _ProductCard extends StatelessWidget {
 
   final Product product;
   final String? categoryName;
+  final VoidCallback onTap;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
   final ValueChanged<double> onStockAdjust;
@@ -319,6 +338,7 @@ class _ProductCard extends StatelessWidget {
 
     return AppCard(
       padding: const EdgeInsets.all(12),
+      onTap: onTap,
       child: Row(
         children: [
           Container(

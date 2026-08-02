@@ -36,28 +36,39 @@ class ProductTile extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          accent.withValues(alpha: 0.25),
-                          accent.withValues(alpha: 0.08),
-                        ],
-                      ),
+                  if (product.primaryImageUrl != null)
+                    AppImageThumb(
+                      url: product.primaryImageUrl,
+                      size: 34,
                       borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      product.isOutOfStock
+                      fallbackIcon: product.isOutOfStock
                           ? Icons.block
                           : Icons.shopping_bag_outlined,
-                      size: 18,
-                      color: accent,
+                      fallbackColor: accent,
+                    )
+                  else
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            accent.withValues(alpha: 0.25),
+                            accent.withValues(alpha: 0.08),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Icon(
+                        product.isOutOfStock
+                            ? Icons.block
+                            : Icons.shopping_bag_outlined,
+                        size: 18,
+                        color: accent,
+                      ),
                     ),
-                  ),
                   const Spacer(),
                   if (product.isOutOfStock)
                     Icon(Icons.block, size: 16, color: theme.colorScheme.error),
