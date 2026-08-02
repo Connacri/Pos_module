@@ -1,10 +1,8 @@
 import '../core/failure.dart';
 import '../core/result.dart';
 import '../entities/enums.dart';
-import '../entities/product.dart';
 import '../entities/return_item.dart';
 import '../entities/return_record.dart';
-import '../entities/sale.dart';
 import '../repositories/product_repository.dart';
 import '../repositories/return_repository.dart';
 import '../repositories/sale_repository.dart';
