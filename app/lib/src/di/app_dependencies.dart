@@ -27,7 +27,9 @@ class AppDependencies {
     await ObjectboxDatabase.open();
     await SupabaseConfig.initialize();
 
-    final connectivity = ConnectivityService();
+    final connectivity = ConnectivityService(
+      supabaseUrl: SupabaseConfig.url,
+    );
     final productRepository = ObjectboxProductRepository();
     final categoryRepository = ObjectboxCategoryRepository();
     final customerRepository = ObjectboxCustomerRepository();

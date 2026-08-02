@@ -1,17 +1,24 @@
-# app
+# POS Module — Application hôte
 
-A new Flutter project.
+Point de vente multiplateforme : caisse, inventaire, facturation et retours, avec mode hors-ligne
+(ObjectBox) et synchronisation Supabase.
 
-## Getting Started
+## 💻 Lancer l'application
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+cd packages/pos_data && dart run build_runner build --delete-conflicting-outputs && cd ../..
+cd app
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+## ▶️ Run depuis Android Studio
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Ouvrir la racine `pos_module` dans Android Studio puis `app/lib/main.dart` (working directory `app/`)
+pour y exécuter `Run` / `hot reload`.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 🔗 Liens utiles
+
+- Guide utilisateur complet : [`../index.html`](../index.html)
+- Documentation racine : [`../README.md`](../README.md)
+- Télécharger la dernière release : https://github.com/Connacri/Pos_module/releases

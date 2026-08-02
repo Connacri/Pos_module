@@ -116,11 +116,11 @@ jobs:
 
       - name: Build APK signé
         working-directory: app
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=APP_VERSION=${{ steps.version.outputs.version }}
 
       - name: Build Windows
         working-directory: app
-        run: flutter build windows --release
+        run: flutter build windows --release --dart-define=APP_VERSION=${{ steps.version.outputs.version }}
 
       - name: Installer Inno Setup
         run: choco install innosetup --yes --no-progress

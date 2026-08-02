@@ -617,16 +617,12 @@ class _SyncCard extends StatefulWidget {
 }
 
 class _SyncCardState extends State<_SyncCard> {
-  bool _online = true;
   DateTime? _lastSync;
   bool _syncing = false;
 
   @override
   void initState() {
     super.initState();
-    widget.syncUseCases.watchOnline().listen((online) {
-      if (mounted) setState(() => _online = online);
-    });
     widget.syncUseCases.lastSyncAt().then((result) {
       final value = result.fold<DateTime?>((v) => v, (_) => null);
       if (mounted) setState(() => _lastSync = value);
@@ -660,44 +656,128 @@ class _SyncCardState extends State<_SyncCard> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
+    final connectivity = context.watch<ConnectivityService>();
+    final online = connectivity.isOnline;
+    final supabaseOnline = connectivity.isSupabaseOnline;
 
     return AppCard(
       padding: const EdgeInsets.all(16),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _online ? Colors.green : theme.colorScheme.error,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _online ? l10n.online : l10n.offline,
-                  style: theme.textTheme.titleSmall,
+          Row(
+            children: [
+              _StatusDot(connected: online),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      online ? l10n.online : l10n.offline,
+                      style: theme.textTheme.titleSmall,
+                    ),
+                    Text(
+                      _lastSync == null
+                          ? '${l10n.syncing}...'
+                          : '${l10n.syncComplete} ${AppDateUtils.formatDateTime(_lastSync!)}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  _lastSync == null
-                      ? '${l10n.syncing}...'
-                      : '${l10n.syncComplete} ${AppDateUtils.formatDateTime(_lastSync!)}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _IndicatorPill(
+                label: 'Internet',
+                connected: online,
+                color: theme.colorScheme,
+              ),
+              const SizedBox(width: 8),
+              _IndicatorPill(
+                label: 'Supabase',
+                connected: supabaseOnline,
+                color: theme.colorScheme,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
           AppButton(
             label: 'Synchroniser',
             icon: Icons.sync,
             loading: _syncing,
+            expanded: true,
             onPressed: _syncing ? null : _sync,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatusDot extends StatelessWidget {
+  const _StatusDot({required this.connected});
+
+  final bool connected;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      width: 12,
+      height: 12,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: connected ? Colors.green : theme.colorScheme.error,
+      ),
+    );
+  }
+}
+
+class _IndicatorPill extends StatelessWidget {
+  const _IndicatorPill({
+    required this.label,
+    required this.connected,
+    required this.color,
+  });
+
+  final String label;
+  final bool connected;
+  final ColorScheme color;
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = connected ? Colors.green : color.error;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: statusColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: statusColor.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: statusColor,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

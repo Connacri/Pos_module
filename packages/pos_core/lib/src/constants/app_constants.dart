@@ -2,7 +2,10 @@ class AppConstants {
   AppConstants._();
 
   static const String appName = 'POS Module';
-  static const String appVersion = '1.0.0';
+  static const String appVersion = String.fromEnvironment(
+    'APP_VERSION',
+    defaultValue: '1.0.0',
+  );
 
   static const String keyThemeMode = 'theme_mode';
   static const String keyLocale = 'locale';

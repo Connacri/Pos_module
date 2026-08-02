@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide utilisateur — POS Module</title>
+  <style>
+    :root {
+      --primary: #1976D2;
+      --primary-dark: #1565C0;
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1c2733;
+      --muted: #5b6b7b;
+      --border: #e3e8ef;
+      --green: #2e7d32;
+      --red: #c62828;
+      --amber: #ed6c02;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    header.hero {
+      background: linear-gradient(135deg, #1976D2, #26A69A);
+      color: #fff;
+      padding: 48px 24px 40px;
+      text-align: center;
+    }
+    header.hero h1 { margin: 0 0 8px; font-size: 2.2rem; }
+    header.hero p { margin: 0 auto; max-width: 640px; opacity: .95; }
+    main { max-width: 900px; margin: 0 auto; padding: 28px 16px 60px; }
+    nav.toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 22px;
+    }
+    nav.toc h2 { margin-top: 0; font-size: 1.1rem; }
+    nav.toc ol { margin: 0; padding-left: 20px; }
+    nav.toc a { color: var(--primary); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    section { margin-top: 34px; }
+    h2.section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.4rem;
+      border-bottom: 3px solid var(--primary);
+      padding-bottom: 8px;
+    }
+    h3 { font-size: 1.1rem; margin: 20px 0 8px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      margin: 12px 0;
+    }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .8rem; font-weight: 600; }
+    .b-green { background: rgba(46,125,50,.12); color: var(--green); }
+    .b-red { background: rgba(198,40,40,.12); color: var(--red); }
+    .b-amber { background: rgba(237,108,2,.12); color: var(--amber); }
+    .b-blue { background: rgba(25,118,210,.12); color: var(--primary); }
+    table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: var(--radius); overflow: hidden; }
+    th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    th { background: #eef3fa; }
+    code { background: #eef3fa; padding: 2px 6px; border-radius: 6px; font-size: .9em; }
+    .steps { counter-reset: step; padding-left: 0; list-style: none; }
+    .steps li { position: relative; padding: 8px 0 8px 40px; }
+    .steps li::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute; left: 0; top: 8px;
+      width: 26px; height: 26px; line-height: 26px;
+      background: var(--primary); color: #fff; border-radius: 50%;
+      text-align: center; font-weight: 700; font-size: .85rem;
+    }
+    .pill { display: inline-flex; align-items: center; gap: 6px; background: var(--card); border: 1px solid var(--border); border-radius: 999px; padding: 6px 12px; margin: 4px 6px 0 0; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    footer { text-align: center; color: var(--muted); font-size: .85rem; padding: 20px; }
+    .callout { border-left: 4px solid var(--primary); background: #eef6ff; padding: 12px 16px; border-radius: 8px; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <h1>🛒 POS Module — Guide utilisateur</h1>
+    <p>Point de vente multiplateforme (Flutter • ObjectBox • Supabase) : caisse, inventaire, facturation et retours — avec mode hors-ligne et synchronisation.</p>
+  </header>
+
+  <main>
+    <nav class="toc">
+      <h2>Sommaire</h2>
+      <ol>
+        <li><a href="#nav">La navigation</a></li>
+        <li><a href="#accueil">Accueil (tableau de bord)</a></li>
+        <li><a href="#caisse">Caisse (POS)</a></li>
+        <li><a href="#inventaire">Inventaire</a></li>
+        <li><a href="#facturation">Facturation (factures &amp; ventes)</a></li>
+        <li><a href="#detail-vente">Détail d'une vente</a></li>
+        <li><a href="#retours">Retours (total ou partiel)</a></li>
+        <li><a href="#reglages">Réglages</a></li>
+        <li><a href="#connectivite">Connectivité &amp; synchronisation</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ol>
+    </nav>
+
+    <section id="nav">
+      <h2 class="section">🧭 1. La navigation</h2>
+      <p>La barre de navigation se trouve <strong>en bas</strong> sur mobile et <strong>en latéral (rail)</strong> sur tablette/desktop (≥ 900 px).</p>
+      <table>
+        <tr><th>Icône</th><th>Section</th><th>Rôle</th></tr>
+        <tr><td>🏠</td><td>Accueil</td><td>Tableau de bord &amp; rapports</td></tr>
+        <tr><td>🛒</td><td>Caisse (POS)</td><td>Encaisser une vente</td></tr>
+        <tr><td>📦</td><td>Inventaire</td><td>Gérer les produits</td></tr>
+        <tr><td>🧾</td><td>Facturation</td><td>Factures + historique des ventes</td></tr>
+        <tr><td>⚙️</td><td>Réglages</td><td>Thème, langue, stockage, version</td></tr>
+        <tr><td>↺</td><td>Retours</td><td>Accessible depuis l'Accueil</td></tr>
+      </table>
+      <div class="callout">💡 <strong>Retours</strong> : accessible via la carte « Retours » de l&#39;Accueil ou depuis le <strong>détail d&#39;une vente</strong> (Facturation → Ventes).</div>
+    </section>
+
+    <section id="accueil">
+      <h2 class="section">📊 2. Accueil (tableau de bord)</h2>
+      <div class="card">
+        <h3>Indicateurs (KPI)</h3>
+        <p>Chiffre d&#39;affaires du jour, Ventes du jour, Panier moyen, Créances clients.</p>
+        <h3>Graphiques</h3>
+        <p>CA des 7 derniers jours (toucher une barre), Ventes par catégorie, Top produits par quantité.</p>
+        <h3>Métriques secondaires</h3>
+        <p>Produits, valeur du stock, ruptures, clients.</p>
+        <h3>Raccourcis</h3>
+        <p>Cartes d&#39;accès rapide vers Caisse, Inventaire, Facturation, Retours, Réglages.</p>
+      </div>
+    </section>
+
+    <section id="caisse">
+      <h2 class="section">🛒 3. Caisse (POS)</h2>
+      <ol class="steps">
+        <li>Ajouter des produits au panier (recherche, scan code-barres, sélection).</li>
+        <li>Ajuster les quantités.</li>
+        <li>Choisir la méthode de paiement : Espèces, Carte, Mobile Money, Virement, Crédit.</li>
+        <li>Valider → la vente est enregistrée (statut « Terminée ») et le stock diminue.</li>
+      </ol>
+    </section>
+
+    <section id="inventaire">
+      <h2 class="section">📦 4. Inventaire</h2>
+      <div class="card">
+        <p>Liste des produits avec recherche. Ajout/modification : nom, SKU, prix, TVA, stock, code-barres. Les ruptures et la valeur du stock sont visibles sur l&#39;Accueil.</p>
+      </div>
+    </section>
+
+    <section id="facturation">
+      <h2 class="section">🧾 5. Facturation</h2>
+      <h3>Onglet Factures</h3>
+      <div class="card">
+        <p>Recherche (numéro, client, statut), résumé (Total / En attente / Retards), création d&#39;une facture depuis une vente, détail avec QR de paiement, marquer payée/émise, supprimer, imprimer.</p>
+      </div>
+      <h3>Onglet Ventes</h3>
+      <div class="card">
+        <p>Liste de toutes les ventes : numéro, client, date, statut, mode de paiement, montant. <strong>Toucher une vente</strong> pour ouvrir son détail.</p>
+      </div>
+    </section>
+
+    <section id="detail-vente">
+      <h2 class="section">🔍 6. Détail d'une vente</h2>
+      <p>En <strong>Facturation → Ventes</strong>, touchez une vente pour afficher&nbsp;:</p>
+      <div class="card">
+        <ul>
+          <li><strong>Statut</strong> (Terminée / En attente / Annulée / Retournée) et date.</li>
+          <li><strong>Client</strong>, méthode de paiement, n° de caissier, nombre d&#39;articles.</li>
+          <li>Liste des <strong>articles</strong> : nom, prix × quantité, TVA, sous-total ligne.</li>
+          <li><strong>Totaux</strong> : sous-total, taxe, remise, total.</li>
+        </ul>
+        <p>Actions selon le statut&nbsp;:</p>
+        <p>
+          <span class="badge b-green">✅ Terminée</span> → bouton <strong>« Faire un retour »</strong>
+          <span class="badge b-red">↺ Retournée</span> → message « entièrement retournée »
+          <span class="badge b-amber">⛔ Autre</span> → « non retournable »
+        </p>
+      </div>
+    </section>
+
+    <section id="retours">
+      <h2 class="section">↺ 7. Retours (total ou partiel)</h2>
+      <h3>Chemin A — depuis le détail de la vente (recommandé)</h3>
+      <ol class="steps">
+        <li><strong>Facturation</strong> → <strong>Ventes</strong>.</li>
+        <li>Touchez la vente concernée.</li>
+        <li>Touchez <strong>« Faire un retour »</strong>.</li>
+      </ol>
+      <h3>Chemin B — depuis la liste des retours</h3>
+      <ol class="steps">
+        <li><strong>Accueil</strong> → carte <strong>« Retours »</strong>.</li>
+        <li>Touchez <strong>« Nouveau retour »</strong> (bouton flottant en bas à droite).</li>
+        <li>Dans <strong>« Choisir la vente »</strong>, sélectionnez la vente encaissée à retourner.</li>
+      </ol>
+      <h3>Écran « Retour de #N »</h3>
+      <ul>
+        <li>La liste des articles encore <strong>retournables</strong> est affichée (quantité déjà retournée déduite).</li>
+        <li>Pour chaque article, un compteur <strong>− / valeur / +</strong> : laissez 0 pour déjà retourné (partiel), augmentez jusqu&#39;au max.</li>
+        <li>Le <strong>remboursement</strong> se recalcule en direct (montant + nombre d&#39;articles).</li>
+        <li>Motif (optionnel) : « produit défectueux », « erreur de commande », etc.</li>
+        <li>Validez avec <strong>« Valider le retour »</strong>.</li>
+      </ul>
+      <h3>Effets du retour</h3>
+      <ul>
+        <li>✅ <strong>Stock restauré</strong> automatiquement.</li>
+        <li>💶 Remise globale répartie proportionnellement.</li>
+        <li>♻️ Retour total → vente « Retournée » ; partiel → vente reste « Terminée » (restant retournable).</li>
+        <li>Le retour est enregistré dans la liste « Retours » de l&#39;Accueil.</li>
+      </ul>
+    </section>
+
+    <section id="reglages">
+      <h2 class="section">⚙️ 8. Réglages</h2>
+      <div class="card">
+        <ul>
+          <li><strong>Thème</strong> : Clair / Sombre / Système.</li>
+          <li><strong>Langue</strong> : FR, EN, ES, AR.</li>
+          <li><strong>Stockage &amp; fichiers</strong> : upload image/CSV vers Supabase, export produits CSV.</li>
+          <li><strong>Version</strong> : applique la version du dernier tag GitHub.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="connectivite">
+      <h2 class="section">📡 9. Connectivité &amp; synchronisation</h2>
+      <p>Une carte sur l&#39;Accueil affiche deux témoins&nbsp;:</p>
+      <p>
+        <span class="pill"><span class="dot" style="background:var(--green)"></span> Internet</span>
+        <span class="pill"><span class="dot" style="background:var(--red)"></span> Supabase</span>
+      </p>
+      <ul>
+        <li>L&#39;app fonctionne <strong>hors-ligne</strong> (ObjectBox) et se <b>synchronise</b> quand la connexion revient.</li>
+        <li>Les témoins sont testés par de <strong>vraies requêtes HTTP</strong> (plus fiable que le plugin réseau, notamment sous Windows).</li>
+        <li>Bouton <strong>« Synchroniser »</strong> pour forcer la synchro. Date de dernière synchro affichée.</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2 class="section">❓ 10. FAQ — Retours</h2>
+      <div class="card">
+        <p><strong>Q: Puis-je retourner une partie d&#39;une vente ?</strong><br>R: Oui. Mettez à 0 (ou à la bonne quantité) les articles non retournés.</p>
+        <p><strong>Q: Pourquoi pas de bouton « Faire un retour » ?</strong><br>R: Le bouton s&#39;affiche uniquement pour les ventes <b>Terminées</b> et non entièrement retournées.</p>
+        <p><strong>Q: Le stock se remet-il à jour ?</strong><br>R: Oui, automatiquement à la validation du retour.</p>
+        <p><strong>Q: Peux-je retourner un article déjà retourné ?</strong><br>R: Non, les quantités déjà retournées sont déduites.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>POS Module — Guide utilisateur généré depuis le dépôt (voir README.md).</footer>
+</body>
+</html>

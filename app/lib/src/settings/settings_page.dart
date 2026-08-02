@@ -100,32 +100,51 @@ class _VersionSection extends StatefulWidget {
 }
 
 class _VersionSectionState extends State<_VersionSection> {
-  String? _version;
+  String? _buildNumber;
 
   @override
   void initState() {
     super.initState();
-    _loadVersion();
+    _load();
   }
 
-  Future<void> _loadVersion() async {
-    final info = await PackageInfo.fromPlatform();
+  Future<void> _load() async {
+    String? build;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      build = info.buildNumber;
+    } catch (_) {
+      build = null;
+    }
     if (!mounted) return;
-    setState(() {
-      _version = info.version;
-    });
+    setState(() => _buildNumber = build);
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final version = AppConstants.appVersion;
+    final build = _buildNumber;
+
     return AppCard(
       child: Center(
-        child: Text(
-          '${AppConstants.appName} v${_version ?? AppConstants.appVersion}',
-          style: theme.textTheme.labelMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-          ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '${AppConstants.appName} v$version',
+              style: theme.textTheme.titleSmall,
+            ),
+            if (build != null)
+              const SizedBox(height: 2),
+            if (build != null)
+              Text(
+                'Build $build',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+          ],
         ),
       ),
     );
