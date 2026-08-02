@@ -284,7 +284,7 @@ class _InvoiceCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   invoice.createdAt != null
-                      ? AppDateUtils.formatDate(invoice.createdAt!)
+                      ? AppDateUtils.formatDateTime(invoice.createdAt!)
                       : '-',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,

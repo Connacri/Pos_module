@@ -36,6 +36,7 @@ class PosApp extends StatelessWidget {
           create: (_) => PosController(
             productUseCases: dependencies.productUseCases,
             saleUseCases: dependencies.saleUseCases,
+            invoiceUseCases: dependencies.invoiceUseCases,
           ),
         ),
         ChangeNotifierProvider<InventoryController>(

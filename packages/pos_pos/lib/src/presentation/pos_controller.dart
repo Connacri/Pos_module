@@ -8,12 +8,14 @@ class PosController extends ChangeNotifier {
   PosController({
     required this.productUseCases,
     required this.saleUseCases,
+    required this.invoiceUseCases,
   }) {
     init();
   }
 
   final ProductUseCases productUseCases;
   final SaleUseCases saleUseCases;
+  final InvoiceUseCases invoiceUseCases;
 
   List<Product> _products = [];
   final Map<int, SaleItem> _cart = {};
@@ -146,19 +148,26 @@ class PosController extends ChangeNotifier {
     final result = await saleUseCases.createSale(sale);
     _isCheckingOut = false;
 
-    return result.fold(
-      (sale) {
-        _successMessage = 'Vente ${sale.saleNumber} enregistrée avec succès';
+    switch (result) {
+      case Success<Sale>(:final value):
+        final invoiceResult = await invoiceUseCases.createInvoiceFromSale(
+          value.id,
+        );
+        if (invoiceResult is Success) {
+          _successMessage =
+              'Vente ${value.saleNumber} enregistrée, facture créée';
+        } else {
+          _error =
+              'Vente ${value.saleNumber} enregistrée, mais la facture n\'a pas pu être créée';
+        }
         clearCart();
         notifyListeners();
         return true;
-      },
-      (failure) {
+      case AppError<Sale>(:final failure):
         _error = failure.message;
         notifyListeners();
         return false;
-      },
-    );
+    }
   }
 
   @override
