@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 ///
 /// Only uses Flutter's built-in implicit/explicit animations so it works
 /// identically on mobile, desktop and web (no extra dependency).
-library;
-
 /// Fades a child in while sliding it up by [animationPx]. Used to stagger the
 /// appearance of dashboard sections so the screen feels alive instead of
 /// appearing all at once.

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -161,7 +159,7 @@ class _ProductFormState extends State<ProductForm> {
       }
     }
     if (!mounted) return;
-    setState(_uploading = false);
+    setState(() => _uploading = false);
     if (added > 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('$added photo(s) ajoutée(s)')),
@@ -336,7 +334,6 @@ class _ProductFormState extends State<ProductForm> {
             ],
           ),
         ),
-      ),
       ),
       ),
     );

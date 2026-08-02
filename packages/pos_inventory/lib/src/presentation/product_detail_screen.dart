@@ -27,9 +27,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final controller = context.watch<InventoryController>();
-    final scheme = theme.colorScheme;
     // Pull the freshest copy of the product from the controller stream.
     final product = controller.products.firstWhere(
       (p) => p.id == _product.id,
@@ -37,11 +35,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
 
     final photos = product.imageUrls;
-    final stockColor = product.isOutOfStock
-        ? scheme.error
-        : product.isLowStock
-        ? AppColors.warning
-        : scheme.primary;
 
     return AppScaffold(
       title: product.name,
@@ -79,7 +72,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   child: _HeaderInfo(
                     product: product,
                     categoryName: widget.categoryName,
-                    stockColor: stock,
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -120,7 +112,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         onSave: (draft) => controller.saveProduct(draft, isNew: false),
       ),
     );
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (saved == true) {
       messenger.showSnackBar(
         SnackBar(content: Text(controller.successMessage ?? l10n.success)),
@@ -150,9 +142,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         ],
       ),
     );
-    if (confirmed != true || !mounted) return;
+    if (confirmed != true || !context.mounted) return;
     final ok = await controller.deleteProduct(_product.id);
-    if (!mounted) return;
+    if (!context.mounted) return;
     if (ok) {
       Navigator.of(context).maybePop();
       messenger.showSnackBar(
@@ -274,12 +266,10 @@ class _HeaderInfo extends StatelessWidget {
   const _HeaderInfo({
     required this.product,
     required this.categoryName,
-    required this.stockColor,
   });
 
   final Product product;
   final String? categoryName;
-  final Color stockColor;
 
   @override
   Widget build(BuildContext context) {

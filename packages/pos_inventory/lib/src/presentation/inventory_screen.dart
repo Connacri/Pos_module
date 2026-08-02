@@ -6,6 +6,7 @@ import 'package:pos_domain/pos_domain.dart';
 
 import 'inventory_controller.dart';
 import 'inventory_pdf_service.dart';
+import 'product_detail_screen.dart';
 import 'widgets/product_form.dart';
 
 enum InventoryFilter { all, lowStock, outOfStock }
