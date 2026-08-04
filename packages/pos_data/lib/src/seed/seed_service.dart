@@ -184,6 +184,8 @@ class SeedService {
     }
     final client = Supabase.instance.client;
     for (final table in const [
+      'return_items',
+      'returns',
       'sale_items',
       'invoice_items',
       'sales',

@@ -18,8 +18,5 @@ Future<void> main() async {
 }
 
 Future<void> _seedIfNeeded() async {
-  final seeded = await SeedService.seedIfEmpty();
-  if (!seeded) return;
-  await SeedService.seedSupabase();
-  AppLogger.info('Données de démonstration insérées.');
+  await SeedService.seedIfEmpty();
 }

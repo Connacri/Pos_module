@@ -114,7 +114,7 @@ class SupabaseSyncRepository implements SyncRepository {
     // synchronisation (upsert idempotent). Cela garantit que la base distante
     // est reconstruite même après avoir été vidée.
     for (final p in _productBox.getAll()) {
-      await client.from('products').upsert(_productToMap(p), onConflict: 'id');
+      await _pushProduct(client, p);
       _productBox.put(p..syncStatus = SyncStatus.synced.index);
     }
 
@@ -131,6 +131,32 @@ class SupabaseSyncRepository implements SyncRepository {
     await _pushSales(client);
     await _pushInvoices(client);
     await _pushReturns(client);
+  }
+
+  /// Pousse un produit avec upsert sur son ID distant.
+  ///
+  /// Si le SKU existe déjà sur le serveur sous un autre ID (données de démo aux
+  /// IDs fixes, ou même SKU créé sur un autre appareil), la contrainte
+  /// `products_sku_key` déclencherait une erreur 23505. On récupère alors l'ID
+  /// distant réel de ce SKU et on fait l'upsert dessus pour fusionner au lieu
+  /// d'interrompre toute la synchronisation.
+  Future<void> _pushProduct(SupabaseClient client, ProductEntity p) async {
+    try {
+      await client.from('products').upsert(_productToMap(p), onConflict: 'id');
+      return;
+    } on PostgrestException catch (e) {
+      if (e.code != '23505') rethrow;
+      final rows = await client
+          .from('products')
+          .select('id')
+          .eq('sku', p.sku)
+          .limit(1);
+      if (rows.isEmpty) rethrow;
+      await client.from('products').upsert(
+        {..._productToMap(p), 'id': rows.first['id']},
+        onConflict: 'id',
+      );
+    }
   }
 
   Future<void> _pushSales(SupabaseClient client) async {
