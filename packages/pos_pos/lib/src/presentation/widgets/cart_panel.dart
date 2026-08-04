@@ -131,6 +131,185 @@ Future<void> showPaymentSheet(BuildContext context, PosController controller) {
   );
 }
 
+/// Ouvre le panier en mode mobile (liste des articles, sous-total, taxe,
+/// suppression / diminution des quantités) — l'équivalent latéral du
+/// [CartPanel] utilisé en mode desktop.
+Future<void> showCartSheet(BuildContext context, PosController controller) {
+  return showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) =>
+        SafeArea(child: _CartSheet(controller: controller)),
+  );
+}
+
+class _CartSheet extends StatelessWidget {
+  const _CartSheet({required this.controller});
+
+  final PosController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context);
+
+    return SizedBox(
+      height: MediaQuery.sizeOf(context).height * 0.82,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+            child: Row(
+              children: [
+                Text(l10n.checkout, style: theme.textTheme.titleMedium),
+                const Spacer(),
+                IconButton(
+                  onPressed:
+                      controller.isCartEmpty ? null : controller.clearCart,
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                  tooltip: l10n.delete,
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          Expanded(
+            child: controller.isCartEmpty
+                ? EmptyState(
+                    icon: Icons.shopping_cart_outlined,
+                    title: l10n.emptyCart,
+                    subtitle: l10n.addToCart,
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: controller.cartItems.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) {
+                      final item = controller.cartItems[index];
+                      final product =
+                          controller.productById(item.productId);
+                      return _CartSheetRow(
+                        item: item,
+                        imageUrl: product?.primaryImageUrl,
+                        onDecrement: () =>
+                            controller.decrement(item.productId),
+                        onIncrement: () =>
+                            controller.increment(item.productId),
+                        onRemove: () =>
+                            controller.removeFromCart(item.productId),
+                      );
+                    },
+                  ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                _TotalRow(label: l10n.subtotal, value: controller.subtotal),
+                _TotalRow(label: l10n.tax, value: controller.taxTotal),
+                const SizedBox(height: 4),
+                Divider(color: theme.colorScheme.outlineVariant),
+                const SizedBox(height: 4),
+                _TotalRow(
+                  label: l10n.total,
+                  value: controller.total,
+                  highlight: true,
+                ),
+                const SizedBox(height: 16),
+                AppButton(
+                  label: l10n.checkout,
+                  icon: Icons.point_of_sale,
+                  expanded: true,
+                  loading: controller.isCheckingOut,
+                  onPressed: controller.isCartEmpty
+                      ? null
+                      : () => showPaymentSheet(context, controller),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CartSheetRow extends StatelessWidget {
+  const _CartSheetRow({
+    required this.item,
+    required this.imageUrl,
+    required this.onDecrement,
+    required this.onIncrement,
+    required this.onRemove,
+  });
+
+  final SaleItem item;
+  final String? imageUrl;
+  final VoidCallback onDecrement;
+  final VoidCallback onIncrement;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          AppImageThumb(
+            url: imageUrl,
+            size: 40,
+            borderRadius: BorderRadius.circular(10),
+            fallbackIcon: Icons.shopping_bag_outlined,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(item.productName, style: theme.textTheme.bodyMedium),
+                const SizedBox(height: 2),
+                Text(
+                  '${CurrencyUtils.format(item.unitPrice)} x ${item.quantity}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            CurrencyUtils.format(item.lineTotal),
+            style: AppTextStyles.money(theme.colorScheme.onSurface),
+          ),
+          const SizedBox(width: 4),
+          IconButton(
+            onPressed: onDecrement,
+            icon: const Icon(Icons.remove_circle_outline),
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Diminuer',
+          ),
+          IconButton(
+            onPressed: onIncrement,
+            icon: const Icon(Icons.add_circle_outline),
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Augmenter',
+          ),
+          IconButton(
+            onPressed: onRemove,
+            icon: const Icon(Icons.delete_outline),
+            visualDensity: VisualDensity.compact,
+            tooltip: 'Supprimer',
+            color: theme.colorScheme.error,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TotalRow extends StatelessWidget {
   const _TotalRow({
     required this.label,

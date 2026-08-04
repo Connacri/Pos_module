@@ -29,6 +29,14 @@ class Validators {
     return null;
   }
 
+  static String? percent(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final number = double.tryParse(value.replaceAll(',', '.'));
+    if (number == null) return 'Doit être un nombre';
+    if (number < 0 || number > 100) return 'Entre 0 et 100';
+    return null;
+  }
+
   static String? integer(String? value) {
     if (value == null || value.isEmpty) return null;
     final number = int.tryParse(value);

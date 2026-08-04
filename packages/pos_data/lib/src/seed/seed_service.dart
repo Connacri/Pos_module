@@ -10,6 +10,8 @@ import '../models/objectbox/invoice_entity.dart';
 import '../models/objectbox/invoice_item_entity.dart';
 import '../models/objectbox/payment_entity.dart';
 import '../models/objectbox/product_entity.dart';
+import '../models/objectbox/return_item_entity.dart';
+import '../models/objectbox/return_record_entity.dart';
 import '../models/objectbox/sale_entity.dart';
 import '../models/objectbox/sale_item_entity.dart';
 import 'seed_data.dart';
@@ -156,8 +158,53 @@ class SeedService {
         );
   }
 
-  static double _paymentAmountFor(SeedPayment payment) {
-    if (payment.invoiceId != null) {
+  /// Vide toutes les boîtes ObjectBox (base locale).
+  static Future<void> clearObjectBox() async {
+    final boxes = [
+      ObjectboxDatabase.box<ReturnItemEntity>(),
+      ObjectboxDatabase.box<ReturnRecordEntity>(),
+      ObjectboxDatabase.box<SaleItemEntity>(),
+      ObjectboxDatabase.box<SaleEntity>(),
+      ObjectboxDatabase.box<InvoiceItemEntity>(),
+      ObjectboxDatabase.box<InvoiceEntity>(),
+      ObjectboxDatabase.box<PaymentEntity>(),
+      ObjectboxDatabase.box<ProductEntity>(),
+      ObjectboxDatabase.box<CategoryEntity>(),
+      ObjectboxDatabase.box<CustomerEntity>(),
+    ];
+    for (final box in boxes) {
+      box.removeAll();
+    }
+  }
+
+  /// Vide toutes les tables Supabase (base distante).
+  static Future<void> clearSupabase() async {
+    if (!SupabaseConfig.isConfigured) {
+      return;
+    }
+    final client = Supabase.instance.client;
+    for (final table in const [
+      'sale_items',
+      'invoice_items',
+      'sales',
+      'invoices',
+      'payments',
+      'products',
+      'categories',
+      'customers',
+    ]) {
+      await client.from(table).delete().neq('id', 0);
+    }
+  }
+
+  /// Reconstruit la base locale à partir du script de démonstration :
+  /// vide ObjectBox puis insère les données de [seedObjectBox].
+  static Future<void> populateObjectBox() async {
+    await clearObjectBox();
+    await seedObjectBox();
+  }
+
+  static double _paymentAmountFor(SeedPayment payment) {    if (payment.invoiceId != null) {
       final invoice = SeedData.invoices
           .where((i) => i.id == payment.invoiceId)
           .firstOrNull;

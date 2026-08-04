@@ -1,6 +1,7 @@
 import '../core/failure.dart';
 import '../core/result.dart';
 import '../entities/category.dart';
+import '../entities/enums.dart';
 import '../repositories/category_repository.dart';
 
 class CategoryUseCases {
@@ -17,14 +18,25 @@ class CategoryUseCases {
       return const AppError(ValidationFailure('Le nom de la catégorie est requis'));
     }
     return _guard(() async {
-      final id = await _repository.save(category);
-      return category.copyWith(id: id);
+      final now = DateTime.now();
+      final draft = category.copyWith(
+        id: 0,
+        createdAt: now,
+        updatedAt: now,
+        syncStatus: SyncStatus.pending,
+      );
+      final id = await _repository.save(draft);
+      return draft.copyWith(id: id);
     });
   }
 
   Future<Result<Category>> updateCategory(Category category) => _guard(() async {
-        await _repository.save(category);
-        return category;
+        final updated = category.copyWith(
+          updatedAt: DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        );
+        await _repository.save(updated);
+        return updated;
       });
 
   Future<Result<void>> deleteCategory(int id) => _guard(() async {

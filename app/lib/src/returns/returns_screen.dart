@@ -43,6 +43,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
       showBack: widget.showBackButton,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _startReturn,
+        heroTag: 'fab_returns',
         icon: const Icon(Icons.replay_outlined),
         label: const Text('Nouveau retour'),
       ),

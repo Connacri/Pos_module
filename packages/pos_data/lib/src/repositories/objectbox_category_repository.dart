@@ -45,6 +45,7 @@ class ObjectboxCategoryRepository implements CategoryRepository {
     final entity = _box.get(id);
     if (entity == null) return;
     entity.isActive = false;
+    entity.syncStatus = SyncStatus.pending.index;
     _box.put(entity);
   }
 

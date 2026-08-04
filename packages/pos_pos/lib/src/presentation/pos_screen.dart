@@ -157,8 +157,12 @@ class CartSummaryBar extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.shopping_cart, color: theme.colorScheme.primary),
-                const SizedBox(width: 8),
+                IconButton(
+                  onPressed: () => showCartSheet(context, controller),
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  tooltip: 'Voir le panier',
+                ),
+                const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     '${controller.itemCount} ${l10n.products}',

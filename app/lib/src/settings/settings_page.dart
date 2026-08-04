@@ -40,17 +40,17 @@ class SettingsPage extends StatelessWidget {
                         ButtonSegment(
                           value: ThemeMode.light,
                           icon: Icon(Icons.light_mode_outlined),
-                          label: Text('Clair'),
+                          label: FittedBox(child: Text('Clair')),
                         ),
                         ButtonSegment(
                           value: ThemeMode.dark,
                           icon: Icon(Icons.dark_mode_outlined),
-                          label: Text('Sombre'),
+                          label: FittedBox(child: Text('Sombre')),
                         ),
                         ButtonSegment(
                           value: ThemeMode.system,
                           icon: Icon(Icons.settings_brightness_outlined),
-                          label: Text('Système'),
+                          label: FittedBox(child: Text('Système')),
                         ),
                       ],
                       selected: {controller.themeMode},
@@ -65,10 +65,22 @@ class SettingsPage extends StatelessWidget {
                     width: double.infinity,
                     child: SegmentedButton<String>(
                       segments: const [
-                        ButtonSegment(value: 'fr', label: Text('FR')),
-                        ButtonSegment(value: 'en', label: Text('EN')),
-                        ButtonSegment(value: 'es', label: Text('ES')),
-                        ButtonSegment(value: 'ar', label: Text('AR')),
+                        ButtonSegment(
+                          value: 'fr',
+                          label: FittedBox(child: Text('FR')),
+                        ),
+                        ButtonSegment(
+                          value: 'en',
+                          label: FittedBox(child: Text('EN')),
+                        ),
+                        ButtonSegment(
+                          value: 'es',
+                          label: FittedBox(child: Text('ES')),
+                        ),
+                        ButtonSegment(
+                          value: 'ar',
+                          label: FittedBox(child: Text('AR')),
+                        ),
                       ],
                       selected: {
                         controller.locale?.languageCode ??
@@ -82,11 +94,127 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
+            _TaxSection(
+              controller: context.read<SettingsController>(),
+            ),
+            const SizedBox(height: 16),
             const _StorageSection(),
             const SizedBox(height: 16),
             const _VersionSection(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TaxSection extends StatefulWidget {
+  const _TaxSection({required this.controller});
+
+  final SettingsController controller;
+
+  @override
+  State<_TaxSection> createState() => _TaxSectionState();
+}
+
+class _TaxSectionState extends State<_TaxSection> {
+  late final TextEditingController _rateController;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _rateController = TextEditingController(
+      text: _formatPercent(widget.controller.defaultTaxRate),
+    );
+    _loadPersisted();
+  }
+
+  Future<void> _loadPersisted() async {
+    final rate = await TaxSettings.defaultRate();
+    if (!mounted) return;
+    setState(() => _rateController.text = _formatPercent(rate));
+  }
+
+  @override
+  void dispose() {
+    _rateController.dispose();
+    super.dispose();
+  }
+
+  static String _formatPercent(double rate) {
+    final percent = rate * 100;
+    return percent == percent.roundToDouble()
+        ? percent.round().toString()
+        : percent.toStringAsFixed(1);
+  }
+
+  Future<void> _save() async {
+    final raw = _rateController.text.trim().replaceAll(',', '.');
+    final percent = double.tryParse(raw);
+    if (percent == null || percent < 0 || percent > 100) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Taux invalide. Entrez une valeur entre 0 et 100.'),
+        ),
+      );
+      return;
+    }
+    setState(() => _saving = true);
+    await widget.controller.setDefaultTaxRate(percent / 100);
+    if (!mounted) return;
+    setState(() => _saving = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('TVA par défaut enregistrée')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.percent,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 8),
+              Text('TVA par défaut', style: theme.textTheme.titleMedium),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Taux de TVA appliqué par défaut aux nouveaux produits dans les formulaires.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: 'Taux de TVA (%)',
+                  controller: _rateController,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              AppButton(
+                label: 'Enregistrer',
+                icon: Icons.check,
+                loading: _saving,
+                onPressed: _saving ? null : _save,
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

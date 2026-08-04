@@ -50,7 +50,9 @@ class _ProductFormState extends State<ProductForm> {
     _descriptionController = TextEditingController(text: p?.description ?? '');
     _priceController = TextEditingController(text: _fmt(p?.price));
     _costController = TextEditingController(text: _fmt(p?.costPrice));
-    _taxController = TextEditingController(text: _fmt(p?.taxRate));
+    _taxController = TextEditingController(
+      text: _fmtPercent(p?.taxRate ?? AppConstants.defaultTaxRate),
+    );
     _stockController = TextEditingController(text: _fmt(p?.stock));
     _thresholdController =
         TextEditingController(text: _fmt(p?.lowStockThreshold));
@@ -59,11 +61,28 @@ class _ProductFormState extends State<ProductForm> {
     _isActive = p?.isActive ?? true;
     _photos.addAll(p?.imageUrls ?? const []);
     _uploading = false;
+    if (p == null) {
+      _loadDefaultTaxRate();
+    }
   }
 
   static String _fmt(double? value) {
     final v = value ?? 0;
     return v == v.roundToDouble() ? v.round().toString() : v.toString();
+  }
+
+  /// Le taux est stocké en fraction (0.19) mais affiché en pourcentage (19).
+  static String _fmtPercent(double? rate) {
+    final percent = (rate ?? 0) * 100;
+    return percent == percent.roundToDouble()
+        ? percent.round().toString()
+        : percent.toStringAsFixed(1);
+  }
+
+  Future<void> _loadDefaultTaxRate() async {
+    final rate = await TaxSettings.defaultRate();
+    if (!mounted) return;
+    setState(() => _taxController.text = _fmtPercent(rate));
   }
 
   @override
@@ -95,7 +114,7 @@ class _ProductFormState extends State<ProductForm> {
       categoryId: _categoryId,
       price: _parse(_priceController.text),
       costPrice: _parse(_costController.text),
-      taxRate: _parse(_taxController.text),
+      taxRate: _parsePercent(_taxController.text),
       stock: _parse(_stockController.text),
       lowStockThreshold: _parse(_thresholdController.text),
       barcode: _barcodeController.text.trim().isEmpty
@@ -122,6 +141,10 @@ class _ProductFormState extends State<ProductForm> {
 
   static double _parse(String value) =>
       double.tryParse(value.replaceAll(',', '.')) ?? 0;
+
+  /// Convertit une saisie en pourcentage (ex : « 19 ») en fraction (0.19).
+  static double _parsePercent(String value) =>
+      (double.tryParse(value.replaceAll(',', '.')) ?? 0) / 100;
 
   Future<void> _scanBarcode() async {
     final scanned = await Navigator.of(context).push<String>(
@@ -278,7 +301,7 @@ class _ProductFormState extends State<ProductForm> {
                       controller: _taxController,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      validator: Validators.positiveNumber,
+                      validator: Validators.percent,
                     ),
                   ),
                   const SizedBox(width: 12),

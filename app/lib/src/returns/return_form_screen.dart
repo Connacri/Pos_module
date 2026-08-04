@@ -161,7 +161,11 @@ class _ReturnSaleScreenState extends State<ReturnSaleScreen> {
 
   double get _selectedRefund => _items.fold(
     0,
-    (sum, item) => sum + (item.unitPrice * (_quantities[item.productId] ?? 0)),
+    (sum, item) {
+      final qty = _quantities[item.productId] ?? 0;
+      final lineSubtotal = item.unitPrice * qty;
+      return sum + lineSubtotal * (1 + item.taxRate);
+    },
   );
 
   int get _selectedCount => _items.fold(

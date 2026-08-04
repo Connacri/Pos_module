@@ -369,11 +369,16 @@ class _PricePanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final items = <(String, double, Color)>[
-      ('Prix de vente', product.price, scheme.primary),
-      ('Coût', product.costPrice, scheme.tertiary),
-      ('Marge', product.margin, scheme.secondary),
-      ('Taxe', product.taxRate, AppColors.info),
+    final taxPercent = product.taxRate * 100;
+    final items = <(String, String, Color)>[
+      ('Prix de vente', CurrencyUtils.format(product.price), scheme.primary),
+      ('Coût', CurrencyUtils.format(product.costPrice), scheme.tertiary),
+      ('Marge', CurrencyUtils.format(product.margin), scheme.secondary),
+      (
+        'Taxe',
+        '${taxPercent.toStringAsFixed(taxPercent == taxPercent.roundToDouble() ? 0 : 1)}%',
+        AppColors.info,
+      ),
     ];
 
     return AppCard(
@@ -419,7 +424,7 @@ class _MetricChip extends StatelessWidget {
   });
 
   final String label;
-  final double value;
+  final String value;
   final Color color;
 
   @override
@@ -442,7 +447,7 @@ class _MetricChip extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            CurrencyUtils.format(value),
+            value,
             style: theme.textTheme.titleSmall?.copyWith(
               color: color,
               fontWeight: FontWeight.w700,

@@ -138,6 +138,7 @@ class ReturnUseCases {
       sale.copyWith(
         status: allReturned ? SaleStatus.returned : SaleStatus.completed,
         updatedAt: now,
+        syncStatus: SyncStatus.pending,
       ),
     );
 

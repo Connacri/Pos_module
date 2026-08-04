@@ -12,16 +12,21 @@ import 'widgets/product_form.dart';
 enum InventoryFilter { all, lowStock, outOfStock }
 
 class InventoryScreen extends StatefulWidget {
-  const InventoryScreen({super.key, this.showBackButton = false});
+  const InventoryScreen({
+    super.key,
+    this.showBackButton = false,
+    this.initialFilter,
+  });
 
   final bool showBackButton;
+  final InventoryFilter? initialFilter;
 
   @override
   State<InventoryScreen> createState() => _InventoryScreenState();
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  InventoryFilter _filter = InventoryFilter.all;
+  late InventoryFilter _filter = widget.initialFilter ?? InventoryFilter.all;
   String _query = '';
 
   List<Product> _filterProducts(List<Product> products) {
@@ -82,6 +87,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
       ],
       floatingActionButton: FloatingActionButton(
         onPressed: () => _openProductForm(context),
+        heroTag: 'fab_inventory',
         child: const Icon(Icons.add),
       ),
       body: AppResponsiveBody(
@@ -108,15 +114,15 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 segments: [
                   ButtonSegment(
                     value: InventoryFilter.all,
-                    label: Text(l10n.products),
+                    label: FittedBox(child: Text(l10n.products)),
                   ),
                   ButtonSegment(
                     value: InventoryFilter.lowStock,
-                    label: Text(l10n.lowStock),
+                    label: FittedBox(child: Text(l10n.lowStock)),
                   ),
                   ButtonSegment(
                     value: InventoryFilter.outOfStock,
-                    label: Text(l10n.outOfStock),
+                    label: FittedBox(child: Text(l10n.outOfStock)),
                   ),
                 ],
                 selected: {_filter},

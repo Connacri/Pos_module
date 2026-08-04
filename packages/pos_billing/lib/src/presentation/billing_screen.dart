@@ -61,6 +61,7 @@ class _BillingScreenState extends State<BillingScreen>
       floatingActionButton: _tabController.index == 0
           ? FloatingActionButton(
               onPressed: () => _openCreateSheet(context),
+              heroTag: 'fab_billing',
               child: const Icon(Icons.note_add_outlined),
             )
           : null,
@@ -71,8 +72,32 @@ class _BillingScreenState extends State<BillingScreen>
             child: TabBar(
               controller: _tabController,
               tabs: [
-                Tab(text: l10n.invoices, icon: const Icon(Icons.receipt_long_outlined)),
-                Tab(text: l10n.sales, icon: const Icon(Icons.point_of_sale_outlined)),
+                Tab(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.receipt_long_outlined, size: 20),
+                        const SizedBox(width: 6),
+                        Text(l10n.invoices, maxLines: 1, softWrap: false),
+                      ],
+                    ),
+                  ),
+                ),
+                Tab(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.point_of_sale_outlined, size: 20),
+                        const SizedBox(width: 6),
+                        Text(l10n.sales, maxLines: 1, softWrap: false),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

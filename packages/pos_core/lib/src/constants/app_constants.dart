@@ -9,10 +9,12 @@ class AppConstants {
 
   static const String keyThemeMode = 'theme_mode';
   static const String keyLocale = 'locale';
+  static const String keyDefaultTaxRate = 'default_tax_rate';
   static const String keyAccessToken = 'access_token';
   static const String keyRefreshToken = 'refresh_token';
   static const String keyUserId = 'user_id';
   static const String keyLastSync = 'last_sync';
+  static const String keyDeviceId = 'device_id';
 
   static const int defaultPageSize = 20;
   static const int maxPageSize = 100;

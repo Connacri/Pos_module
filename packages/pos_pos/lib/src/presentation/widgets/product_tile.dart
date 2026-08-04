@@ -89,21 +89,30 @@ class ProductTile extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    CurrencyUtils.format(product.price),
-                    style: AppTextStyles.money(accent),
-                  ),
-                  if (product.isLowStock)
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
                     Text(
-                      '${product.stock} ${l10n.inStock}',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: accent,
-                      ),
+                      CurrencyUtils.format(product.price),
+                      style: AppTextStyles.money(accent),
                     ),
-                ],
+                    if (product.isLowStock) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '${product.stock} ${l10n.inStock}',
+                        maxLines: 1,
+                        softWrap: false,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: accent,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
             ],
           ),

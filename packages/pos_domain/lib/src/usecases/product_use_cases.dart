@@ -1,5 +1,6 @@
 import '../core/failure.dart';
 import '../core/result.dart';
+import '../entities/enums.dart';
 import '../entities/product.dart';
 import '../repositories/product_repository.dart';
 
@@ -28,14 +29,25 @@ class ProductUseCases {
       return const AppError(ValidationFailure('Le prix ne peut pas être négatif'));
     }
     return _guard(() async {
-      final id = await _repository.save(product);
-      return product.copyWith(id: id);
+      final now = DateTime.now();
+      final draft = product.copyWith(
+        id: 0,
+        createdAt: now,
+        updatedAt: now,
+        syncStatus: SyncStatus.pending,
+      );
+      final id = await _repository.save(draft);
+      return draft.copyWith(id: id);
     });
   }
 
   Future<Result<Product>> updateProduct(Product product) => _guard(() async {
-        await _repository.save(product);
-        return product;
+        final updated = product.copyWith(
+          updatedAt: DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        );
+        await _repository.save(updated);
+        return updated;
       });
 
   Future<Result<void>> deleteProduct(int id) => _guard(() async {
@@ -52,7 +64,13 @@ class ProductUseCases {
         if (newStock < 0) {
           throw StockFailure('Stock insuffisant pour ${existing.name}');
         }
-        await _repository.save(existing.copyWith(stock: newStock));
+        await _repository.save(
+          existing.copyWith(
+            stock: newStock,
+            updatedAt: DateTime.now(),
+            syncStatus: SyncStatus.pending,
+          ),
+        );
         return;
       });
 

@@ -6,7 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
 
+import '../customers/customers_list_screen.dart';
 import '../dashboard/dashboard_controller.dart';
+import '../sales/sales_list_screen.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
@@ -60,17 +62,7 @@ class DashboardPage extends StatelessWidget {
                         const SizedBox(height: 16),
                         AnimatedEntrance(
                           delay: const Duration(milliseconds: 100),
-                          child: _ChartCard(
-                            title: 'Chiffre d\'affaires (7 derniers jours)',
-                            subtitle:
-                                '${CurrencyUtils.format(controller.totalRevenue)} au total',
-                            child: SizedBox(
-                              height: 220,
-                              child: _RevenueChart(
-                                data: controller.revenueByDay,
-                              ),
-                            ),
-                          ),
+                          child: _RevenueCard(controller: controller),
                         ),
                         const SizedBox(height: 16),
                         AnimatedEntrance(
@@ -78,14 +70,8 @@ class DashboardPage extends StatelessWidget {
                           child: LayoutBuilder(
                             builder: (context, constraints) {
                               final isDesktop = constraints.maxWidth >= 900;
-                              final categoryChart = _ChartCard(
-                                title: 'Ventes par catégorie',
-                                child: SizedBox(
-                                  height: 220,
-                                  child: _CategoryChart(
-                                    data: controller.revenueByCategory,
-                                  ),
-                                ),
+                              final categoryChart = _CategoryCard(
+                                data: controller.categorySales,
                               );
                               final topProducts = _ChartCard(
                                 title: 'Top produits',
@@ -246,24 +232,43 @@ class _KpiGrid extends StatelessWidget {
         value: CurrencyUtils.format(controller.revenueToday),
         icon: Icons.trending_up,
         color: scheme.primary,
+        onTap: () => _openSalesList(
+          context,
+          title: 'Ventes du jour',
+          sales: controller.todaySales,
+          controller: controller,
+        ),
       ),
       _Kpi(
         label: 'Ventes aujourd\'hui',
         value: '${controller.salesTodayCount}',
         icon: Icons.receipt_long_outlined,
         color: scheme.secondary,
+        onTap: () => _openSalesList(
+          context,
+          title: 'Ventes du jour',
+          sales: controller.todaySales,
+          controller: controller,
+        ),
       ),
       _Kpi(
         label: 'Panier moyen',
         value: CurrencyUtils.format(controller.averageBasket),
         icon: Icons.shopping_cart_outlined,
         color: scheme.tertiary,
+        onTap: () => _openSalesList(
+          context,
+          title: 'Toutes les ventes',
+          sales: controller.completedSales,
+          controller: controller,
+        ),
       ),
       _Kpi(
         label: 'Créances clients',
         value: CurrencyUtils.format(controller.outstandingAmount),
         icon: Icons.account_balance_wallet_outlined,
         color: AppColors.warning,
+        onTap: () => context.go(Routes.billing),
       ),
     ];
 
@@ -285,12 +290,14 @@ class _Kpi {
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   final String label;
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 }
 
 class _KpiCard extends StatelessWidget {
@@ -303,6 +310,7 @@ class _KpiCard extends StatelessWidget {
     final theme = Theme.of(context);
     return AppCard(
       padding: const EdgeInsets.all(14),
+      onTap: kpi.onTap,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -345,49 +353,217 @@ class _SecondaryMetrics extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final items = [
-      ('Produits', '${controller.totalProducts}', Icons.inventory_2_outlined),
-      (
-        'Valeur du stock',
-        CurrencyUtils.format(controller.stockValue),
-        Icons.payments_outlined,
+      _MetricChipData(
+        label: 'Produits',
+        value: '${controller.totalProducts}',
+        icon: Icons.inventory_2_outlined,
+        color: theme.colorScheme.primary,
+        onTap: () => context.go(Routes.inventory),
       ),
-      ('Ruptures', '${controller.outOfStockCount}', Icons.block),
-      ('Clients', '${controller.customerCount}', Icons.people_outline),
+      _MetricChipData(
+        label: 'Valeur du stock',
+        value: CurrencyUtils.format(controller.stockValue),
+        icon: Icons.payments_outlined,
+        color: theme.colorScheme.tertiary,
+        onTap: () => context.go(Routes.inventory),
+      ),
+      _MetricChipData(
+        label: 'Ruptures',
+        value: '${controller.outOfStockCount}',
+        icon: Icons.block,
+        color: theme.colorScheme.error,
+        onTap: () => context.go('${Routes.inventory}?filter=ruptures'),
+      ),
+      _MetricChipData(
+        label: 'Clients',
+        value: '${controller.customerCount}',
+        icon: Icons.people_outline,
+        color: theme.colorScheme.secondary,
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                CustomersListScreen(customers: controller.customers),
+          ),
+        ),
+      ),
     ];
 
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: [
-        for (final (label, value, icon) in items)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(12),
+      children: [for (final item in items) _MetricChip(data: item)],
+    );
+  }
+}
+
+class _MetricChipData {
+  const _MetricChipData({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+}
+
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({required this.data});
+
+  final _MetricChipData data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: data.onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(data.icon, size: 16, color: data.color),
+            const SizedBox(width: 6),
+            Text(
+              '${data.label} : ',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 16, color: theme.colorScheme.onSurfaceVariant),
-                const SizedBox(width: 6),
-                Text(
-                  '$label : ',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  value,
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                ),
-              ],
+            Text(
+              data.value,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: data.color,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RevenueCard extends StatelessWidget {
+  const _RevenueCard({required this.controller});
+
+  final DashboardController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final profitColor = controller.profitLast7Days >= 0
+        ? Colors.green
+        : theme.colorScheme.error;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Chiffre d\'affaires (7 derniers jours)',
+            style: theme.textTheme.titleSmall,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${CurrencyUtils.format(controller.revenueLast7Days)} au total',
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
-      ],
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 220,
+            child: _RevenueChart(data: controller.revenueByDay),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _RevenueStat(
+                  label: 'CA',
+                  value: controller.revenueLast7Days,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _RevenueStat(
+                  label: 'Coût',
+                  value: controller.costLast7Days,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _RevenueStat(
+                  label: 'Bénéfice',
+                  value: controller.profitLast7Days,
+                  color: profitColor,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RevenueStat extends StatelessWidget {
+  const _RevenueStat({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyUtils.format(value),
+              style: theme.textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -530,10 +706,31 @@ class _RevenueChart extends StatelessWidget {
   }
 }
 
+class _CategoryCard extends StatelessWidget {
+  const _CategoryCard({required this.data});
+
+  final List<CategorySaleStats> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Ventes par catégorie', style: theme.textTheme.titleSmall),
+          const SizedBox(height: 16),
+          _CategoryChart(data: data),
+        ],
+      ),
+    );
+  }
+}
+
 class _CategoryChart extends StatelessWidget {
   const _CategoryChart({required this.data});
 
-  final List<(String, double)> data;
+  final List<CategorySaleStats> data;
 
   static const _palette = [
     Color(0xFF1976D2),
@@ -547,30 +744,52 @@ class _CategoryChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final total = data.fold<double>(0, (s, e) => s + e.$2);
+    final total = data.fold<double>(0, (s, e) => s + e.revenue);
 
     if (total <= 0) {
       return Center(
-        child: Text(
-          'Aucune vente pour le moment',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32),
+          child: Text(
+            'Aucune vente pour le moment',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       );
     }
 
-    return Row(
+    final legend = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Expanded(
-          child: PieChart(
+        for (var i = 0; i < data.length; i++)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: _LegendItem(
+              color: _palette[i % _palette.length],
+              stats: data[i],
+              total: total,
+            ),
+          ),
+      ],
+    );
+
+    final chart = SizedBox(
+      width: 168,
+      height: 168,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          PieChart(
             PieChartData(
               sectionsSpace: 2,
-              centerSpaceRadius: 42,
+              centerSpaceRadius: 52,
+              startDegreeOffset: -90,
               sections: [
                 for (var i = 0; i < data.length; i++)
                   PieChartSectionData(
-                    value: data[i].$2,
+                    value: data[i].revenue,
                     color: _palette[i % _palette.length],
                     radius: 48,
                     showTitle: false,
@@ -578,49 +797,172 @@ class _CategoryChart extends StatelessWidget {
               ],
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < data.length; i++)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: _palette[i % _palette.length],
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          data[i].$1,
-                          style: theme.textTheme.labelSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Text(
-                        '${(data[i].$2 / total * 100).toStringAsFixed(0)}%',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: theme.colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    CurrencyUtils.format(total),
+                    style: AppTextStyles.money(theme.colorScheme.primary),
                   ),
                 ),
+                Text(
+                  'CA',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final isMobile = ResponsiveLayout.isMobile(context);
+    if (isMobile) {
+      return Column(
+        children: [
+          Center(child: chart),
+          const SizedBox(height: 16),
+          legend,
+        ],
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        chart,
+        const SizedBox(width: 20),
+        Expanded(child: legend),
+      ],
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({
+    required this.color,
+    required this.stats,
+    required this.total,
+  });
+
+  final Color color;
+  final CategorySaleStats stats;
+  final double total;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final profitColor =
+        stats.profit >= 0 ? Colors.green : theme.colorScheme.error;
+    final percent = total <= 0 ? 0 : (stats.revenue / total * 100);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  stats.category,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Text(
+                '${stats.salesCount} vente(s) • ${percent.toStringAsFixed(0)}%',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              _LegendValue(
+                label: 'CA',
+                value: stats.revenue,
+                color: theme.colorScheme.primary,
+              ),
+              _LegendValue(
+                label: 'Coût',
+                value: stats.cost,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              _LegendValue(
+                label: 'Bénéfice',
+                value: stats.profit,
+                color: profitColor,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LegendValue extends StatelessWidget {
+  const _LegendValue({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final double value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: theme.textTheme.labelSmall?.copyWith(
+              fontSize: 10,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              CurrencyUtils.format(value),
+              style: theme.textTheme.labelSmall?.copyWith(
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -938,4 +1280,24 @@ String _compact(double value) {
   if (value >= 1000000) return '${(value / 1000000).toStringAsFixed(1)}M';
   if (value >= 1000) return '${(value / 1000).toStringAsFixed(1)}k';
   return value.toStringAsFixed(0);
+}
+
+void _openSalesList(
+  BuildContext context, {
+  required String title,
+  required List<Sale> sales,
+  required DashboardController controller,
+}) {
+  Navigator.of(context).push(
+    MaterialPageRoute(
+      builder: (_) => SalesListScreen(
+        title: title,
+        sales: sales,
+        customerName: (id) => controller.customers
+            .where((c) => c.id == id)
+            .map((c) => c.name)
+            .firstOrNull,
+      ),
+    ),
+  );
 }

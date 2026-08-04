@@ -32,12 +32,18 @@ class AppButton extends StatelessWidget {
               color: _getForegroundColor(theme),
             ),
           )
-        : Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 8)],
-              Text(label),
-            ],
+        : FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 20),
+                  const SizedBox(width: 8),
+                ],
+                Text(label, maxLines: 1, softWrap: false),
+              ],
+            ),
           );
 
     Widget button;

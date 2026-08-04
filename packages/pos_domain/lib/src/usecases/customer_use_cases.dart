@@ -1,6 +1,7 @@
 import '../core/failure.dart';
 import '../core/result.dart';
 import '../entities/customer.dart';
+import '../entities/enums.dart';
 import '../repositories/customer_repository.dart';
 
 class CustomerUseCases {
@@ -20,14 +21,25 @@ class CustomerUseCases {
       return const AppError(ValidationFailure('Le nom du client est requis'));
     }
     return _guard(() async {
-      final id = await _repository.save(customer);
-      return customer.copyWith(id: id);
+      final now = DateTime.now();
+      final draft = customer.copyWith(
+        id: 0,
+        createdAt: now,
+        updatedAt: now,
+        syncStatus: SyncStatus.pending,
+      );
+      final id = await _repository.save(draft);
+      return draft.copyWith(id: id);
     });
   }
 
   Future<Result<Customer>> updateCustomer(Customer customer) => _guard(() async {
-        await _repository.save(customer);
-        return customer;
+        final updated = customer.copyWith(
+          updatedAt: DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        );
+        await _repository.save(updated);
+        return updated;
       });
 
   Future<Result<void>> deleteCustomer(int id) => _guard(() async {

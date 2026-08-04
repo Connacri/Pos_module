@@ -15,7 +15,7 @@ class ObjectboxProductRepository implements ProductRepository {
     return _box
         .query(ProductEntity_.isActive.equals(true))
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map((query) => query.find().map(_toDomain).sortedByRecent().toList());
   }
 
   @override
@@ -28,6 +28,7 @@ class ObjectboxProductRepository implements ProductRepository {
               .find()
               .where((e) => e.stock <= e.lowStockThreshold)
               .map(_toDomain)
+              .sortedByRecent()
               .toList(),
         );
   }
@@ -39,6 +40,7 @@ class ObjectboxProductRepository implements ProductRepository {
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent()
         .toList();
   }
 
@@ -66,6 +68,7 @@ class ObjectboxProductRepository implements ProductRepository {
         .find()
         .map(_toDomain)
         .where((p) => p.matchesQuery(q))
+        .sortedByRecent()
         .toList();
     return products;
   }
@@ -86,6 +89,7 @@ class ObjectboxProductRepository implements ProductRepository {
     final entity = _box.get(id);
     if (entity == null) return;
     entity.isActive = false;
+    entity.syncStatus = SyncStatus.pending.index;
     _box.put(entity);
   }
 
@@ -137,4 +141,23 @@ SyncStatus _toSyncStatus(int index) {
     return SyncStatus.synced;
   }
   return SyncStatus.values[index];
+}
+
+/// Trie les produits du plus récent au plus ancien : la modification (ou la
+/// création) remonte le produit en tête de liste.
+extension on Iterable<Product> {
+  Iterable<Product> sortedByRecent() {
+    final list = toList();
+    list.sort((a, b) {
+      final at = a.updatedAt ?? a.createdAt;
+      final bt = b.updatedAt ?? b.createdAt;
+      if (at == null && bt == null) return b.id.compareTo(a.id);
+      if (at == null) return 1;
+      if (bt == null) return -1;
+      final byDate = bt.compareTo(at);
+      if (byDate != 0) return byDate;
+      return b.id.compareTo(a.id);
+    });
+    return list;
+  }
 }

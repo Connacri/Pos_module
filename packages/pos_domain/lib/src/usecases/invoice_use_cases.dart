@@ -54,6 +54,9 @@ class InvoiceUseCases {
               .toList(),
           status: InvoiceStatus.issued,
           discountTotal: sale.discountTotal,
+          companyName: 'POS Module',
+          companyAddress: 'Alger, Algérie',
+          companyTaxId: '099900000000',
           dueDate: now.add(const Duration(days: 30)),
           createdAt: now,
           updatedAt: now,
@@ -70,7 +73,11 @@ class InvoiceUseCases {
         if (invoice == null) {
           throw const NotFoundFailure('Facture introuvable');
         }
-        final updated = invoice.copyWith(status: status, updatedAt: DateTime.now());
+        final updated = invoice.copyWith(
+          status: status,
+          updatedAt: DateTime.now(),
+          syncStatus: SyncStatus.pending,
+        );
         await _invoiceRepository.save(updated);
         return updated;
       });

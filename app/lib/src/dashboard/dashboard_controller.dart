@@ -56,12 +56,52 @@ class DashboardController extends ChangeNotifier {
   int get salesTodayCount =>
       completedSales.where((s) => _isToday(s.createdAt)).length;
 
+  List<Sale> get todaySales =>
+      completedSales.where((s) => _isToday(s.createdAt)).toList();
+
   int get totalProducts => _products.length;
 
   int get outOfStockCount => _products.where((p) => p.isOutOfStock).length;
 
   int get lowStockCount =>
       _products.where((p) => p.isLowStock && !p.isOutOfStock).length;
+
+  double get totalCost => completedSales.fold(
+    0,
+    (sum, s) => sum +
+        s.items.fold<double>(
+          0,
+          (a, item) => a + item.costPrice * item.quantity,
+        ),
+  );
+
+  double get totalProfit => totalRevenue - totalCost;
+
+  List<Sale> get last7DaysSales {
+    final from = _startOfDay(DateTime.now())
+        .subtract(const Duration(days: 6))
+        .toLocal();
+    return completedSales
+        .where((s) {
+          final d = s.createdAt;
+          return d != null && !d.isBefore(from);
+        })
+        .toList();
+  }
+
+  double get revenueLast7Days =>
+      last7DaysSales.fold(0, (sum, s) => sum + s.total);
+
+  double get costLast7Days => last7DaysSales.fold(
+    0,
+    (sum, s) => sum +
+        s.items.fold<double>(
+          0,
+          (a, item) => a + item.costPrice * item.quantity,
+        ),
+  );
+
+  double get profitLast7Days => revenueLast7Days - costLast7Days;
 
   double get stockValue => _products.fold(
     0,
@@ -91,8 +131,10 @@ class DashboardController extends ChangeNotifier {
     return [for (var i = 0; i < 7; i++) (days[i], amounts[i])];
   }
 
-  List<(String, double)> get revenueByCategory {
-    final map = <String, double>{};
+  List<CategorySaleStats> get categorySales {
+    final revenue = <String, double>{};
+    final cost = <String, double>{};
+    final salesSet = <String, Set<int>>{};
     final productById = {for (final p in _products) p.id: p};
     final categoryById = {for (final c in _categories) c.id: c.name};
     for (final sale in completedSales) {
@@ -101,15 +143,36 @@ class DashboardController extends ChangeNotifier {
         final name = categoryId == null
             ? 'Sans catégorie'
             : (categoryById[categoryId] ?? 'Sans catégorie');
-        map[name] = (map[name] ?? 0) + item.lineTotal;
+        revenue[name] = (revenue[name] ?? 0) + item.lineTotal;
+        cost[name] = (cost[name] ?? 0) + item.costPrice * item.quantity;
+        (salesSet[name] ??= <int>{}).add(sale.id);
       }
     }
-    final entries = map.entries.map((e) => (e.key, e.value)).toList()
-      ..sort((a, b) => b.$2.compareTo(a.$2));
+    final entries = revenue.keys
+        .map(
+          (name) => CategorySaleStats(
+            category: name,
+            revenue: revenue[name]!,
+            cost: cost[name]!,
+            profit: revenue[name]! - cost[name]!,
+            salesCount: salesSet[name]!.length,
+          ),
+        )
+        .toList()
+      ..sort((a, b) => b.revenue.compareTo(a.revenue));
     if (entries.length <= 6) return entries;
     final top = entries.take(5).toList();
-    final rest = entries.skip(5).fold<double>(0, (sum, e) => sum + e.$2);
-    return [...top, ('Autres', rest)];
+    final rest = entries.skip(5).toList();
+    return [
+      ...top,
+      CategorySaleStats(
+        category: 'Autres',
+        revenue: rest.fold(0, (sum, e) => sum + e.revenue),
+        cost: rest.fold(0, (sum, e) => sum + e.cost),
+        profit: rest.fold(0, (sum, e) => sum + e.profit),
+        salesCount: rest.fold(0, (sum, e) => sum + e.salesCount),
+      ),
+    ];
   }
 
   List<(String, double)> get topProducts {
@@ -163,3 +226,19 @@ DateTime _startOfDay(DateTime d) => DateTime(d.year, d.month, d.day);
 
 bool _isToday(DateTime? d) =>
     d != null && _startOfDay(d) == _startOfDay(DateTime.now());
+
+class CategorySaleStats {
+  const CategorySaleStats({
+    required this.category,
+    required this.revenue,
+    required this.cost,
+    required this.profit,
+    required this.salesCount,
+  });
+
+  final String category;
+  final double revenue;
+  final double cost;
+  final double profit;
+  final int salesCount;
+}

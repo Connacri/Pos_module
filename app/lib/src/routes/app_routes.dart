@@ -28,7 +28,17 @@ List<GoRoute> buildAppRoutes() {
     ),
     GoRoute(
       path: Routes.inventory,
-      builder: (context, state) => const InventoryScreen(showBackButton: true),
+      builder: (context, state) {
+        final filter = state.uri.queryParameters['filter'];
+        return InventoryScreen(
+          showBackButton: true,
+          initialFilter: switch (filter) {
+            'ruptures' => InventoryFilter.outOfStock,
+            'low' => InventoryFilter.lowStock,
+            _ => null,
+          },
+        );
+      },
     ),
     GoRoute(
       path: Routes.billing,
