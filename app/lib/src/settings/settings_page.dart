@@ -228,6 +228,7 @@ class _VersionSection extends StatefulWidget {
 }
 
 class _VersionSectionState extends State<_VersionSection> {
+  String? _packageVersion;
   String? _buildNumber;
 
   @override
@@ -237,21 +238,27 @@ class _VersionSectionState extends State<_VersionSection> {
   }
 
   Future<void> _load() async {
+    String? version;
     String? build;
     try {
       final info = await PackageInfo.fromPlatform();
+      version = info.version;
       build = info.buildNumber;
     } catch (_) {
+      version = null;
       build = null;
     }
     if (!mounted) return;
-    setState(() => _buildNumber = build);
+    setState(() {
+      _packageVersion = version;
+      _buildNumber = build;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final version = AppConstants.appVersion;
+    final version = _packageVersion ?? AppConstants.appVersion;
     final build = _buildNumber;
 
     return AppCard(

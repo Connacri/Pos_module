@@ -12,7 +12,10 @@ on:
 
 concurrency:
   group: release
-  cancel-in-progress: true
+  # Ne pas annuler un build en cours : un nouveau push sur master ne doit pas
+  # tuer la release en cours de compilation ("Terminate batch job / operation
+  # canceled" sur le runner Windows). Les runs suivants attendent en file.
+  cancel-in-progress: false
 
 permissions:
   contents: write
