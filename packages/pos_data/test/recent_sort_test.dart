@@ -3,13 +3,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_data/src/utils/recent_sort.dart';
 
 class _Item {
-  _Item(this.id, {this.createdAt, this.updatedAt});
+  _Item(this.id, {this.updatedAt});
 
   final int id;
-  final DateTime? createdAt;
   final DateTime? updatedAt;
 }
-
 void main() {
   test('tri le plus récent d\'abord', () {
     final items = [
@@ -20,7 +18,7 @@ void main() {
     final sorted = items
         .sortedByRecent(
           id: (e) => e.id,
-          createdAt: (e) => e.createdAt,
+          createdAt: (_) => null,
           updatedAt: (e) => e.updatedAt,
         )
         .map((e) => e.id)
@@ -37,7 +35,7 @@ void main() {
     final sorted = items
         .sortedByRecent(
           id: (e) => e.id,
-          createdAt: (e) => e.createdAt,
+          createdAt: (_) => null,
           updatedAt: (e) => e.updatedAt,
         )
         .map((e) => e.id)
@@ -50,7 +48,7 @@ void main() {
     final sorted = items
         .sortedByRecent(
           id: (e) => e.id,
-          createdAt: (e) => e.createdAt,
+          createdAt: (_) => null,
           updatedAt: (e) => e.updatedAt,
         )
         .map((e) => e.id)
