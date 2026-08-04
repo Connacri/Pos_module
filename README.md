@@ -19,7 +19,7 @@ Les builds de production sont publiés automatiquement dans **GitHub Releases** 
 ### 📖 Guide utilisateur
 
 [![Voir le guide en ligne](https://img.shields.io/badge/Guide%20utilisateur-HTML-1976D2?style=for-the-badge)]([index.html](https://connacri.github.io/Pos_module/))
-
+https://connacri.github.io/Pos_module/
 ## Architecture
 
 Monorepo organisé en packages Dart (pub workspaces) :
