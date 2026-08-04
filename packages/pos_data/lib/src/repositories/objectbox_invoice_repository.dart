@@ -3,6 +3,7 @@ import 'package:pos_domain/pos_domain.dart';
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/invoice_entity.dart';
 import '../models/objectbox/invoice_item_entity.dart';
+import '../utils/recent_sort.dart';
 import '../../objectbox.g.dart';
 
 class ObjectboxInvoiceRepository implements InvoiceRepository {
@@ -17,19 +18,28 @@ class ObjectboxInvoiceRepository implements InvoiceRepository {
   Stream<List<Invoice>> watchAll() {
     return _box
         .query()
-        .order(InvoiceEntity_.id, flags: Order.descending)
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map(
+          (query) => query.find().map(_toDomain).sortedByRecent(
+                id: (e) => e.id,
+                createdAt: (e) => e.createdAt,
+                updatedAt: (e) => e.updatedAt,
+              ).toList(),
+        );
   }
 
   @override
   Future<List<Invoice>> getAll() async {
     return _box
         .query()
-        .order(InvoiceEntity_.id, flags: Order.descending)
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 

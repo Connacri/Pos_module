@@ -25,6 +25,8 @@ class _BillingScreenState extends State<BillingScreen>
     vsync: this,
   )..addListener(_onTabChanged);
   String _query = '';
+  String _sortKey = 'date';
+  bool _ascending = false;
 
   @override
   void dispose() {
@@ -48,6 +50,56 @@ class _BillingScreenState extends State<BillingScreen>
               i.status.label.toLowerCase().contains(q),
         )
         .toList();
+  }
+
+  List<Invoice> _sortInvoices(BillingController controller) {
+    return sortByKey(
+      _filter(controller.invoices),
+      _sortKey,
+      _ascending,
+      (i) => switch (_sortKey) {
+        'number' => i.invoiceNumber,
+        'customer' => controller.customerName(i.customerId) ?? '',
+        'amount' => i.total,
+        _ => i.createdAt,
+      },
+    );
+  }
+
+  List<Sale> _sortSales(BillingController controller) {
+    return sortByKey(
+      controller.sales,
+      _sortKey,
+      _ascending,
+      (s) => switch (_sortKey) {
+        'number' => s.saleNumber,
+        'customer' => controller.customerName(s.customerId) ?? '',
+        'amount' => s.total,
+        _ => s.createdAt,
+      },
+    );
+  }
+
+  Widget _buildHeader(AppLocalizations l10n) {
+    return SortableListHeader(
+      columns: [
+        const SortableListColumn(label: 'N°', key: 'number', flex: 2),
+        const SortableListColumn(label: 'Client', key: 'customer', flex: 3),
+        const SortableListColumn(label: 'Date', key: 'date', flex: 2),
+        SortableListColumn(
+          label: l10n.total,
+          key: 'amount',
+          flex: 2,
+          align: TextAlign.end,
+        ),
+      ],
+      sortKey: _sortKey,
+      ascending: _ascending,
+      onSort: (key, ascending) => setState(() {
+        _sortKey = key;
+        _ascending = ascending;
+      }),
+    );
   }
 
   @override
@@ -138,6 +190,7 @@ class _BillingScreenState extends State<BillingScreen>
             ),
           ),
           _SummaryCards(controller: controller),
+          if (controller.invoices.isNotEmpty) _buildHeader(l10n),
           Expanded(
             child: controller.isLoading
                 ? const Center(child: CircularProgressIndicator())
@@ -146,23 +199,29 @@ class _BillingScreenState extends State<BillingScreen>
                     icon: Icons.receipt_long_outlined,
                     title: 'Aucune facture',
                   )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _filter(controller.invoices).length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final invoice = _filter(controller.invoices)[index];
-                      return _InvoiceCard(
-                        invoice: invoice,
-                        customerName: controller.customerName(
-                          invoice.customerId,
-                        ),
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  InvoiceDetailScreen(invoice: invoice),
+                : Builder(
+                    builder: (context) {
+                      final invoices = _sortInvoices(controller);
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: invoices.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final invoice = invoices[index];
+                          return _InvoiceCard(
+                            invoice: invoice,
+                            customerName: controller.customerName(
+                              invoice.customerId,
                             ),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => InvoiceDetailScreen(
+                                    invoice: invoice,
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       );
@@ -181,26 +240,40 @@ class _BillingScreenState extends State<BillingScreen>
     final sales = controller.sales;
     return AppResponsiveBody(
       padding: EdgeInsets.zero,
-      child: sales.isEmpty
-          ? const EmptyState(
-              icon: Icons.point_of_sale_outlined,
-              title: 'Aucune vente',
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: sales.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 8),
-              itemBuilder: (context, index) {
-                final sale = sales[index];
-                return _SaleCard(
-                  sale: sale,
-                  customerName: controller.customerName(sale.customerId),
-                  onTap: widget.onOpenSale == null
-                      ? null
-                      : () => widget.onOpenSale!(sale),
-                );
-              },
-            ),
+      child: Column(
+        children: [
+          if (sales.isNotEmpty) _buildHeader(l10n),
+          Expanded(
+            child: sales.isEmpty
+                ? const EmptyState(
+                    icon: Icons.point_of_sale_outlined,
+                    title: 'Aucune vente',
+                  )
+                : Builder(
+                    builder: (context) {
+                      final sorted = _sortSales(controller);
+                      return ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: sorted.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final sale = sorted[index];
+                          return _SaleCard(
+                            sale: sale,
+                            customerName: controller.customerName(
+                              sale.customerId,
+                            ),
+                            onTap: widget.onOpenSale == null
+                                ? null
+                                : () => widget.onOpenSale!(sale),
+                          );
+                        },
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 

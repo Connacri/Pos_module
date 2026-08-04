@@ -3,6 +3,7 @@ import 'package:pos_domain/pos_domain.dart';
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/return_item_entity.dart';
 import '../models/objectbox/return_record_entity.dart';
+import '../utils/recent_sort.dart';
 import '../../objectbox.g.dart';
 
 class ObjectboxReturnRepository implements ReturnRepository {
@@ -17,19 +18,28 @@ class ObjectboxReturnRepository implements ReturnRepository {
   Stream<List<ReturnRecord>> watchAll() {
     return _box
         .query()
-        .order(ReturnRecordEntity_.id, flags: Order.descending)
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map(
+          (query) => query.find().map(_toDomain).sortedByRecent(
+                id: (e) => e.id,
+                createdAt: (e) => e.createdAt,
+                updatedAt: (e) => e.updatedAt,
+              ).toList(),
+        );
   }
 
   @override
   Future<List<ReturnRecord>> getAll() async {
     return _box
         .query()
-        .order(ReturnRecordEntity_.id, flags: Order.descending)
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 
@@ -40,6 +50,11 @@ class ObjectboxReturnRepository implements ReturnRepository {
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 

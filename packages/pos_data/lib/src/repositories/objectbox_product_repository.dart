@@ -2,6 +2,7 @@ import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/product_entity.dart';
+import '../utils/recent_sort.dart';
 import '../../objectbox.g.dart';
 
 class ObjectboxProductRepository implements ProductRepository {
@@ -15,7 +16,11 @@ class ObjectboxProductRepository implements ProductRepository {
     return _box
         .query(ProductEntity_.isActive.equals(true))
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).sortedByRecent().toList());
+        .map((query) => query.find().map(_toDomain).sortedByRecent(
+              id: (e) => e.id,
+              createdAt: (e) => e.createdAt,
+              updatedAt: (e) => e.updatedAt,
+            ).toList());
   }
 
   @override
@@ -28,7 +33,11 @@ class ObjectboxProductRepository implements ProductRepository {
               .find()
               .where((e) => e.stock <= e.lowStockThreshold)
               .map(_toDomain)
-              .sortedByRecent()
+              .sortedByRecent(
+              id: (e) => e.id,
+              createdAt: (e) => e.createdAt,
+              updatedAt: (e) => e.updatedAt,
+            )
               .toList(),
         );
   }
@@ -40,7 +49,11 @@ class ObjectboxProductRepository implements ProductRepository {
         .build()
         .find()
         .map(_toDomain)
-        .sortedByRecent()
+        .sortedByRecent(
+              id: (e) => e.id,
+              createdAt: (e) => e.createdAt,
+              updatedAt: (e) => e.updatedAt,
+            )
         .toList();
   }
 
@@ -68,7 +81,11 @@ class ObjectboxProductRepository implements ProductRepository {
         .find()
         .map(_toDomain)
         .where((p) => p.matchesQuery(q))
-        .sortedByRecent()
+        .sortedByRecent(
+              id: (e) => e.id,
+              createdAt: (e) => e.createdAt,
+              updatedAt: (e) => e.updatedAt,
+            )
         .toList();
     return products;
   }
@@ -141,23 +158,4 @@ SyncStatus _toSyncStatus(int index) {
     return SyncStatus.synced;
   }
   return SyncStatus.values[index];
-}
-
-/// Trie les produits du plus récent au plus ancien : la modification (ou la
-/// création) remonte le produit en tête de liste.
-extension on Iterable<Product> {
-  Iterable<Product> sortedByRecent() {
-    final list = toList();
-    list.sort((a, b) {
-      final at = a.updatedAt ?? a.createdAt;
-      final bt = b.updatedAt ?? b.createdAt;
-      if (at == null && bt == null) return b.id.compareTo(a.id);
-      if (at == null) return 1;
-      if (bt == null) return -1;
-      final byDate = bt.compareTo(at);
-      if (byDate != 0) return byDate;
-      return b.id.compareTo(a.id);
-    });
-    return list;
-  }
 }

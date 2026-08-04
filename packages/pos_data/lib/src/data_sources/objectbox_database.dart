@@ -26,6 +26,12 @@ class ObjectboxDatabase {
 
   static Box<T> box<T>() => store.box<T>();
 
+  /// Hook de test : remplace le store partagé (par exemple un store en
+  /// mémoire ou dans un répertoire temporaire).
+  static void useStoreForTesting(Store store) {
+    _store = store;
+  }
+
   static void close() {
     _store?.close();
     _store = null;

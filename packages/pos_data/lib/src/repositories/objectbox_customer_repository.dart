@@ -4,6 +4,7 @@ import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/customer_entity.dart';
+import '../utils/recent_sort.dart';
 
 class ObjectboxCustomerRepository implements CustomerRepository {
   ObjectboxCustomerRepository()
@@ -16,12 +17,22 @@ class ObjectboxCustomerRepository implements CustomerRepository {
     return _box
         .query()
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map(
+          (query) => query.find().map(_toDomain).sortedByRecent(
+                id: (e) => e.id,
+                createdAt: (e) => e.createdAt,
+                updatedAt: (e) => e.updatedAt,
+              ).toList(),
+        );
   }
 
   @override
   Future<List<Customer>> getAll() async {
-    return _box.getAll().map(_toDomain).toList();
+    return _box.getAll().map(_toDomain).sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        ).toList();
   }
 
   @override
@@ -38,6 +49,11 @@ class ObjectboxCustomerRepository implements CustomerRepository {
         .getAll()
         .map(_toDomain)
         .where((c) => c.matchesQuery(q))
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 

@@ -2,6 +2,7 @@ import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/category_entity.dart';
+import '../utils/recent_sort.dart';
 import '../../objectbox.g.dart';
 
 class ObjectboxCategoryRepository implements CategoryRepository {
@@ -15,7 +16,13 @@ class ObjectboxCategoryRepository implements CategoryRepository {
     return _box
         .query(CategoryEntity_.isActive.equals(true))
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map(
+          (query) => query.find().map(_toDomain).sortedByRecent(
+                id: (e) => e.id,
+                createdAt: (e) => e.createdAt,
+                updatedAt: (e) => e.updatedAt,
+              ).toList(),
+        );
   }
 
   @override
@@ -25,6 +32,11 @@ class ObjectboxCategoryRepository implements CategoryRepository {
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 

@@ -144,13 +144,39 @@ Future<void> showCartSheet(BuildContext context, PosController controller) {
   );
 }
 
-class _CartSheet extends StatelessWidget {
+class _CartSheet extends StatefulWidget {
   const _CartSheet({required this.controller});
 
   final PosController controller;
 
   @override
+  State<_CartSheet> createState() => _CartSheetState();
+}
+
+/// La feuille du panier vit dans une route (bottom sheet) séparée de l'écran
+/// caisse : elle doit donc s'abonner elle-même au [PosController] pour
+/// refléter les modifications (+ / - / suppression) effectuées depuis ses
+/// boutons.
+class _CartSheetState extends State<_CartSheet> {
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onControllerChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerChanged);
+    super.dispose();
+  }
+
+  void _onControllerChanged() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final controller = widget.controller;
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context);
 

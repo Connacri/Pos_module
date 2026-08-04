@@ -3,6 +3,7 @@ import 'package:pos_domain/pos_domain.dart';
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/sale_entity.dart';
 import '../models/objectbox/sale_item_entity.dart';
+import '../utils/recent_sort.dart';
 import '../../objectbox.g.dart';
 
 class ObjectboxSaleRepository implements SaleRepository {
@@ -18,12 +19,22 @@ class ObjectboxSaleRepository implements SaleRepository {
     return _box
         .query()
         .watch(triggerImmediately: true)
-        .map((query) => query.find().map(_toDomain).toList());
+        .map(
+          (query) => query.find().map(_toDomain).sortedByRecent(
+                id: (e) => e.id,
+                createdAt: (e) => e.createdAt,
+                updatedAt: (e) => e.updatedAt,
+              ).toList(),
+        );
   }
 
   @override
   Future<List<Sale>> getAll() async {
-    return _box.getAll().map(_toDomain).toList();
+    return _box.getAll().map(_toDomain).sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        ).toList();
   }
 
   @override
@@ -39,6 +50,11 @@ class ObjectboxSaleRepository implements SaleRepository {
         .build()
         .find()
         .map(_toDomain)
+        .sortedByRecent(
+          id: (e) => e.id,
+          createdAt: (e) => e.createdAt,
+          updatedAt: (e) => e.updatedAt,
+        )
         .toList();
   }
 

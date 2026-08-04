@@ -22,6 +22,7 @@ export 'src/widgets/empty_state.dart';
 export 'src/widgets/app_scaffold.dart';
 export 'src/widgets/app_responsive_body.dart';
 export 'src/widgets/barcode_view.dart';
+export 'src/widgets/sortable_list_header.dart';
 export 'src/widgets/qr_code_view.dart';
 export 'src/widgets/scanner_screen.dart';
 export 'src/services/file_picker_service.dart';
