@@ -422,10 +422,10 @@ This project is licensed under the MIT License.
 
 <div align="center">
 
-Made with ❤️ using Flutter
+Codded By RMZ LAB
 
 **POS Module**
 
-Enterprise Flutter POS Solution
+Enterprise FORSLOG LTD Solution
 
 </div>
