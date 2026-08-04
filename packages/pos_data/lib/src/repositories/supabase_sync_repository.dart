@@ -81,7 +81,9 @@ class SupabaseSyncRepository implements SyncRepository {
         .build()
         .find();
     for (final p in pendingProducts) {
-      await client.from('products').upsert(_productToMap(p));
+      await client
+          .from('products')
+          .upsert(_productToMap(p), onConflict: 'id');
       _productBox.put(p..syncStatus = SyncStatus.synced.index);
     }
 
@@ -90,7 +92,9 @@ class SupabaseSyncRepository implements SyncRepository {
         .build()
         .find();
     for (final c in pendingCategories) {
-      await client.from('categories').upsert(_categoryToMap(c));
+      await client
+          .from('categories')
+          .upsert(_categoryToMap(c), onConflict: 'id');
       _categoryBox.put(c..syncStatus = SyncStatus.synced.index);
     }
 
@@ -99,27 +103,67 @@ class SupabaseSyncRepository implements SyncRepository {
         .build()
         .find();
     for (final c in pendingCustomers) {
-      await client.from('customers').upsert(_customerToMap(c));
+      await client
+          .from('customers')
+          .upsert(_customerToMap(c), onConflict: 'id');
       _customerBox.put(c..syncStatus = SyncStatus.synced.index);
     }
 
+    await _pushSales(client);
+    await _pushInvoices(client);
+  }
+
+  Future<void> _pushSales(SupabaseClient client) async {
     final pendingSales = _saleBox
         .query(SaleEntity_.syncStatus.equals(SyncStatus.pending.index))
         .build()
         .find();
     for (final s in pendingSales) {
-      await client.from('sales').upsert(_saleToMap(s));
+      try {
+        await client.from('sales').upsert(_saleToMap(s), onConflict: 'id');
+      } on PostgrestException catch (e) {
+        if (e.code != '23505') rethrow;
+        s.saleNumber =
+            await _nextRemoteNumber(client, 'sales', 'sale_number');
+        s.updatedAt = DateTime.now();
+        await client.from('sales').upsert(_saleToMap(s), onConflict: 'id');
+      }
       _saleBox.put(s..syncStatus = SyncStatus.synced.index);
     }
+  }
 
+  Future<void> _pushInvoices(SupabaseClient client) async {
     final pendingInvoices = _invoiceBox
         .query(InvoiceEntity_.syncStatus.equals(SyncStatus.pending.index))
         .build()
         .find();
     for (final i in pendingInvoices) {
-      await client.from('invoices').upsert(_invoiceToMap(i));
+      try {
+        await client.from('invoices').upsert(_invoiceToMap(i), onConflict: 'id');
+      } on PostgrestException catch (e) {
+        if (e.code != '23505') rethrow;
+        i.invoiceNumber =
+            await _nextRemoteNumber(client, 'invoices', 'invoice_number');
+        i.updatedAt = DateTime.now();
+        await client.from('invoices').upsert(_invoiceToMap(i), onConflict: 'id');
+      }
       _invoiceBox.put(i..syncStatus = SyncStatus.synced.index);
     }
+  }
+
+  Future<String> _nextRemoteNumber(
+    SupabaseClient client,
+    String table,
+    String column,
+  ) async {
+    final rows = await client.from(table).select(column);
+    var max = 0;
+    for (final row in rows) {
+      final raw = row[column];
+      final value = raw is num ? raw.toInt() : int.tryParse('$raw');
+      if (value != null && value > max) max = value;
+    }
+    return (max + 1).toString().padLeft(6, '0');
   }
 
   Future<void> _pullProducts() async {
@@ -150,49 +194,85 @@ class SupabaseSyncRepository implements SyncRepository {
 
   Map<String, dynamic> _productToMap(ProductEntity p) {
     return {
+      'id': p.id,
       'sku': p.sku,
       'name': p.name,
       'description': p.description,
+      'category_id': p.categoryId,
       'price': p.price,
       'cost_price': p.costPrice,
       'tax_rate': p.taxRate,
       'stock': p.stock,
+      'low_stock_threshold': p.lowStockThreshold,
       'barcode': p.barcode,
+      'image_url': p.imageUrl,
+      'is_active': p.isActive,
+      'created_at': p.createdAt.toIso8601String(),
       'updated_at': p.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
     };
   }
 
   Map<String, dynamic> _categoryToMap(CategoryEntity c) {
     return {
+      'id': c.id,
       'name': c.name,
+      'parent_id': c.parentId,
       'sort_order': c.sortOrder,
+      'is_active': c.isActive,
+      'created_at': c.createdAt.toIso8601String(),
       'updated_at': c.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
     };
   }
 
   Map<String, dynamic> _customerToMap(CustomerEntity c) {
     return {
+      'id': c.id,
       'name': c.name,
       'phone': c.phone,
       'email': c.email,
+      'address': c.address,
+      'company': c.company,
+      'tax_id': c.taxId,
+      'notes': c.notes,
+      'created_at': c.createdAt.toIso8601String(),
       'updated_at': c.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
     };
   }
 
   Map<String, dynamic> _saleToMap(SaleEntity s) {
     return {
+      'id': s.id,
       'sale_number': s.saleNumber,
-      'total': _saleTotal(s),
+      'customer_id': s.customerId,
+      'cashier_id': s.cashierId,
+      'payment_method': s.paymentMethod,
       'status': s.status,
+      'discount_total': s.discountTotal,
+      'total': _saleTotal(s),
       'created_at': s.createdAt.toIso8601String(),
+      'updated_at': s.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
     };
   }
 
   Map<String, dynamic> _invoiceToMap(InvoiceEntity i) {
     return {
+      'id': i.id,
       'invoice_number': i.invoiceNumber,
+      'sale_id': i.saleId,
+      'customer_id': i.customerId,
       'status': i.status,
+      'discount_total': i.discountTotal,
+      'company_name': i.companyName,
+      'company_address': i.companyAddress,
+      'company_tax_id': i.companyTaxId,
+      'due_date': i.dueDate?.toIso8601String(),
       'created_at': i.createdAt.toIso8601String(),
+      'updated_at': i.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
     };
   }
 

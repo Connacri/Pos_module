@@ -62,7 +62,12 @@ class ObjectboxSaleRepository implements SaleRepository {
 
   @override
   Future<int> getNextSaleNumber() async {
-    return _box.count() + 1;
+    var maxNumber = 0;
+    for (final sale in _box.getAll()) {
+      final value = int.tryParse(sale.saleNumber);
+      if (value != null && value > maxNumber) maxNumber = value;
+    }
+    return maxNumber + 1;
   }
 
   Sale _toDomain(SaleEntity e) {

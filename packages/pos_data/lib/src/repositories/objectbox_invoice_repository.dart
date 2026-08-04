@@ -59,7 +59,12 @@ class ObjectboxInvoiceRepository implements InvoiceRepository {
 
   @override
   Future<int> getNextInvoiceNumber() async {
-    return _box.count() + 1;
+    var maxNumber = 0;
+    for (final invoice in _box.getAll()) {
+      final value = int.tryParse(invoice.invoiceNumber);
+      if (value != null && value > maxNumber) maxNumber = value;
+    }
+    return maxNumber + 1;
   }
 
   Invoice _toDomain(InvoiceEntity e) {
