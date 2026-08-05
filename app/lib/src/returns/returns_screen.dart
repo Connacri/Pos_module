@@ -8,9 +8,13 @@ import 'return_controller.dart';
 import 'return_form_screen.dart';
 
 class ReturnsScreen extends StatefulWidget {
-  const ReturnsScreen({super.key, this.showBackButton = false});
+  const ReturnsScreen({super.key, this.showBackButton = false, this.bare = false});
 
   final bool showBackButton;
+
+  /// Mode « onglet » : cache la barre d'app pour être intégré dans un écran
+  /// parent (ex : onglet Retour de la facturation).
+  final bool bare;
 
   @override
   State<ReturnsScreen> createState() => _ReturnsScreenState();
@@ -41,6 +45,7 @@ class _ReturnsScreenState extends State<ReturnsScreen> {
     return AppScaffold(
       title: 'Retours',
       showBack: widget.showBackButton,
+      showAppBar: !widget.bare,
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _startReturn,
         heroTag: 'fab_returns',

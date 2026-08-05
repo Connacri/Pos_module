@@ -208,6 +208,14 @@ class _ReturnItemTile extends StatelessWidget {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Text(
+                  'Acheté : ${item.purchasedQuantity?.round() ?? '?'} • '
+                  'Disponible : ${item.quantity.round()}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
               ],
             ),
           ),

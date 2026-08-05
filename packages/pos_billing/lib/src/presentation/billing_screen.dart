@@ -9,10 +9,19 @@ import 'invoice_detail_screen.dart';
 import 'invoice_form.dart';
 
 class BillingScreen extends StatefulWidget {
-  const BillingScreen({super.key, this.showBackButton = false, this.onOpenSale});
+  const BillingScreen({
+    super.key,
+    this.showBackButton = false,
+    this.onOpenSale,
+    this.returnsTab,
+  });
 
   final bool showBackButton;
   final void Function(Sale sale)? onOpenSale;
+
+  /// Contenu de l'onglet « Retour » (fourni par l'app hôte). Lorsqu'il est
+  /// fourni, un troisième onglet est ajouté.
+  final Widget? returnsTab;
 
   @override
   State<BillingScreen> createState() => _BillingScreenState();
@@ -21,7 +30,7 @@ class BillingScreen extends StatefulWidget {
 class _BillingScreenState extends State<BillingScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController = TabController(
-    length: 2,
+    length: widget.returnsTab == null ? 2 : 3,
     vsync: this,
   )..addListener(_onTabChanged);
   String _query = '';
@@ -150,6 +159,20 @@ class _BillingScreenState extends State<BillingScreen>
                     ),
                   ),
                 ),
+                if (widget.returnsTab != null)
+                  const Tab(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.replay_outlined, size: 20),
+                          SizedBox(width: 6),
+                          Text('Retour', maxLines: 1, softWrap: false),
+                        ],
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -159,6 +182,7 @@ class _BillingScreenState extends State<BillingScreen>
               children: [
                 _buildInvoicesTab(controller, l10n),
                 _buildSalesTab(controller, l10n),
+                if (widget.returnsTab != null) widget.returnsTab!,
               ],
             ),
           ),

@@ -42,6 +42,7 @@ class ReturnUseCases {
               productId: saleItem.productId,
               description: saleItem.productName,
               quantity: remaining,
+              purchasedQuantity: saleItem.quantity,
               unitPrice: saleItem.unitPrice,
               taxRate: saleItem.taxRate,
             ),

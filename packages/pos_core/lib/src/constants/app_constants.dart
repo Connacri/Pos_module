@@ -15,6 +15,12 @@ class AppConstants {
   static const String keyUserId = 'user_id';
   static const String keyLastSync = 'last_sync';
   static const String keyDeviceId = 'device_id';
+  static const String keyIssuerName = 'issuer_name';
+  static const String keyIssuerAddress = 'issuer_address';
+  static const String keyIssuerTaxId = 'issuer_tax_id';
+  static const String keyIssuerPhone = 'issuer_phone';
+  static const String keyIssuerEmail = 'issuer_email';
+  static const String keyIssuerLogoUrl = 'issuer_logo_url';
 
   static const int defaultPageSize = 20;
   static const int maxPageSize = 100;

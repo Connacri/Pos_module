@@ -823,22 +823,29 @@ class _CategoryChart extends StatelessWidget {
 
     final isMobile = ResponsiveLayout.isMobile(context);
     if (isMobile) {
-      return Column(
-        children: [
-          Center(child: chart),
-          const SizedBox(height: 16),
-          legend,
-        ],
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Column(
+          children: [
+            Center(child: chart),
+            const SizedBox(height: 24),
+            legend,
+            const SizedBox(height: 8),
+          ],
+        ),
       );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        chart,
-        const SizedBox(width: 20),
-        Expanded(child: legend),
-      ],
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          chart,
+          const SizedBox(width: 24),
+          Expanded(child: legend),
+        ],
+      ),
     );
   }
 }

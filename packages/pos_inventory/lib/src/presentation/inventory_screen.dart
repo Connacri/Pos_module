@@ -348,25 +348,7 @@ class _ProductCard extends StatelessWidget {
       onTap: onTap,
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  accent.withValues(alpha: 0.25),
-                  accent.withValues(alpha: 0.1),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(
-              product.isOutOfStock ? Icons.block : Icons.shopping_bag_outlined,
-              color: accent,
-            ),
-          ),
+          _ProductThumbnail(product: product, accent: accent),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -536,6 +518,54 @@ class _SummaryCell extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProductThumbnail extends StatelessWidget {
+  const _ProductThumbnail({required this.product, required this.accent});
+
+  final Product product;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final url = product.primaryImageUrl;
+    if (url == null) return _fallback(theme);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) => _fallback(theme),
+        ),
+      ),
+    );
+  }
+
+  Widget _fallback(ThemeData theme) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            accent.withValues(alpha: 0.25),
+            accent.withValues(alpha: 0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Icon(
+        product.isOutOfStock ? Icons.block : Icons.shopping_bag_outlined,
+        color: accent,
       ),
     );
   }

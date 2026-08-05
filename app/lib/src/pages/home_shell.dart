@@ -6,6 +6,7 @@ import 'package:pos_domain/pos_domain.dart';
 import 'package:pos_inventory/pos_inventory.dart';
 import 'package:pos_pos/pos_pos.dart';
 
+import '../returns/returns_screen.dart';
 import '../sales/sale_detail_screen.dart';
 import '../settings/settings_page.dart';
 import 'dashboard_page.dart';
@@ -30,7 +31,10 @@ class _HomeShellState extends State<HomeShell> {
     DashboardPage(),
     PosScreen(),
     InventoryScreen(),
-    BillingScreen(onOpenSale: _openSale),
+    BillingScreen(
+      onOpenSale: _openSale,
+      returnsTab: const ReturnsScreen(bare: true),
+    ),
     SettingsPage(),
   ];
 

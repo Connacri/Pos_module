@@ -126,21 +126,42 @@ class InvoiceDetailScreen extends StatelessWidget {
   }
 }
 
-class _CompanySection extends StatelessWidget {
+class _CompanySection extends StatefulWidget {
   const _CompanySection({required this.invoice});
 
   final Invoice invoice;
 
   @override
+  State<_CompanySection> createState() => _CompanySectionState();
+}
+
+class _CompanySectionState extends State<_CompanySection> {
+  IssuerData? _issuer;
+
+  @override
+  void initState() {
+    super.initState();
+    IssuerSettings.load().then((data) {
+      if (mounted) setState(() => _issuer = data);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final lines = [
-      invoice.companyName,
-      invoice.companyAddress,
-      invoice.companyTaxId,
-    ].whereType<String>();
+    final invoice = widget.invoice;
+    final issuer = _issuer;
+    final name = issuer?.name ?? invoice.companyName;
+    final address = issuer?.address ?? invoice.companyAddress;
+    final taxId = issuer?.taxId ?? invoice.companyTaxId;
+    final logoUrl = issuer?.logoUrl;
 
-    if (lines.isEmpty) return const SizedBox.shrink();
+    final lines = [name, address, taxId, issuer?.phone, issuer?.email]
+        .whereType<String>()
+        .where((e) => e.trim().isNotEmpty)
+        .toList();
+
+    if (logoUrl == null && lines.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,8 +173,27 @@ class _CompanySection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
+        if (logoUrl != null) ...[
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              width: 72,
+              height: 72,
+              child: Image.network(
+                logoUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => const SizedBox
+                    .shrink(),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
         for (final line in lines)
-          Text(line, style: theme.textTheme.bodyMedium),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 1),
+            child: Text(line, style: theme.textTheme.bodyMedium),
+          ),
       ],
     );
   }

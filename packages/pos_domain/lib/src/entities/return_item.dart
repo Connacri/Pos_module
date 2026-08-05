@@ -4,6 +4,7 @@ class ReturnItem {
     required this.description,
     required this.unitPrice,
     required this.quantity,
+    this.purchasedQuantity,
     this.taxRate = 0,
     this.discount = 0,
   });
@@ -11,7 +12,13 @@ class ReturnItem {
   final int productId;
   final String description;
   final double unitPrice;
+
+  /// Quantité restant à retourner (achetée - déjà retournée).
   final double quantity;
+
+  /// Quantité achetée initialement sur la vente (null si inconnue).
+  final double? purchasedQuantity;
+
   final double taxRate;
   final double discount;
 
@@ -24,6 +31,7 @@ class ReturnItem {
     String? description,
     double? unitPrice,
     double? quantity,
+    double? purchasedQuantity,
     double? taxRate,
     double? discount,
   }) {
@@ -32,6 +40,7 @@ class ReturnItem {
       description: description ?? this.description,
       unitPrice: unitPrice ?? this.unitPrice,
       quantity: quantity ?? this.quantity,
+      purchasedQuantity: purchasedQuantity ?? this.purchasedQuantity,
       taxRate: taxRate ?? this.taxRate,
       discount: discount ?? this.discount,
     );

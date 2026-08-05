@@ -12,6 +12,7 @@ class AppScaffold extends StatelessWidget {
   final Widget body;
   final bool centerTitle;
   final bool? showBack;
+  final bool showAppBar;
 
   const AppScaffold({
     super.key,
@@ -23,18 +24,21 @@ class AppScaffold extends StatelessWidget {
     required this.body,
     this.centerTitle = false,
     this.showBack,
+    this.showAppBar = true,
   });
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: titleWidget ?? (title != null ? Text(title!) : null),
-        actions: actions,
-        centerTitle: centerTitle,
-        automaticallyImplyLeading: false,
-        leading: _buildLeading(context),
-      ),
+      appBar: showAppBar
+          ? AppBar(
+              title: titleWidget ?? (title != null ? Text(title!) : null),
+              actions: actions,
+              centerTitle: centerTitle,
+              automaticallyImplyLeading: false,
+              leading: _buildLeading(context),
+            )
+          : null,
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: bottomNavigationBar,
       body: SafeArea(child: body),

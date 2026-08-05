@@ -24,44 +24,49 @@ class InvoiceUseCases {
         return invoice;
       });
 
-  Future<Result<Invoice>> createInvoiceFromSale(int saleId) => _guard(() async {
-        final sale = await _saleRepository.getById(saleId);
-        if (sale == null) {
-          throw const NotFoundFailure('Vente introuvable');
-        }
-        if (sale.isEmpty) {
-          throw const ValidationFailure('La vente est vide');
-        }
+  Future<Result<Invoice>> createInvoiceFromSale(
+    int saleId, {
+    String? companyName,
+    String? companyAddress,
+    String? companyTaxId,
+  }) => _guard(() async {
+    final sale = await _saleRepository.getById(saleId);
+    if (sale == null) {
+      throw const NotFoundFailure('Vente introuvable');
+    }
+    if (sale.isEmpty) {
+      throw const ValidationFailure('La vente est vide');
+    }
 
-        final number = await _invoiceRepository.getNextInvoiceNumber();
-        final now = DateTime.now();
-        final invoice = Invoice(
-          id: 0,
-          invoiceNumber: number.toString().padLeft(6, '0'),
-          saleId: sale.id,
-          customerId: sale.customerId,
-          items: sale.items
-              .map(
-                (item) => InvoiceItem(
-                  productId: item.productId,
-                  description: item.productName,
-                  unitPrice: item.unitPrice,
-                  quantity: item.quantity,
-                  taxRate: item.taxRate,
-                  discount: item.discount,
-                ),
-              )
-              .toList(),
-          status: InvoiceStatus.issued,
-          discountTotal: sale.discountTotal,
-          companyName: 'POS Module',
-          companyAddress: 'Alger, Algérie',
-          companyTaxId: '099900000000',
-          dueDate: now.add(const Duration(days: 30)),
-          createdAt: now,
-          updatedAt: now,
-          syncStatus: SyncStatus.pending,
-        );
+    final number = await _invoiceRepository.getNextInvoiceNumber();
+    final now = DateTime.now();
+    final invoice = Invoice(
+      id: 0,
+      invoiceNumber: number.toString().padLeft(6, '0'),
+      saleId: sale.id,
+      customerId: sale.customerId,
+      items: sale.items
+          .map(
+            (item) => InvoiceItem(
+              productId: item.productId,
+              description: item.productName,
+              unitPrice: item.unitPrice,
+              quantity: item.quantity,
+              taxRate: item.taxRate,
+              discount: item.discount,
+            ),
+          )
+          .toList(),
+      status: InvoiceStatus.issued,
+      discountTotal: sale.discountTotal,
+      companyName: companyName,
+      companyAddress: companyAddress,
+      companyTaxId: companyTaxId,
+      dueDate: now.add(const Duration(days: 30)),
+      createdAt: now,
+      updatedAt: now,
+      syncStatus: SyncStatus.pending,
+    );
 
         final id = await _invoiceRepository.save(invoice);
         return invoice.copyWith(id: id);

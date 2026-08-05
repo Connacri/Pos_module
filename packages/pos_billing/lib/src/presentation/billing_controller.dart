@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 
+import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
 
 class BillingController extends ChangeNotifier {
@@ -84,7 +85,13 @@ class BillingController extends ChangeNotifier {
   }
 
   Future<bool> createFromSale(int saleId) async {
-    final result = await invoiceUseCases.createInvoiceFromSale(saleId);
+    final issuer = await IssuerSettings.load();
+    final result = await invoiceUseCases.createInvoiceFromSale(
+      saleId,
+      companyName: issuer.name,
+      companyAddress: issuer.address,
+      companyTaxId: issuer.taxId,
+    );
     return _handleResult(result, 'Facture créée');
   }
 

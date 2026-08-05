@@ -27,3 +27,4 @@ export 'src/widgets/qr_code_view.dart';
 export 'src/widgets/scanner_screen.dart';
 export 'src/services/file_picker_service.dart';
 export 'src/services/tax_settings.dart';
+export 'src/services/issuer_settings.dart';

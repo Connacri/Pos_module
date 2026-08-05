@@ -14,6 +14,7 @@ import '../models/objectbox/return_item_entity.dart';
 import '../models/objectbox/return_record_entity.dart';
 import '../models/objectbox/sale_entity.dart';
 import '../models/objectbox/sale_item_entity.dart';
+import '../models/objectbox/sync_id_entity.dart';
 import 'seed_data.dart';
 
 class SeedService {
@@ -158,9 +159,11 @@ class SeedService {
         );
   }
 
-  /// Vide toutes les boîtes ObjectBox (base locale).
+  /// Vide toutes les boîtes ObjectBox (base locale), y compris le mapping de
+  /// synchronisation [SyncIdEntity] pour repartir d'un état vierge.
   static Future<void> clearObjectBox() async {
     final boxes = [
+      ObjectboxDatabase.box<SyncIdEntity>(),
       ObjectboxDatabase.box<ReturnItemEntity>(),
       ObjectboxDatabase.box<ReturnRecordEntity>(),
       ObjectboxDatabase.box<SaleItemEntity>(),
