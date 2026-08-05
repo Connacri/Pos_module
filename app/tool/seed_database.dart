@@ -64,12 +64,5 @@ Future<void> main(List<String> args) async {
 }
 
 void _clearBoxes() {
-  ObjectboxDatabase.box<CategoryEntity>().removeAll();
-  ObjectboxDatabase.box<ProductEntity>().removeAll();
-  ObjectboxDatabase.box<CustomerEntity>().removeAll();
-  ObjectboxDatabase.box<SaleEntity>().removeAll();
-  ObjectboxDatabase.box<SaleItemEntity>().removeAll();
-  ObjectboxDatabase.box<InvoiceEntity>().removeAll();
-  ObjectboxDatabase.box<InvoiceItemEntity>().removeAll();
-  ObjectboxDatabase.box<PaymentEntity>().removeAll();
+  SeedService.clearObjectBox();
 }

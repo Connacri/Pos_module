@@ -60,7 +60,11 @@ class SaleUseCases {
         final product = await _productRepository.getById(item.productId);
         if (product != null) {
           await _productRepository.save(
-            product.copyWith(stock: product.stock - item.quantity),
+            product.copyWith(
+              stock: product.stock - item.quantity,
+              updatedAt: now,
+              syncStatus: SyncStatus.pending,
+            ),
           );
         }
       }
@@ -84,7 +88,11 @@ class SaleUseCases {
           final product = await _productRepository.getById(item.productId);
           if (product != null) {
             await _productRepository.save(
-              product.copyWith(stock: product.stock + item.quantity),
+              product.copyWith(
+                stock: product.stock + item.quantity,
+                updatedAt: DateTime.now(),
+                syncStatus: SyncStatus.pending,
+              ),
             );
           }
         }

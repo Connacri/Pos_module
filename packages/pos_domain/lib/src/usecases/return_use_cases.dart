@@ -95,7 +95,11 @@ class ReturnUseCases {
         throw NotFoundFailure('Produit introuvable : ${item.description}');
       }
       await _productRepository.save(
-        product.copyWith(stock: product.stock + item.quantity, updatedAt: now),
+        product.copyWith(
+          stock: product.stock + item.quantity,
+          updatedAt: now,
+          syncStatus: SyncStatus.pending,
+        ),
       );
     }
 

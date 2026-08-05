@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -22,6 +21,17 @@ import '../models/objectbox/sale_item_entity.dart';
 import '../models/objectbox/sync_id_entity.dart';
 import '../../objectbox.g.dart';
 
+/// Synchronisation Supabase convergente et incrémentale.
+///
+/// L'ID distant n'est plus calculé localement (deviceId * 10^6 + idLocal) : il
+/// est toujours l'ID canonique attribué par Supabase. Chaque enregistrement
+/// local est relié à sa ligne distante par le mapping [SyncIdEntity], et les
+/// enregistrements non encore mappés sont fusionnés par clé métier
+/// (SKU, sale_number, invoice_number, nom+téléphone, référence, ...) au lieu
+/// d'être dupliqués. Le push ne concerne que les lignes locales marquées
+/// `pending` (ou toutes les lignes quand une table distante est vide, pour
+/// rebooter après une remise à zéro). Le pull déduplique les lignes distantes
+/// par clé métier et applique la règle « dernière modification gagne ».
 class SupabaseSyncRepository implements SyncRepository {
   SupabaseSyncRepository({required this.connectivityService})
       : _productBox = ObjectboxDatabase.box<ProductEntity>(),
@@ -45,56 +55,9 @@ class SupabaseSyncRepository implements SyncRepository {
   final Box<PaymentEntity> _paymentBox;
   final Box<SyncIdEntity> _syncIdBox;
 
-  int? _deviceId;
-
-  /// Multiplicateur qui sépare les ID locaux de chaque appareil sur le serveur.
-  ///
-  /// Chaque appareil reçoit un identifiant unique et pousse ses enregistrements
-  /// avec un ID distant = deviceId * [_remoteIdSpace] + idLocal. Cela évite que
-  /// deux appareils écrasent les lignes de l'autre pendant les upserts (conflit
-  /// sur la clé primaire 'id' de Supabase).
-  static const int _remoteIdSpace = 1000000;
-
-  /// Calcule l'ID distant d'un enregistrement local.
-  int _remoteId(int localId) {
-    if (localId <= 0) return localId;
-    return _deviceId! * _remoteIdSpace + localId;
-  }
-
-  /// Vrai si [remoteId] a été émis par cet appareil (espace d'ID local dédié).
-  bool _isOwnRemoteId(int remoteId) {
-    return remoteId > 0 && remoteId ~/ _remoteIdSpace == _deviceId;
-  }
-
-  /// ID local porté par un ID distant de cet appareil.
-  int _localFromRemoteId(int remoteId) => remoteId % _remoteIdSpace;
-
-  Future<void> _ensureDeviceId() async {
-    if (_deviceId != null) return;
-    final prefs = await SharedPreferences.getInstance();
-    var id = prefs.getInt(AppConstants.keyDeviceId);
-    if (id == null || id < 1) {
-      id = Random().nextInt(1 << 22) + 1;
-      await prefs.setInt(AppConstants.keyDeviceId, id);
-    }
-    _deviceId = id;
-  }
-
-  /// Traduit une clé étrangère distante en ID local ObjectBox.
-  ///
-  /// Utilise le mapping [SyncIdEntity] (ligne tirée depuis un autre appareil),
-  /// sinon le décodage de l'espace d'ID local (ligne poussée par cet appareil),
-  /// sinon 0 (référence inconnue, traitée comme absente).
-  int _translateFk(String entityType, int remoteFk) {
-    if (remoteFk <= 0) return 0;
-    final local = _mappedLocalId(entityType, remoteFk);
-    if (local != null) return local;
-    if (_isOwnRemoteId(remoteFk)) return _localFromRemoteId(remoteFk);
-    return 0;
-  }
-
   /// ID local mappé à [remoteId] pour [entityType], ou null si inconnu.
   int? _mappedLocalId(String entityType, int remoteId) {
+    if (remoteId <= 0) return null;
     final m = _syncIdBox
         .query(SyncIdEntity_.entityType.equals(entityType)
             .and(SyncIdEntity_.remoteId.equals(remoteId)))
@@ -103,7 +66,26 @@ class SupabaseSyncRepository implements SyncRepository {
     return m?.localId;
   }
 
+  /// ID distant mappé à [localId] pour [entityType], ou null si inconnu.
+  int? _mappedRemoteId(String entityType, int localId) {
+    if (localId <= 0) return null;
+    final m = _syncIdBox
+        .query(SyncIdEntity_.entityType.equals(entityType)
+            .and(SyncIdEntity_.localId.equals(localId)))
+        .build()
+        .findFirst();
+    return m?.remoteId;
+  }
+
+  /// Traduit une clé étrangère distante en ID local ObjectBox via le mapping.
+  int _translateFk(String entityType, int remoteFk) {
+    return _mappedLocalId(entityType, remoteFk) ?? 0;
+  }
+
   /// Enregistre la correspondance [remoteId] ↔ [localId] pour [entityType].
+  ///
+  /// Si la ligne locale est déjà mappée (mapping déplacé après une remise à
+  /// zéro du serveur), le nouvel ID distant remplace l'ancien.
   Future<void> _recordMapping(
     String entityType,
     int remoteId,
@@ -125,30 +107,6 @@ class SupabaseSyncRepository implements SyncRepository {
       ..entityType = entityType
       ..remoteId = remoteId
       ..localId = localId);
-  }
-
-  /// Insère ou met à jour la ligne distante [remoteId] dans [box].
-  ///
-  /// Si un mapping existe (ou si l'ID distant appartient à cet appareil), la
-  /// ligne locale est mise à jour en conservant son ID ; sinon une nouvelle
-  /// ligne locale est créée et le mapping est enregistré. Le mapping est toujours
-  /// garanti à la fin, ce qui évite tout doublon lors des synchronisations
-  /// successives et permet de traduire les clés étrangères.
-  Future<int> _ensureMapped<T>(
-    String entityType,
-    Box<T> box,
-    int remoteId,
-    T Function(int localId) build,
-  ) async {
-    var localId = _mappedLocalId(entityType, remoteId);
-    if (localId == null && _isOwnRemoteId(remoteId)) {
-      localId = _localFromRemoteId(remoteId);
-    }
-    // build(id) réutilise l'ID local existant (mise à jour) ou 0 pour laisser
-    // ObjectBox attribuer un nouvel ID ; le mapping est ensuite enregistré.
-    localId = box.put(build(localId ?? 0));
-    await _recordMapping(entityType, remoteId, localId);
-    return localId;
   }
 
   final StreamController<bool> _onlineController =
@@ -180,7 +138,6 @@ class SupabaseSyncRepository implements SyncRepository {
     }
 
     AppLogger.info('Synchronisation avec Supabase...');
-    await _ensureDeviceId();
     await _pushAll();
     await _pullAll();
 
@@ -192,262 +149,284 @@ class SupabaseSyncRepository implements SyncRepository {
     AppLogger.info('Synchronisation terminée');
   }
 
-  /// Pousse intégralement toutes les tables locales vers Supabase.
+  // ---------------------------------------------------------------------------
+  // Aides de requête Supabase
+  // ---------------------------------------------------------------------------
+
+  /// Renvoie la première ligne de [table] filtrée par [filter], ou null.
+  Future<Map<String, dynamic>?> _findOne(
+    SupabaseClient client,
+    String table,
+    PostgrestFilterBuilder<List<Map<String, dynamic>>> Function(
+      PostgrestFilterBuilder<List<Map<String, dynamic>>> query,
+    ) filter,
+  ) async {
+    final rows = await filter(client.from(table).select()).limit(1);
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  /// Renvoie la ligne [id] de [table], ou null si elle n'existe pas.
+  Future<Map<String, dynamic>?> _findOneById(
+    SupabaseClient client,
+    String table,
+    int id,
+  ) async {
+    if (id <= 0) return null;
+    final rows = await client.from(table).select().eq('id', id).limit(1);
+    if (rows.isEmpty) return null;
+    return rows.first;
+  }
+
+  /// Vrai si la table distante [table] ne contient aucune ligne.
+  Future<bool> _remoteTableEmpty(SupabaseClient client, String table) async {
+    final rows = await client.from(table).select('id').limit(1);
+    return rows.isEmpty;
+  }
+
+  /// Horodatage « récence » d'une ligne distante (updated_at, sinon paid_at,
+  /// sinon created_at) utilisé pour départager des doublons.
+  DateTime? _rowTimestamp(Map<String, dynamic> row) {
+    return DateTime.tryParse(
+      '${row['updated_at'] ?? row['paid_at'] ?? row['created_at']}',
+    );
+  }
+
+  bool _rowNewer(Map<String, dynamic> a, Map<String, dynamic> b) {
+    final ta = _rowTimestamp(a);
+    final tb = _rowTimestamp(b);
+    if (ta == null || tb == null) return false;
+    return ta.isAfter(tb);
+  }
+
+  /// Vrai si la ligne locale non synchronisée (pending) est plus récente que
+  /// la ligne distante : dans ce cas le pull ne doit pas l'écraser.
+  bool _localIsNewerPending(
+    DateTime localUpdated,
+    int localSyncStatus,
+    Map<String, dynamic> remoteRow,
+  ) {
+    if (localSyncStatus != SyncStatus.pending.index) return false;
+    final remoteUpdated = _rowTimestamp(remoteRow);
+    return remoteUpdated == null || localUpdated.isAfter(remoteUpdated);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Push : incrémental (pending) + fusion par clé métier
+  // ---------------------------------------------------------------------------
+
+  /// Pousse les modifications locales vers Supabase.
   ///
-  /// Chaque enregistrement est poussé via un upsert idempotent sur son ID
-  /// distant (deviceId * 10^6 + idLocal). Les produits, catégories, clients,
-  /// ventes, factures, paiements et retours sont poussés en totalité à chaque
-  /// synchronisation : la base distante est donc toujours reconstruite/alignée
-  /// sur la base locale (synchronisation forcée), indépendamment de l'état
-  /// `syncStatus`. Le mapping [SyncIdEntity] est mis à jour pour chaque
-  /// enregistrement poussé.
+  /// Seules les lignes `pending` (créées ou modifiées hors-ligne) sont poussées,
+  /// sauf si la table distante est vide : dans ce cas toutes les lignes locales
+  /// sont poussées pour reconstruire le serveur après une remise à zéro.
+  /// Chaque ligne est fusionnée sur son ID canonique (mapping existant, ligne
+  /// distante retrouvée par clé métier, ou insertion nouvelle).
   Future<void> _pushAll() async {
     final client = Supabase.instance.client;
-
-    for (final p in _productBox.getAll()) {
-      final remoteId = await _pushProduct(client, p);
-      await _recordMapping('product', remoteId, p.id);
-      _productBox.put(p..syncStatus = SyncStatus.synced.index);
-    }
-
-    for (final c in _categoryBox.getAll()) {
-      final remoteId = _remoteId(c.id);
-      await client.from('categories').upsert(_categoryToMap(c), onConflict: 'id');
-      await _recordMapping('category', remoteId, c.id);
-      _categoryBox.put(c..syncStatus = SyncStatus.synced.index);
-    }
-
-    for (final c in _customerBox.getAll()) {
-      final remoteId = _remoteId(c.id);
-      await client.from('customers').upsert(_customerToMap(c), onConflict: 'id');
-      await _recordMapping('customer', remoteId, c.id);
-      _customerBox.put(c..syncStatus = SyncStatus.synced.index);
-    }
-
+    await _pushCategories(client);
+    await _pushProducts(client);
+    await _pushCustomers(client);
     await _pushSales(client);
     await _pushInvoices(client);
     await _pushPayments(client);
     await _pushReturns(client);
   }
 
-  /// Pousse un produit avec upsert sur son ID distant et retourne l'ID distant
-  /// réellement utilisé (qui peut différer en cas de fusion sur SKU existant).
+  /// Lignes locales à pousser pour une table : toutes si la table distante est
+  /// vide (bootstrap), sinon uniquement celles en attente de synchronisation.
+  Future<List<T>> _pushCandidates<T>(
+    SupabaseClient client,
+    String table,
+    List<T> rows,
+  ) async {
+    if (rows.isEmpty) return const [];
+    if (await _remoteTableEmpty(client, table)) return rows;
+    return rows
+        .where((r) => (r as dynamic).syncStatus != SyncStatus.synced.index)
+        .toList();
+  }
+
+  /// Fusionne une ligne locale sur le serveur et renvoie son ID distant
+  /// canonique.
   ///
-  /// Si le SKU existe déjà sur le serveur sous un autre ID (données de démo aux
-  /// IDs fixes, ou même SKU créé sur un autre appareil), la contrainte
-  /// `products_sku_key` déclencherait une erreur 23505. On récupère alors l'ID
-  /// distant réel de ce SKU et on fait l'upsert dessus pour fusionner au lieu
-  /// d'interrompre toute la synchronisation.
-  Future<int> _pushProduct(SupabaseClient client, ProductEntity p) async {
-    try {
-      await client.from('products').upsert(_productToMap(p), onConflict: 'id');
-      return _remoteId(p.id);
-    } on PostgrestException catch (e) {
-      if (e.code != '23505') rethrow;
-      final rows = await client
-          .from('products')
-          .select('id')
-          .eq('sku', p.sku)
-          .limit(1);
-      if (rows.isEmpty) rethrow;
-      final remoteId = rows.first['id'] as int;
-      await client.from('products').upsert(
-        {..._productToMap(p), 'id': remoteId},
-        onConflict: 'id',
-      );
-      return remoteId;
-    }
-  }
-
-  Future<void> _pushSales(SupabaseClient client) async {
-    // Pousse intégralement toutes les ventes locales (pas seulement celles en
-    // attente) pour reconstruire/aligner la base distante à chaque sync forcée.
-    for (final s in _saleBox.getAll()) {
-      await _pushWithUniqueNumber(
-        client: client,
-        table: 'sales',
-        numberColumn: 'sale_number',
-        toMap: () => _saleToMap(s),
-        applyNumber: (number) {
-          s.saleNumber = number;
-          s.updatedAt = DateTime.now();
-        },
-      );
-      await _pushSaleItems(client, s);
-      await _recordMapping('sale', _remoteId(s.id), s.id);
-      _saleBox.put(s..syncStatus = SyncStatus.synced.index);
-    }
-  }
-
-  Future<void> _pushInvoices(SupabaseClient client) async {
-    // Pousse intégralement toutes les factures locales.
-    for (final i in _invoiceBox.getAll()) {
-      await _pushWithUniqueNumber(
-        client: client,
-        table: 'invoices',
-        numberColumn: 'invoice_number',
-        toMap: () => _invoiceToMap(i),
-        applyNumber: (number) {
-          i.invoiceNumber = number;
-          i.updatedAt = DateTime.now();
-        },
-      );
-      await _pushInvoiceItems(client, i);
-      await _recordMapping('invoice', _remoteId(i.id), i.id);
-      _invoiceBox.put(i..syncStatus = SyncStatus.synced.index);
-    }
-  }
-
-  Future<void> _pushPayments(SupabaseClient client) async {
-    // Les paiements sont poussés intégralement à chaque synchronisation comme
-    // les produits/catégories/clients (upsert idempotent). La table `payments`
-    // ne porte aucune contrainte unique : aucun conflit 23505 possible.
-    for (final payment in _paymentBox.getAll()) {
-      await client
-          .from('payments')
-          .upsert(_paymentToMap(payment), onConflict: 'id');
-      await _recordMapping(
-        'payment',
-        _remoteId(payment.id),
-        payment.id,
-      );
-      _paymentBox.put(payment..syncStatus = SyncStatus.synced.index);
-    }
-  }
-
-  Future<void> _pushReturns(SupabaseClient client) async {
-    // Pousse intégralement tous les retours locaux.
-    for (final r in _returnBox.getAll()) {
-      await client
-          .from('returns')
-          .upsert(_returnToMap(r), onConflict: 'id');
-      await _pushReturnItems(client, r);
-      await _recordMapping('return', _remoteId(r.id), r.id);
-      _returnBox.put(r..syncStatus = SyncStatus.synced.index);
-    }
-  }
-
-  Future<void> _pushReturnItems(SupabaseClient client, ReturnRecordEntity r) async {
-    final items = ObjectboxDatabase.box<ReturnItemEntity>()
-        .query(ReturnItemEntity_.returnId.equals(r.id))
-        .build()
-        .find();
-    if (items.isEmpty) return;
-    try {
-      await client
-          .from('return_items')
-          .delete()
-          .eq('return_id', _remoteId(r.id));
-      await client
-          .from('return_items')
-          .insert(items.map(_returnItemToMap).toList());
-    } catch (e) {
-      AppLogger.warning('Échec synchronisation des lignes du retour ${r.id}: $e');
-    }
-  }
-
-  Map<String, dynamic> _paymentToMap(PaymentEntity payment) {
-    return {
-      'id': _remoteId(payment.id),
-      'amount': payment.amount,
-      'method': payment.method,
-      'sale_id': _remoteId(payment.saleId),
-      'invoice_id': _remoteId(payment.invoiceId),
-      'reference': payment.reference,
-      'paid_at': payment.paidAt.toIso8601String(),
-      'sync_status': SyncStatus.synced.index,
-    };
-  }
-
-  Map<String, dynamic> _returnToMap(ReturnRecordEntity r) {
-    return {
-      'id': _remoteId(r.id),
-      'sale_id': _remoteId(r.saleId),
-      'sale_number': r.saleNumber,
-      'customer_id': _remoteId(r.customerId),
-      'reason': r.reason,
-      'created_at': r.createdAt.toIso8601String(),
-      'updated_at': r.updatedAt.toIso8601String(),
-      'sync_status': SyncStatus.synced.index,
-    };
-  }
-
-  Map<String, dynamic> _returnItemToMap(ReturnItemEntity item) {
-    return {
-      'return_id': _remoteId(item.returnId),
-      'product_id': _remoteId(item.productId),
-      'description': item.description,
-      'unit_price': item.unitPrice,
-      'quantity': item.quantity,
-      'tax_rate': item.taxRate,
-      'discount': item.discount,
-    };
-  }
-
-  /// Upsert d'une ligne portant un numéro unique (sale_number / invoice_number).
-  ///
-  /// En cas de conflit 23505 (numéro déjà utilisé sur le serveur), le numéro est
-  /// régénéré depuis le max distant et le upsert est réessayé. Les tentatives
-  /// successives requestionnent le max à chaque fois pour éviter les collisions
-  /// entre plusieurs appareils qui synchronisent en même temps.
-  Future<void> _pushWithUniqueNumber({
+  /// Résolution de l'ID canonique : mapping existant, puis ligne distante
+  /// trouvée par clé métier ([finder]), puis insertion nouvelle (l'ID est alors
+  /// attribué par le serveur). Si la ligne distante est plus récente que la
+  /// ligne locale (updated_at), le serveur gagne et la ligne locale n'est pas
+  /// écrasée (dernière modification gagne).
+  Future<int> _pushRow({
     required SupabaseClient client,
     required String table,
+    required String entityType,
+    required int localId,
+    required DateTime localUpdated,
+    required Map<String, dynamic> Function() rowBuilder,
+    required Future<Map<String, dynamic>?> Function()? finder,
+  }) async {
+    var remoteId = _mappedRemoteId(entityType, localId);
+    Map<String, dynamic>? remoteRow;
+    if (remoteId != null && remoteId > 0) {
+      remoteRow = await _findOneById(client, table, remoteId);
+    } else if (finder != null) {
+      remoteRow = await finder();
+    }
+
+    if (remoteRow == null) {
+      Map<String, dynamic> row;
+      try {
+        row = await client
+            .from(table)
+            .insert(rowBuilder())
+            .select('id')
+            .single();
+      } on PostgrestException catch (e) {
+        // Conflit 23505 (clé métier unique) survenu pendant l'insertion : la
+        // ligne a été créée entre-temps par un autre appareil → fusionner.
+        if (e.code != '23505' || finder == null) rethrow;
+        final recovered = await finder();
+        if (recovered == null) rethrow;
+        remoteId = recovered['id'] as int;
+        await client
+            .from(table)
+            .upsert({...rowBuilder(), 'id': remoteId}, onConflict: 'id');
+        await _recordMapping(entityType, remoteId, localId);
+        return remoteId;
+      }
+      remoteId = row['id'] as int;
+      await _recordMapping(entityType, remoteId, localId);
+      return remoteId;
+    }
+
+    remoteId = remoteRow['id'] as int;
+    final remoteUpdated =
+        DateTime.tryParse('${remoteRow['updated_at']}');
+    if (remoteUpdated != null && remoteUpdated.isAfter(localUpdated)) {
+      await _recordMapping(entityType, remoteId, localId);
+      return remoteId;
+    }
+    await client
+        .from(table)
+        .upsert({...rowBuilder(), 'id': remoteId}, onConflict: 'id');
+    await _recordMapping(entityType, remoteId, localId);
+    return remoteId;
+  }
+
+  /// Pousse une ligne portant un numéro unique (sale_number / invoice_number).
+  ///
+  /// Un numéro déjà présent sur le serveur correspond soit à une copie tirée
+  /// d'un autre appareil (même created_at → fusion), soit à une vente/facture
+  /// réellement nouvelle d'un autre appareil (created_at différent → nouveau
+  /// numéro via [_nextRemoteNumber]). En cas de collision restante, le numéro
+  /// est régénéré depuis le max distant et l'insertion est réessayée.
+  Future<int> _pushNumberedRow({
+    required SupabaseClient client,
+    required String table,
+    required String entityType,
+    required int localId,
+    required DateTime localUpdated,
     required String numberColumn,
-    required Map<String, dynamic> Function() toMap,
+    required Map<String, dynamic> Function() rowBuilder,
+    required void Function(String number) applyNumber,
+  }) async {
+    final mappedId = _mappedRemoteId(entityType, localId);
+    if (mappedId != null && mappedId > 0) {
+      final existing = await _findOneById(client, table, mappedId);
+      if (existing == null) {
+        // Ligne supprimée sur le serveur : recréation avec un numéro libre.
+        return _insertNumbered(
+          client: client,
+          table: table,
+          entityType: entityType,
+          localId: localId,
+          numberColumn: numberColumn,
+          rowBuilder: rowBuilder,
+          applyNumber: applyNumber,
+        );
+      }
+      final remoteUpdated =
+          DateTime.tryParse('${existing['updated_at']}');
+      if (remoteUpdated != null && remoteUpdated.isAfter(localUpdated)) {
+        await _recordMapping(entityType, mappedId, localId);
+        return mappedId;
+      }
+      await client
+          .from(table)
+          .upsert({...rowBuilder(), 'id': mappedId}, onConflict: 'id');
+      await _recordMapping(entityType, mappedId, localId);
+      return mappedId;
+    }
+
+    final row = rowBuilder();
+    final number = '${row[numberColumn]}';
+    final match =
+        await _findOne(client, table, (q) => q.eq(numberColumn, number));
+    if (match != null && _sameNumberedEntity(match, row)) {
+      final remoteId = match['id'] as int;
+      final remoteUpdated = DateTime.tryParse('${match['updated_at']}');
+      if (remoteUpdated == null || !remoteUpdated.isAfter(localUpdated)) {
+        await client
+            .from(table)
+            .upsert({...row, 'id': remoteId}, onConflict: 'id');
+      }
+      await _recordMapping(entityType, remoteId, localId);
+      return remoteId;
+    }
+
+    return _insertNumbered(
+      client: client,
+      table: table,
+      entityType: entityType,
+      localId: localId,
+      numberColumn: numberColumn,
+      rowBuilder: rowBuilder,
+      applyNumber: applyNumber,
+    );
+  }
+
+  /// Vrai si la ligne distante [remoteRow] est la même vente/facture logique
+  /// que [localRow] : numéro identique ET date de création quasi identique
+  /// (une copie tirée d'un autre appareil garde sa created_at ; une vente
+  /// réellement nouvelle porte une date fraîche et ne doit pas être fusionnée).
+  bool _sameNumberedEntity(
+    Map<String, dynamic> remoteRow,
+    Map<String, dynamic> localRow,
+  ) {
+    final remoteCreated = DateTime.tryParse('${remoteRow['created_at']}');
+    final localCreated = DateTime.tryParse('${localRow['created_at']}');
+    if (remoteCreated == null || localCreated == null) return true;
+    return localCreated.difference(remoteCreated).inMilliseconds.abs() <= 1000;
+  }
+
+  /// Insère une ligne numérotée en régénérant le numéro en cas de collision
+  /// 23505. Renvoie l'ID distant attribué par le serveur.
+  Future<int> _insertNumbered({
+    required SupabaseClient client,
+    required String table,
+    required String entityType,
+    required int localId,
+    required String numberColumn,
+    required Map<String, dynamic> Function() rowBuilder,
     required void Function(String number) applyNumber,
   }) async {
     const maxAttempts = 5;
     for (var attempt = 0; attempt < maxAttempts; attempt++) {
       try {
-        await client.from(table).upsert(toMap(), onConflict: 'id');
-        return;
+        final inserted =
+            await client.from(table).insert(rowBuilder()).select('id').single();
+        final remoteId = inserted['id'] as int;
+        await _recordMapping(entityType, remoteId, localId);
+        return remoteId;
       } on PostgrestException catch (e) {
         if (e.code != '23505') rethrow;
         if (attempt == maxAttempts - 1) rethrow;
         applyNumber(await _nextRemoteNumber(client, table, numberColumn));
       }
     }
+    throw StateError('Insertion numérotée impossible');
   }
 
-  Future<void> _pushSaleItems(SupabaseClient client, SaleEntity s) async {
-    final items = ObjectboxDatabase.box<SaleItemEntity>()
-        .query(SaleItemEntity_.saleId.equals(s.id))
-        .build()
-        .find();
-    if (items.isEmpty) return;
-    try {
-      await client
-          .from('sale_items')
-          .delete()
-          .eq('sale_id', _remoteId(s.id));
-      await client.from('sale_items').insert(items.map(_saleItemToMap).toList());
-    } catch (e) {
-      AppLogger.warning('Échec synchronisation des lignes de la vente ${s.id}: $e');
-    }
-  }
-
-  Future<void> _pushInvoiceItems(SupabaseClient client, InvoiceEntity i) async {
-    final items = ObjectboxDatabase.box<InvoiceItemEntity>()
-        .query(InvoiceItemEntity_.invoiceId.equals(i.id))
-        .build()
-        .find();
-    if (items.isEmpty) return;
-    try {
-      await client
-          .from('invoice_items')
-          .delete()
-          .eq('invoice_id', _remoteId(i.id));
-      await client
-          .from('invoice_items')
-          .insert(items.map(_invoiceItemToMap).toList());
-    } catch (e) {
-      AppLogger.warning(
-        'Échec synchronisation des lignes de la facture ${i.id}: $e',
-      );
-    }
-  }
-
+  /// Prochain numéro distant (max + 1) pour une colonne à numéro unique.
   Future<String> _nextRemoteNumber(
     SupabaseClient client,
     String table,
@@ -463,15 +442,446 @@ class SupabaseSyncRepository implements SyncRepository {
     return (max + 1).toString().padLeft(6, '0');
   }
 
-  /// Tire toutes les tables distantes vers ObjectBox, dans l'ordre des
-  /// dépendances (parents avant enfants) afin que les clés étrangères soient
-  /// traduites via le mapping [SyncIdEntity].
+  /// Résout l'ID distant canonique d'un parent référencé par une clé étrangère.
   ///
-  /// Chaque ligne distante est fusionnée sur la ligne locale correspondante
-  /// (mapping ou espace d'ID de cet appareil) ; les lignes issues d'autres
-  /// appareils sont créées localement avec de nouveaux ID et mappées. Les lignes
-  /// enfants (items) sont remplacées en bloc pour refléter exactement l'état
-  /// distant, comme le fait le push.
+  /// Si le parent local n'est pas encore mappé, il est poussé à la volée pour
+  /// garantir l'intégrité des clés étrangères (parents avant enfants).
+  Future<int> _resolveRemoteParent(
+    SupabaseClient client,
+    String entityType,
+    String table,
+    int localParentId,
+  ) async {
+    if (localParentId <= 0) return 0;
+    final mapped = _mappedRemoteId(entityType, localParentId);
+    if (mapped != null) return mapped;
+    switch (entityType) {
+      case 'category':
+        final c = _categoryBox.get(localParentId);
+        return c == null ? 0 : _pushCategory(client, c);
+      case 'product':
+        final p = _productBox.get(localParentId);
+        return p == null ? 0 : _pushProduct(client, p);
+      case 'customer':
+        final c = _customerBox.get(localParentId);
+        return c == null ? 0 : _pushCustomer(client, c);
+      case 'sale':
+        final s = _saleBox.get(localParentId);
+        return s == null ? 0 : _pushSale(client, s);
+      case 'invoice':
+        final i = _invoiceBox.get(localParentId);
+        return i == null ? 0 : _pushInvoice(client, i);
+    }
+    return 0;
+  }
+
+  Future<void> _pushCategories(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'categories', _categoryBox.getAll());
+    for (final c in candidates) {
+      await _pushCategory(client, c);
+    }
+    // Second passage : parent_id, une fois tous les parents mappés.
+    for (final c in candidates) {
+      if (c.parentId <= 0) continue;
+      final remoteId = _mappedRemoteId('category', c.id);
+      if (remoteId == null) continue;
+      final parentRemoteId = await _resolveRemoteParent(
+        client,
+        'category',
+        'categories',
+        c.parentId,
+      );
+      if (parentRemoteId <= 0) continue;
+      await client
+          .from('categories')
+          .update({'parent_id': parentRemoteId}).eq('id', remoteId);
+    }
+  }
+
+  Future<int> _pushCategory(SupabaseClient client, CategoryEntity c) async {
+    final remoteId = await _pushRow(
+      client: client,
+      table: 'categories',
+      entityType: 'category',
+      localId: c.id,
+      localUpdated: c.updatedAt,
+      rowBuilder: () => _categoryToMap(c),
+      finder: () => c.name.trim().isEmpty
+          ? Future.value(null)
+          : _findOne(
+              client,
+              'categories',
+              (q) => q.ilike('name', c.name.trim()),
+            ),
+    );
+    _categoryBox.put(c..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<void> _pushProducts(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'products', _productBox.getAll());
+    for (final p in candidates) {
+      await _pushProduct(client, p);
+    }
+  }
+
+  Future<int> _pushProduct(SupabaseClient client, ProductEntity p) async {
+    final categoryRemoteId = await _resolveRemoteParent(
+      client,
+      'category',
+      'categories',
+      p.categoryId,
+    );
+    final remoteId = await _pushRow(
+      client: client,
+      table: 'products',
+      entityType: 'product',
+      localId: p.id,
+      localUpdated: p.updatedAt,
+      rowBuilder: () => _productToMap(p, categoryRemoteId: categoryRemoteId),
+      finder: () => p.sku.trim().isEmpty
+          ? Future.value(null)
+          : _findOne(client, 'products', (q) => q.eq('sku', p.sku)),
+    );
+    _productBox.put(p..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<void> _pushCustomers(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'customers', _customerBox.getAll());
+    for (final c in candidates) {
+      await _pushCustomer(client, c);
+    }
+  }
+
+  Future<int> _pushCustomer(SupabaseClient client, CustomerEntity c) async {
+    final remoteId = await _pushRow(
+      client: client,
+      table: 'customers',
+      entityType: 'customer',
+      localId: c.id,
+      localUpdated: c.updatedAt,
+      rowBuilder: () => _customerToMap(c),
+      finder: () => _findCustomer(client, c),
+    );
+    _customerBox.put(c..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<Map<String, dynamic>?> _findCustomer(
+    SupabaseClient client,
+    CustomerEntity c,
+  ) async {
+    final name = c.name.trim();
+    if (name.isEmpty) return null;
+    final phone = c.phone?.trim();
+    return _findOne(client, 'customers', (q) {
+      var query = q.ilike('name', name);
+      if (phone != null && phone.isNotEmpty) query = query.eq('phone', phone);
+      return query;
+    });
+  }
+
+  Future<void> _pushSales(SupabaseClient client) async {
+    final candidates = await _pushCandidates(client, 'sales', _saleBox.getAll());
+    for (final s in candidates) {
+      await _pushSale(client, s);
+    }
+  }
+
+  Future<int> _pushSale(SupabaseClient client, SaleEntity s) async {
+    final customerRemoteId = await _resolveRemoteParent(
+      client,
+      'customer',
+      'customers',
+      s.customerId,
+    );
+    final remoteId = await _pushNumberedRow(
+      client: client,
+      table: 'sales',
+      entityType: 'sale',
+      localId: s.id,
+      localUpdated: s.updatedAt,
+      numberColumn: 'sale_number',
+      rowBuilder: () => _saleToMap(s, customerRemoteId: customerRemoteId),
+      applyNumber: (number) {
+        s.saleNumber = number;
+        s.updatedAt = DateTime.now();
+      },
+    );
+    await _pushSaleItems(client, s, remoteId);
+    _saleBox.put(s..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<void> _pushSaleItems(
+    SupabaseClient client,
+    SaleEntity s,
+    int saleRemoteId,
+  ) async {
+    final items = ObjectboxDatabase.box<SaleItemEntity>()
+        .query(SaleItemEntity_.saleId.equals(s.id))
+        .build()
+        .find();
+    if (items.isEmpty) return;
+    try {
+      await client.from('sale_items').delete().eq('sale_id', saleRemoteId);
+      final maps = <Map<String, dynamic>>[];
+      for (final item in items) {
+        final productRemoteId = await _resolveRemoteParent(
+          client,
+          'product',
+          'products',
+          item.productId,
+        );
+        maps.add(_saleItemToMap(
+          item,
+          saleRemoteId: saleRemoteId,
+          productRemoteId: productRemoteId,
+        ));
+      }
+      await client.from('sale_items').insert(maps);
+    } catch (e) {
+      AppLogger.warning(
+        'Échec synchronisation des lignes de la vente ${s.id}: $e',
+      );
+    }
+  }
+
+  Future<void> _pushInvoices(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'invoices', _invoiceBox.getAll());
+    for (final i in candidates) {
+      await _pushInvoice(client, i);
+    }
+  }
+
+  Future<int> _pushInvoice(SupabaseClient client, InvoiceEntity i) async {
+    final saleRemoteId =
+        await _resolveRemoteParent(client, 'sale', 'sales', i.saleId);
+    final customerRemoteId = await _resolveRemoteParent(
+      client,
+      'customer',
+      'customers',
+      i.customerId,
+    );
+    final remoteId = await _pushNumberedRow(
+      client: client,
+      table: 'invoices',
+      entityType: 'invoice',
+      localId: i.id,
+      localUpdated: i.updatedAt,
+      numberColumn: 'invoice_number',
+      rowBuilder: () => _invoiceToMap(
+        i,
+        saleRemoteId: saleRemoteId,
+        customerRemoteId: customerRemoteId,
+      ),
+      applyNumber: (number) {
+        i.invoiceNumber = number;
+        i.updatedAt = DateTime.now();
+      },
+    );
+    await _pushInvoiceItems(client, i, remoteId);
+    _invoiceBox.put(i..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<void> _pushInvoiceItems(
+    SupabaseClient client,
+    InvoiceEntity i,
+    int invoiceRemoteId,
+  ) async {
+    final items = ObjectboxDatabase.box<InvoiceItemEntity>()
+        .query(InvoiceItemEntity_.invoiceId.equals(i.id))
+        .build()
+        .find();
+    if (items.isEmpty) return;
+    try {
+      await client
+          .from('invoice_items')
+          .delete()
+          .eq('invoice_id', invoiceRemoteId);
+      final maps = <Map<String, dynamic>>[];
+      for (final item in items) {
+        final productRemoteId = await _resolveRemoteParent(
+          client,
+          'product',
+          'products',
+          item.productId,
+        );
+        maps.add(_invoiceItemToMap(
+          item,
+          invoiceRemoteId: invoiceRemoteId,
+          productRemoteId: productRemoteId,
+        ));
+      }
+      await client.from('invoice_items').insert(maps);
+    } catch (e) {
+      AppLogger.warning(
+        'Échec synchronisation des lignes de la facture ${i.id}: $e',
+      );
+    }
+  }
+
+  Future<void> _pushPayments(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'payments', _paymentBox.getAll());
+    for (final p in candidates) {
+      await _pushPayment(client, p);
+    }
+  }
+
+  Future<int> _pushPayment(SupabaseClient client, PaymentEntity payment) async {
+    final saleRemoteId = await _resolveRemoteParent(
+      client,
+      'sale',
+      'sales',
+      payment.saleId,
+    );
+    final invoiceRemoteId = await _resolveRemoteParent(
+      client,
+      'invoice',
+      'invoices',
+      payment.invoiceId,
+    );
+    final remoteId = await _pushRow(
+      client: client,
+      table: 'payments',
+      entityType: 'payment',
+      localId: payment.id,
+      localUpdated: payment.paidAt,
+      rowBuilder: () => _paymentToMap(
+        payment,
+        saleRemoteId: saleRemoteId,
+        invoiceRemoteId: invoiceRemoteId,
+      ),
+      finder: () async {
+        final reference = payment.reference?.trim();
+        if (reference != null && reference.isNotEmpty) {
+          return _findOne(
+            client,
+            'payments',
+            (q) => q.eq('reference', reference),
+          );
+        }
+        if (saleRemoteId > 0 || invoiceRemoteId > 0) {
+          return _findOne(
+            client,
+            'payments',
+            (q) {
+              var query = q;
+              if (saleRemoteId > 0) query = query.eq('sale_id', saleRemoteId);
+              if (invoiceRemoteId > 0) {
+                query = query.eq('invoice_id', invoiceRemoteId);
+              }
+              return query;
+            },
+          );
+        }
+        return null;
+      },
+    );
+    _paymentBox.put(payment..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<void> _pushReturns(SupabaseClient client) async {
+    final candidates =
+        await _pushCandidates(client, 'returns', _returnBox.getAll());
+    for (final r in candidates) {
+      await _pushReturn(client, r);
+    }
+  }
+
+  Future<int> _pushReturn(SupabaseClient client, ReturnRecordEntity r) async {
+    final saleRemoteId =
+        await _resolveRemoteParent(client, 'sale', 'sales', r.saleId);
+    final customerRemoteId = await _resolveRemoteParent(
+      client,
+      'customer',
+      'customers',
+      r.customerId,
+    );
+    final remoteId = await _pushRow(
+      client: client,
+      table: 'returns',
+      entityType: 'return',
+      localId: r.id,
+      localUpdated: r.updatedAt,
+      rowBuilder: () => _returnToMap(
+        r,
+        saleRemoteId: saleRemoteId,
+        customerRemoteId: customerRemoteId,
+      ),
+      finder: () => _findReturn(client, r),
+    );
+    await _pushReturnItems(client, r, remoteId);
+    _returnBox.put(r..syncStatus = SyncStatus.synced.index);
+    return remoteId;
+  }
+
+  Future<Map<String, dynamic>?> _findReturn(
+    SupabaseClient client,
+    ReturnRecordEntity r,
+  ) async {
+    final created = r.createdAt.toIso8601String();
+    return _findOne(
+      client,
+      'returns',
+      (q) => q
+          .eq('sale_number', r.saleNumber)
+          .eq('created_at', created),
+    );
+  }
+
+  Future<void> _pushReturnItems(
+    SupabaseClient client,
+    ReturnRecordEntity r,
+    int returnRemoteId,
+  ) async {
+    final items = ObjectboxDatabase.box<ReturnItemEntity>()
+        .query(ReturnItemEntity_.returnId.equals(r.id))
+        .build()
+        .find();
+    if (items.isEmpty) return;
+    try {
+      await client
+          .from('return_items')
+          .delete()
+          .eq('return_id', returnRemoteId);
+      final maps = <Map<String, dynamic>>[];
+      for (final item in items) {
+        final productRemoteId = await _resolveRemoteParent(
+          client,
+          'product',
+          'products',
+          item.productId,
+        );
+        maps.add(_returnItemToMap(
+          item,
+          returnRemoteId: returnRemoteId,
+          productRemoteId: productRemoteId,
+        ));
+      }
+      await client.from('return_items').insert(maps);
+    } catch (e) {
+      AppLogger.warning('Échec synchronisation des lignes du retour ${r.id}: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Pull : dédup par clé métier + dernière modification gagne
+  // ---------------------------------------------------------------------------
+
+  /// Tire les tables distantes vers ObjectBox dans l'ordre des dépendances
+  /// (parents avant enfants). Les lignes distantes sont dédupliquées par clé
+  /// métier (on garde la plus récente), fusionnées sur la ligne locale
+  /// correspondante (mapping, clé métier locale, ou nouvelle ligne) et les
+  /// lignes enfants sont remplacées en bloc.
   Future<void> _pullAll() async {
     final client = Supabase.instance.client;
     await _pullCategories(client);
@@ -488,24 +898,24 @@ class SupabaseSyncRepository implements SyncRepository {
 
   Future<void> _pullCategories(SupabaseClient client) async {
     final rows = await client.from('categories').select();
-    // Premier passage : insérer/mettre à jour chaque catégorie et garantir le
-    // mapping. Second passage : résoudre parent_id une fois tous les mappings
-    // connus (indépendant de l'ordre des lignes renvoyées par Supabase).
+    final byName = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'category',
-        _categoryBox,
-        row['id'] as int,
-        (localId) => _categoryFromMap(row, localId),
-      );
+      final name = (row['name'] as String? ?? '').trim().toLowerCase();
+      if (name.isEmpty) continue;
+      final existing = byName[name];
+      if (existing == null || _rowNewer(row, existing)) byName[name] = row;
     }
-    for (final row in rows) {
+    final deduped = byName.values.toList();
+    for (final row in deduped) {
+      await _pullCategoryRow(row);
+    }
+    // Second passage : résolution de parent_id une fois tous les mappings connus.
+    for (final row in deduped) {
       final localId = _mappedLocalId('category', row['id'] as int);
       if (localId == null) continue;
       final existing = _categoryBox.get(localId);
       if (existing == null) continue;
-      final parentId =
-          _translateFk('category', row['parent_id'] as int? ?? 0);
+      final parentId = _translateFk('category', row['parent_id'] as int? ?? 0);
       if (existing.parentId != parentId) {
         existing.parentId = parentId;
         _categoryBox.put(existing);
@@ -513,15 +923,43 @@ class SupabaseSyncRepository implements SyncRepository {
     }
   }
 
+  Future<void> _pullCategoryRow(Map<String, dynamic> row) async {
+    final remoteId = row['id'] as int;
+    var localId = _mappedLocalId('category', remoteId);
+    if (localId == null) {
+      final name = row['name'] as String? ?? '';
+      if (name.isNotEmpty) {
+        final existing = _categoryBox
+            .query(CategoryEntity_.name.equals(name, caseSensitive: false))
+            .build()
+            .findFirst();
+        if (existing != null) localId = existing.id;
+      }
+    }
+    final local = localId != null ? _categoryBox.get(localId) : null;
+    if (local != null &&
+        _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+      return;
+    }
+    final resolved = _categoryBox.put(_categoryFromMap(row, local?.id ?? 0));
+    await _recordMapping('category', remoteId, resolved);
+  }
+
   Future<void> _pullProducts(SupabaseClient client) async {
     final rows = await client.from('products').select();
+    final bySku = <String, Map<String, dynamic>>{};
     for (final row in rows) {
+      final sku = (row['sku'] as String? ?? '').trim().toLowerCase();
+      if (sku.isEmpty) continue;
+      final existing = bySku[sku];
+      if (existing == null || _rowNewer(row, existing)) bySku[sku] = row;
+    }
+    for (final row in bySku.values) {
       final remoteId = row['id'] as int;
       var localId = _mappedLocalId('product', remoteId);
 
-      // Fusion par SKU : un produit au même SKU déjà présent localement
-      // (créé sur cet appareil ou tiré avant) est réutilisé au lieu de créer
-      // un doublon.
+      // Fusion par SKU : un produit au même SKU déjà présent localement est
+      // réutilisé au lieu de créer un doublon.
       if (localId == null) {
         final sku = row['sku'] as String? ?? '';
         if (sku.isNotEmpty) {
@@ -532,69 +970,165 @@ class SupabaseSyncRepository implements SyncRepository {
           if (existing != null) localId = existing.id;
         }
       }
-      if (localId == null && _isOwnRemoteId(remoteId)) {
-        localId = _localFromRemoteId(remoteId);
-      }
 
-      final existing = localId != null ? _productBox.get(localId) : null;
-      final resolvedLocalId = _productBox.put(
-        _productFromMap(row, existing != null ? existing.id : 0),
-      );
-      await _recordMapping('product', remoteId, resolvedLocalId);
+      final local = localId != null ? _productBox.get(localId) : null;
+      if (local != null &&
+          _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+        continue;
+      }
+      final resolved =
+          _productBox.put(_productFromMap(row, local?.id ?? 0));
+      await _recordMapping('product', remoteId, resolved);
     }
   }
 
   Future<void> _pullCustomers(SupabaseClient client) async {
     final rows = await client.from('customers').select();
+    final byKey = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'customer',
-        _customerBox,
-        row['id'] as int,
-        (localId) => _customerFromMap(row, localId),
-      );
+      final key =
+          '${(row['name'] as String? ?? '').trim().toLowerCase()}|${row['phone'] ?? ''}';
+      if (key.startsWith('|') && key.length == 1) continue;
+      final existing = byKey[key];
+      if (existing == null || _rowNewer(row, existing)) byKey[key] = row;
     }
+    for (final row in byKey.values) {
+      await _pullCustomerRow(row);
+    }
+  }
+
+  Future<void> _pullCustomerRow(Map<String, dynamic> row) async {
+    final remoteId = row['id'] as int;
+    var localId = _mappedLocalId('customer', remoteId);
+    if (localId == null) {
+      final name = (row['name'] as String? ?? '').trim();
+      final phone = row['phone'] as String?;
+      if (name.isNotEmpty) {
+        final candidates = _customerBox
+            .query(CustomerEntity_.name.equals(name, caseSensitive: false))
+            .build()
+            .find();
+        for (final c in candidates) {
+          if ((c.phone ?? '') == (phone ?? '')) {
+            localId = c.id;
+            break;
+          }
+        }
+      }
+    }
+    final local = localId != null ? _customerBox.get(localId) : null;
+    if (local != null &&
+        _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+      return;
+    }
+    final resolved = _customerBox.put(_customerFromMap(row, local?.id ?? 0));
+    await _recordMapping('customer', remoteId, resolved);
   }
 
   Future<void> _pullSales(SupabaseClient client) async {
     final rows = await client.from('sales').select();
+    final byNumber = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'sale',
-        _saleBox,
-        row['id'] as int,
-        (localId) => _saleFromMap(row, localId),
-      );
+      final number = (row['sale_number'] as String? ?? '').trim();
+      if (number.isEmpty) continue;
+      final existing = byNumber[number];
+      if (existing == null || _rowNewer(row, existing)) byNumber[number] = row;
+    }
+    for (final row in byNumber.values) {
+      final remoteId = row['id'] as int;
+      var localId = _mappedLocalId('sale', remoteId);
+      if (localId == null) {
+        final number = row['sale_number'] as String? ?? '';
+        if (number.isNotEmpty) {
+          final existing = _saleBox
+              .query(SaleEntity_.saleNumber.equals(number))
+              .build()
+              .findFirst();
+          if (existing != null) localId = existing.id;
+        }
+      }
+      final local = localId != null ? _saleBox.get(localId) : null;
+      if (local != null &&
+          _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+        continue;
+      }
+      final resolved = _saleBox.put(_saleFromMap(row, local?.id ?? 0));
+      await _recordMapping('sale', remoteId, resolved);
     }
   }
 
   Future<void> _pullInvoices(SupabaseClient client) async {
     final rows = await client.from('invoices').select();
+    final byNumber = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'invoice',
-        _invoiceBox,
-        row['id'] as int,
-        (localId) => _invoiceFromMap(row, localId),
-      );
+      final number = (row['invoice_number'] as String? ?? '').trim();
+      if (number.isEmpty) continue;
+      final existing = byNumber[number];
+      if (existing == null || _rowNewer(row, existing)) byNumber[number] = row;
+    }
+    for (final row in byNumber.values) {
+      final remoteId = row['id'] as int;
+      var localId = _mappedLocalId('invoice', remoteId);
+      if (localId == null) {
+        final number = row['invoice_number'] as String? ?? '';
+        if (number.isNotEmpty) {
+          final existing = _invoiceBox
+              .query(InvoiceEntity_.invoiceNumber.equals(number))
+              .build()
+              .findFirst();
+          if (existing != null) localId = existing.id;
+        }
+      }
+      final local = localId != null ? _invoiceBox.get(localId) : null;
+      if (local != null &&
+          _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+        continue;
+      }
+      final resolved = _invoiceBox.put(_invoiceFromMap(row, local?.id ?? 0));
+      await _recordMapping('invoice', remoteId, resolved);
     }
   }
 
   Future<void> _pullReturns(SupabaseClient client) async {
     final rows = await client.from('returns').select();
+    final byKey = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'return',
-        _returnBox,
-        row['id'] as int,
-        (localId) => _returnFromMap(row, localId),
-      );
+      final key =
+          '${row['sale_number']}|${row['reason']}|${row['created_at']}';
+      final existing = byKey[key];
+      if (existing == null || _rowNewer(row, existing)) byKey[key] = row;
+    }
+    for (final row in byKey.values) {
+      final remoteId = row['id'] as int;
+      var localId = _mappedLocalId('return', remoteId);
+      if (localId == null) {
+        final saleNumber = row['sale_number'] as String? ?? '';
+        final reason = row['reason'] as String?;
+        if (saleNumber.isNotEmpty) {
+          final existing = _returnBox
+              .query(ReturnRecordEntity_.saleNumber.equals(saleNumber))
+              .build()
+              .find();
+          for (final r in existing) {
+            if (r.reason == reason) {
+              localId = r.id;
+              break;
+            }
+          }
+        }
+      }
+      final local = localId != null ? _returnBox.get(localId) : null;
+      if (local != null &&
+          _localIsNewerPending(local.updatedAt, local.syncStatus, row)) {
+        continue;
+      }
+      final resolved = _returnBox.put(_returnFromMap(row, local?.id ?? 0));
+      await _recordMapping('return', remoteId, resolved);
     }
   }
 
-  /// Remplace les lignes de vente locales de chaque vente distante, comme le
-  /// fait le push (delete + insert). Les lignes sont groupées par vente et
-  /// traduites sur l'ID local de la vente via le mapping.
+  /// Remplace les lignes de vente locales de chaque vente distante (delete +
+  /// insert en bloc), groupées par ID distant de la vente.
   Future<void> _pullSaleItems(SupabaseClient client) async {
     final rows = await client.from('sale_items').select();
     final grouped = <int, List<Map<String, dynamic>>>{};
@@ -663,23 +1197,51 @@ class SupabaseSyncRepository implements SyncRepository {
 
   Future<void> _pullPayments(SupabaseClient client) async {
     final rows = await client.from('payments').select();
+    final byKey = <String, Map<String, dynamic>>{};
     for (final row in rows) {
-      await _ensureMapped(
-        'payment',
-        _paymentBox,
-        row['id'] as int,
-        (localId) => _paymentFromMap(row, localId),
-      );
+      final reference = (row['reference'] as String? ?? '').trim();
+      final key = reference.isNotEmpty
+          ? 'ref|$reference'
+          : 'sale${row['sale_id']}|inv${row['invoice_id']}|${row['method']}|${row['amount']}';
+      final existing = byKey[key];
+      if (existing == null || _rowNewer(row, existing)) byKey[key] = row;
+    }
+    for (final row in byKey.values) {
+      final remoteId = row['id'] as int;
+      var localId = _mappedLocalId('payment', remoteId);
+      if (localId == null) {
+        final reference = (row['reference'] as String? ?? '').trim();
+        if (reference.isNotEmpty) {
+          final existing = _paymentBox
+              .query(PaymentEntity_.reference.equals(reference))
+              .build()
+              .findFirst();
+          if (existing != null) localId = existing.id;
+        }
+      }
+      final local = localId != null ? _paymentBox.get(localId) : null;
+      if (local != null &&
+          _localIsNewerPending(local.paidAt, local.syncStatus, row)) {
+        continue;
+      }
+      final resolved = _paymentBox.put(_paymentFromMap(row, local?.id ?? 0));
+      await _recordMapping('payment', remoteId, resolved);
     }
   }
 
-  Map<String, dynamic> _productToMap(ProductEntity p) {
+  // ---------------------------------------------------------------------------
+  // Construction des lignes distantes (sans 'id' : attribué par le serveur)
+  // ---------------------------------------------------------------------------
+
+  Map<String, dynamic> _productToMap(
+    ProductEntity p, {
+    required int categoryRemoteId,
+  }) {
     return {
-      'id': _remoteId(p.id),
       'sku': p.sku,
       'name': p.name,
       'description': p.description,
-      'category_id': _remoteId(p.categoryId),
+      'category_id': categoryRemoteId,
       'price': p.price,
       'cost_price': p.costPrice,
       'tax_rate': p.taxRate,
@@ -696,9 +1258,8 @@ class SupabaseSyncRepository implements SyncRepository {
 
   Map<String, dynamic> _categoryToMap(CategoryEntity c) {
     return {
-      'id': _remoteId(c.id),
       'name': c.name,
-      'parent_id': _remoteId(c.parentId),
+      'parent_id': 0,
       'sort_order': c.sortOrder,
       'is_active': c.isActive,
       'created_at': c.createdAt.toIso8601String(),
@@ -709,7 +1270,6 @@ class SupabaseSyncRepository implements SyncRepository {
 
   Map<String, dynamic> _customerToMap(CustomerEntity c) {
     return {
-      'id': _remoteId(c.id),
       'name': c.name,
       'phone': c.phone,
       'email': c.email,
@@ -723,11 +1283,13 @@ class SupabaseSyncRepository implements SyncRepository {
     };
   }
 
-  Map<String, dynamic> _saleToMap(SaleEntity s) {
+  Map<String, dynamic> _saleToMap(
+    SaleEntity s, {
+    required int customerRemoteId,
+  }) {
     return {
-      'id': _remoteId(s.id),
       'sale_number': s.saleNumber,
-      'customer_id': _remoteId(s.customerId),
+      'customer_id': customerRemoteId,
       'cashier_id': s.cashierId,
       'payment_method': s.paymentMethod,
       'status': s.status,
@@ -739,12 +1301,15 @@ class SupabaseSyncRepository implements SyncRepository {
     };
   }
 
-  Map<String, dynamic> _invoiceToMap(InvoiceEntity i) {
+  Map<String, dynamic> _invoiceToMap(
+    InvoiceEntity i, {
+    required int saleRemoteId,
+    required int customerRemoteId,
+  }) {
     return {
-      'id': _remoteId(i.id),
       'invoice_number': i.invoiceNumber,
-      'sale_id': _remoteId(i.saleId),
-      'customer_id': _remoteId(i.customerId),
+      'sale_id': saleRemoteId,
+      'customer_id': customerRemoteId,
       'status': i.status,
       'discount_total': i.discountTotal,
       'company_name': i.companyName,
@@ -754,6 +1319,88 @@ class SupabaseSyncRepository implements SyncRepository {
       'created_at': i.createdAt.toIso8601String(),
       'updated_at': i.updatedAt.toIso8601String(),
       'sync_status': SyncStatus.synced.index,
+    };
+  }
+
+  Map<String, dynamic> _paymentToMap(
+    PaymentEntity payment, {
+    required int saleRemoteId,
+    required int invoiceRemoteId,
+  }) {
+    return {
+      'amount': payment.amount,
+      'method': payment.method,
+      'sale_id': saleRemoteId,
+      'invoice_id': invoiceRemoteId,
+      'reference': payment.reference,
+      'paid_at': payment.paidAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
+    };
+  }
+
+  Map<String, dynamic> _returnToMap(
+    ReturnRecordEntity r, {
+    required int saleRemoteId,
+    required int customerRemoteId,
+  }) {
+    return {
+      'sale_id': saleRemoteId,
+      'sale_number': r.saleNumber,
+      'customer_id': customerRemoteId,
+      'reason': r.reason,
+      'created_at': r.createdAt.toIso8601String(),
+      'updated_at': r.updatedAt.toIso8601String(),
+      'sync_status': SyncStatus.synced.index,
+    };
+  }
+
+  Map<String, dynamic> _saleItemToMap(
+    SaleItemEntity item, {
+    required int saleRemoteId,
+    required int productRemoteId,
+  }) {
+    return {
+      'sale_id': saleRemoteId,
+      'product_id': productRemoteId,
+      'product_name': item.productName,
+      'sku': item.sku,
+      'unit_price': item.unitPrice,
+      'cost_price': item.costPrice,
+      'tax_rate': item.taxRate,
+      'quantity': item.quantity,
+      'discount': item.discount,
+    };
+  }
+
+  Map<String, dynamic> _invoiceItemToMap(
+    InvoiceItemEntity item, {
+    required int invoiceRemoteId,
+    required int productRemoteId,
+  }) {
+    return {
+      'invoice_id': invoiceRemoteId,
+      'product_id': productRemoteId,
+      'description': item.description,
+      'unit_price': item.unitPrice,
+      'quantity': item.quantity,
+      'tax_rate': item.taxRate,
+      'discount': item.discount,
+    };
+  }
+
+  Map<String, dynamic> _returnItemToMap(
+    ReturnItemEntity item, {
+    required int returnRemoteId,
+    required int productRemoteId,
+  }) {
+    return {
+      'return_id': returnRemoteId,
+      'product_id': productRemoteId,
+      'description': item.description,
+      'unit_price': item.unitPrice,
+      'quantity': item.quantity,
+      'tax_rate': item.taxRate,
+      'discount': item.discount,
     };
   }
 
@@ -772,31 +1419,9 @@ class SupabaseSyncRepository implements SyncRepository {
     return (subtotal + tax) - s.discountTotal;
   }
 
-  Map<String, dynamic> _saleItemToMap(SaleItemEntity item) {
-    return {
-      'sale_id': _remoteId(item.saleId),
-      'product_id': _remoteId(item.productId),
-      'product_name': item.productName,
-      'sku': item.sku,
-      'unit_price': item.unitPrice,
-      'cost_price': item.costPrice,
-      'tax_rate': item.taxRate,
-      'quantity': item.quantity,
-      'discount': item.discount,
-    };
-  }
-
-  Map<String, dynamic> _invoiceItemToMap(InvoiceItemEntity item) {
-    return {
-      'invoice_id': _remoteId(item.invoiceId),
-      'product_id': _remoteId(item.productId),
-      'description': item.description,
-      'unit_price': item.unitPrice,
-      'quantity': item.quantity,
-      'tax_rate': item.taxRate,
-      'discount': item.discount,
-    };
-  }
+  // ---------------------------------------------------------------------------
+  // Reconstruction des entités locales depuis les lignes distantes
+  // ---------------------------------------------------------------------------
 
   ProductEntity _productFromMap(Map<String, dynamic> row, int localId) {
     final now = DateTime.now();
