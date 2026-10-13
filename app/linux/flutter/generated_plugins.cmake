@@ -3,7 +3,7 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  gtk
+  app_links_linux
   objectbox_flutter_libs
   url_launcher_linux
 )

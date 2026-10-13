@@ -1,0 +1,8 @@
+{
+  "name": "POS Module Pro - Caisse & Facturation Multi-Postes",
+  "description": "Système de Point de Vente (POS), gestion des stocks, facturation, retours et synchronisation décentralisée multi-postes ObjectBox P2P sans serveur central.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,4 +1,4 @@
-import 'package:objectbox/objectbox.dart';
+import '../../objectbox/objectbox_core.dart';
 
 @Entity()
 class ReturnItemEntity {

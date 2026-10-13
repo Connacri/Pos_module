@@ -15,8 +15,11 @@ workspace:
   - packages/pos_pos
   - packages/pos_inventory
   - packages/pos_billing
+  - packages/freebox_sync
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
+  build_runner: any
+  objectbox_generator: any

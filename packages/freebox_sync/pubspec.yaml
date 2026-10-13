@@ -1,0 +1,25 @@
+name: freebox_sync
+description: Free, high-performance decentralized LAN peer-to-peer sync engine for ObjectBox databases using binary transaction logs and CRDTs.
+version: 1.0.0
+homepage: https://github.com/freeboxsync/freebox_sync
+repository: https://github.com/freeboxsync/freebox_sync
+issue_tracker: https://github.com/freeboxsync/freebox_sync/issues
+
+environment:
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.10.0'
+
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  objectbox: ^5.3.2
+  meta: ^1.11.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  objectbox_generator: ^5.3.2
+  build_runner: ^2.4.8
