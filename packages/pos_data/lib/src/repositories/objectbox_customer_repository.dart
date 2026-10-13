@@ -1,10 +1,12 @@
-import 'package:objectbox/objectbox.dart';
+import '../../objectbox.g.dart';
 
 import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/customer_entity.dart';
+import '../sync/freebox_sync_service.dart';
 import '../utils/recent_sort.dart';
+
 
 class ObjectboxCustomerRepository implements CustomerRepository {
   ObjectboxCustomerRepository()
@@ -60,8 +62,12 @@ class ObjectboxCustomerRepository implements CustomerRepository {
   @override
   Future<int> save(Customer customer) async {
     final entity = _toEntity(customer);
-    return _box.put(entity);
+    final id = _box.put(entity);
+    entity.id = id;
+    FreeboxSyncService.broadcastCustomer(entity);
+    return id;
   }
+
 
   @override
   Future<void> delete(int id) async {

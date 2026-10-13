@@ -2,7 +2,9 @@ import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/category_entity.dart';
+import '../sync/freebox_sync_service.dart';
 import '../utils/recent_sort.dart';
+
 import '../../objectbox.g.dart';
 
 class ObjectboxCategoryRepository implements CategoryRepository {
@@ -49,8 +51,12 @@ class ObjectboxCategoryRepository implements CategoryRepository {
   @override
   Future<int> save(Category category) async {
     final entity = _toEntity(category);
-    return _box.put(entity);
+    final id = _box.put(entity);
+    entity.id = id;
+    FreeboxSyncService.broadcastCategory(entity);
+    return id;
   }
+
 
   @override
   Future<void> delete(int id) async {

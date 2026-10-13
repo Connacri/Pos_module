@@ -3,7 +3,9 @@ import 'package:pos_domain/pos_domain.dart';
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/sale_entity.dart';
 import '../models/objectbox/sale_item_entity.dart';
+import '../sync/freebox_sync_service.dart';
 import '../utils/recent_sort.dart';
+
 import '../../objectbox.g.dart';
 
 class ObjectboxSaleRepository implements SaleRepository {
@@ -62,13 +64,19 @@ class ObjectboxSaleRepository implements SaleRepository {
   Future<int> save(Sale sale) async {
     final entity = _toEntity(sale);
     final id = _box.put(entity);
+    entity.id = id;
 
     _itemsBox.query(SaleItemEntity_.saleId.equals(id)).build().remove();
+    final itemEntities = <SaleItemEntity>[];
     for (final item in sale.items) {
-      _itemsBox.put(_toItemEntity(item, id));
+      final itemEnt = _toItemEntity(item, id);
+      _itemsBox.put(itemEnt);
+      itemEntities.add(itemEnt);
     }
+    FreeboxSyncService.broadcastSale(entity, itemEntities);
     return id;
   }
+
 
   @override
   Future<void> delete(int id) async {

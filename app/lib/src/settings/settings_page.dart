@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:freebox_sync/freebox_sync.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
@@ -103,7 +104,10 @@ class SettingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             const _IssuerSection(),
             const SizedBox(height: 16),
+            const _FreeboxSyncP2pSettingsSection(),
+            const SizedBox(height: 16),
             const _StorageSection(),
+
             const SizedBox(height: 16),
             const _DataSection(),
             const SizedBox(height: 16),
@@ -1070,3 +1074,163 @@ class _StorageSectionState extends State<_StorageSection> {
     );
   }
 }
+
+class _FreeboxSyncP2pSettingsSection extends StatefulWidget {
+  const _FreeboxSyncP2pSettingsSection();
+
+  @override
+  State<_FreeboxSyncP2pSettingsSection> createState() => _FreeboxSyncP2pSettingsSectionState();
+}
+
+class _FreeboxSyncP2pSettingsSectionState extends State<_FreeboxSyncP2pSettingsSection> {
+  late final TextEditingController _stationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _stationController = TextEditingController(text: FreeBoxSync.instance.stationName);
+  }
+
+  @override
+  void dispose() {
+    _stationController.dispose();
+    super.dispose();
+  }
+
+  void _saveStationName() {
+    final newName = _stationController.text.trim();
+    if (newName.isNotEmpty) {
+      FreeBoxSync.instance.setStationName(newName);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Nom du poste enregistré : $newName')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final sync = FreeBoxSync.instance;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.hub_outlined, color: theme.colorScheme.primary),
+              const SizedBox(width: 8),
+              Text(
+                'ObjectBox P2P (FreeBoxSync)',
+                style: theme.textTheme.titleMedium,
+              ),
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'Décentralisé',
+                  style: TextStyle(
+                    color: Colors.green,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Partage de données décentralisé entre postes sur le réseau local '
+            'sans serveur central. Résolution automatique des conflits (CRDT / HLC).',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: AppTextField(
+                  label: 'Nom de ce poste (ex: Caisse 1, Comptoir)',
+                  controller: _stationController,
+                  prefixIcon: const Icon(Icons.computer_outlined),
+                ),
+              ),
+              const SizedBox(width: 8),
+              AppButton(
+                label: 'Enregistrer',
+                variant: AppButtonVariant.primary,
+                onPressed: _saveStationName,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Identifiant de nœud (Node ID) :', style: theme.textTheme.bodySmall),
+                    SelectableText(
+                      sync.nodeId,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                StreamBuilder<int>(
+                  stream: sync.peerCountStream,
+                  initialData: sync.peerCount,
+                  builder: (context, snapshot) {
+                    final count = snapshot.data ?? 0;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Postes pairs actifs connectés :', style: theme.textTheme.bodySmall),
+                        Text(
+                          '$count poste(s)',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: count > 0 ? Colors.green : Colors.amber,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppButton(
+            label: 'Envoyer signal de présence P2P (Heartbeat)',
+            icon: Icons.wifi_tethering,
+            variant: AppButtonVariant.secondary,
+            expanded: true,
+            onPressed: () {
+              sync.sendHeartbeat();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Signal de présence P2P émis sur le réseau local')),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+

@@ -25,7 +25,10 @@ class AppDependencies {
 
   static Future<AppDependencies> create() async {
     await ObjectboxDatabase.open();
+    await SeedService.seedIfEmpty();
+    await FreeboxSyncService.initialize();
     await SupabaseConfig.initialize();
+
 
     final connectivity = ConnectivityService(
       supabaseUrl: SupabaseConfig.url,

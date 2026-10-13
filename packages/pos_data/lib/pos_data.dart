@@ -24,3 +24,5 @@ export 'src/models/objectbox/return_item_entity.dart';
 
 export 'src/seed/seed_data.dart';
 export 'src/seed/seed_service.dart';
+export 'src/sync/freebox_sync_service.dart';
+

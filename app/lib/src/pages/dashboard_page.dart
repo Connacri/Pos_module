@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import 'package:freebox_sync/freebox_sync.dart';
 import 'package:pos_core/pos_core.dart';
 import 'package:pos_domain/pos_domain.dart';
 
@@ -108,12 +109,18 @@ class DashboardPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         AnimatedEntrance(
+                          delay: const Duration(milliseconds: 280),
+                          child: const _FreeboxSyncP2pCard(),
+                        ),
+                        const SizedBox(height: 16),
+                        AnimatedEntrance(
                           delay: const Duration(milliseconds: 320),
                           child: _SyncCard(
                             syncUseCases: context.watch<SyncUseCases>(),
                           ),
                         ),
                         const SizedBox(height: 16),
+
                         AnimatedEntrance(
                           delay: const Duration(milliseconds: 400),
                           child: GridView.count(
@@ -1308,3 +1315,128 @@ void _openSalesList(
     ),
   );
 }
+
+class _FreeboxSyncP2pCard extends StatelessWidget {
+  const _FreeboxSyncP2pCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final sync = FreeBoxSync.instance;
+
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: StreamBuilder<int>(
+        stream: sync.peerCountStream,
+        initialData: sync.peerCount,
+        builder: (context, snapshot) {
+          final peerCount = snapshot.data ?? 0;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Icon(Icons.hub_outlined, color: theme.colorScheme.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'ObjectBox P2P (Multi-Postes)',
+                              style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: const Text(
+                                'Sans serveur',
+                                style: TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Poste local : ${sync.nodeId}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          peerCount > 0 ? Icons.check_circle : Icons.radio_button_checked,
+                          size: 16,
+                          color: peerCount > 0 ? Colors.green : Colors.amber,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '$peerCount poste(s) pair(s) en direct',
+                          style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'HLC: ${sync.clock?.now().toString().split('@').first ?? 'prêt'}',
+                      style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.outline),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: AppButton(
+                      label: 'Découverte / Ping P2P',
+                      icon: Icons.wifi_tethering,
+                      variant: AppButtonVariant.secondary,
+                      onPressed: () {
+                        sync.sendHeartbeat();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Signal de découverte P2P émis sur le réseau (${sync.nodeId})'),
+                            duration: const Duration(seconds: 2),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+

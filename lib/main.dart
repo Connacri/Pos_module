@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:app/src/app.dart';
+import 'package:app/src/di/app_dependencies.dart';
+import 'package:app/src/routes/app_routes.dart';
 import 'package:pos_core/pos_core.dart';
-import 'package:pos_domain/pos_domain.dart';
-import 'package:pos_data/pos_data.dart';
 
-void main() {
-  runApp(const MaterialApp(home: Scaffold(body: Center(child: Text('POS Module with Data')))));
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final dependencies = await AppDependencies.create();
+
+  AppRouter.registerRoutes(buildAppRoutes());
+
+  runApp(PosApp(dependencies: dependencies));
 }

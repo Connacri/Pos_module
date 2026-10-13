@@ -20,8 +20,12 @@ class ObjectboxDatabase {
 
   static Future<void> open() async {
     if (_store != null) return;
-    final dir = await getApplicationDocumentsDirectory();
-    _store = await openStore(directory: p.join(dir.path, 'objectbox'));
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      _store = await openStore(directory: p.join(dir.path, 'objectbox'));
+    } catch (_) {
+      _store = await openStore();
+    }
   }
 
   static Box<T> box<T>() => store.box<T>();

@@ -33,6 +33,14 @@ typedef ConditionPredicate<T> = bool Function(T item);
 
 abstract class Condition<T> {
   bool test(T item);
+
+  Condition<T> and(Condition<T> other) {
+    return _PredicateCondition<T>((item) => test(item) && other.test(item));
+  }
+
+  Condition<T> or(Condition<T> other) {
+    return _PredicateCondition<T>((item) => test(item) || other.test(item));
+  }
 }
 
 class _PredicateCondition<T> extends Condition<T> {
@@ -42,6 +50,7 @@ class _PredicateCondition<T> extends Condition<T> {
   @override
   bool test(T item) => predicate(item);
 }
+
 
 /// Propriétés pour les requêtes typées ObjectBox
 class QueryProperty<EntityT, ValueT> {

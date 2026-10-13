@@ -1,4 +1,4 @@
-import 'package:objectbox/objectbox.dart';
+import '../../objectbox/objectbox_core.dart';
 
 /// Mappage entre l'ID local (ObjectBox) et l'ID distant (Supabase) d'un
 /// enregistrement synchronisé.

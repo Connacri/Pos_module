@@ -3,7 +3,9 @@ import 'package:pos_domain/pos_domain.dart';
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/invoice_entity.dart';
 import '../models/objectbox/invoice_item_entity.dart';
+import '../sync/freebox_sync_service.dart';
 import '../utils/recent_sort.dart';
+
 import '../../objectbox.g.dart';
 
 class ObjectboxInvoiceRepository implements InvoiceRepository {
@@ -53,13 +55,19 @@ class ObjectboxInvoiceRepository implements InvoiceRepository {
   Future<int> save(Invoice invoice) async {
     final entity = _toEntity(invoice);
     final id = _box.put(entity);
+    entity.id = id;
 
     _itemsBox.query(InvoiceItemEntity_.invoiceId.equals(id)).build().remove();
+    final itemEntities = <InvoiceItemEntity>[];
     for (final item in invoice.items) {
-      _itemsBox.put(_toItemEntity(item, id));
+      final itemEnt = _toItemEntity(item, id);
+      _itemsBox.put(itemEnt);
+      itemEntities.add(itemEnt);
     }
+    FreeboxSyncService.broadcastInvoice(entity, itemEntities);
     return id;
   }
+
 
   @override
   Future<void> delete(int id) async {

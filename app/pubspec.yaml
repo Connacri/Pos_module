@@ -26,6 +26,8 @@ dependencies:
     path: ../packages/pos_inventory
   pos_billing:
     path: ../packages/pos_billing
+  freebox_sync:
+    path: ../packages/freebox_sync
   go_router: ^17.3.0
   package_info_plus: ^8.3.0
   provider: ^6.1.5+1

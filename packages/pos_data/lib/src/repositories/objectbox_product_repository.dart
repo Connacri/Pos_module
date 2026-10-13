@@ -2,7 +2,9 @@ import 'package:pos_domain/pos_domain.dart';
 
 import '../data_sources/objectbox_database.dart';
 import '../models/objectbox/product_entity.dart';
+import '../sync/freebox_sync_service.dart';
 import '../utils/recent_sort.dart';
+
 import '../../objectbox.g.dart';
 
 class ObjectboxProductRepository implements ProductRepository {
@@ -93,8 +95,12 @@ class ObjectboxProductRepository implements ProductRepository {
   @override
   Future<int> save(Product product) async {
     final entity = _toEntity(product);
-    return _box.put(entity);
+    final id = _box.put(entity);
+    entity.id = id;
+    FreeboxSyncService.broadcastProduct(entity);
+    return id;
   }
+
 
   @override
   Future<void> saveMany(List<Product> products) async {
