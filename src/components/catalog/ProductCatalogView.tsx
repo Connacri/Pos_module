@@ -15,6 +15,7 @@ import {
   Layers,
   Edit2,
   X,
+  Truck,
 } from 'lucide-react';
 
 export const ProductCatalogView: React.FC = () => {
@@ -287,6 +288,44 @@ export const ProductCatalogView: React.FC = () => {
         </div>
       </div>
 
+      {/* Reorder Needs Visual Indicator Banner */}
+      {(stockCounts.lowStock > 0 || stockCounts.outOfStock > 0) && (
+        <div className="bg-gradient-to-r from-amber-50 via-amber-50/80 to-rose-50 border border-amber-300/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-extrabold text-sm text-slate-900">
+                  Surveillance des Réapprovisionnements
+                </h3>
+                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full">
+                  {stockCounts.lowStock + stockCounts.outOfStock} référence(s) sous le seuil
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-0.5">
+                Certains articles ont atteint ou dépassé leur seuil minimal de sécurité. Les cartes en surbrillance ambrée/rouge indiquent le besoin de réapprovisionnement.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setStockFilter(stockFilter === 'LOW_STOCK' ? 'ALL' : 'LOW_STOCK')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+                stockFilter === 'LOW_STOCK'
+                  ? 'bg-amber-700 text-white shadow-amber-600/30'
+                  : 'bg-white hover:bg-amber-100 text-amber-900 border border-amber-300'
+              }`}
+            >
+              <Truck className="w-3.5 h-3.5" />
+              <span>{stockFilter === 'LOW_STOCK' ? 'Afficher tous les articles' : 'Filtrer besoins de réappro'}</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Responsive Products Grid */}
       {filteredProducts.length === 0 ? (
         <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs">
@@ -322,7 +361,13 @@ export const ProductCatalogView: React.FC = () => {
             return (
               <div
                 key={product.id}
-                className="bg-white rounded-2xl border border-slate-200/80 shadow-xs hover:shadow-md hover:border-indigo-200 transition-all flex flex-col overflow-hidden group"
+                className={`bg-white rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group relative ${
+                  isOutOfStock
+                    ? 'border-2 border-rose-400 bg-rose-50/20 ring-1 ring-rose-300'
+                    : isLowStock
+                    ? 'border-2 border-amber-400 bg-amber-50/30 ring-1 ring-amber-300 shadow-amber-500/10'
+                    : 'border border-slate-200/80 hover:border-indigo-200'
+                }`}
               >
                 {/* Product Image & Badges */}
                 <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
@@ -339,31 +384,45 @@ export const ProductCatalogView: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Top Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1">
-                    <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded-md">
-                      {product.sku}
-                    </span>
-                    {category && (
-                      <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md shadow-xs">
-                        {category.name}
+                  {/* Top Badges & Threshold Alert Indicator */}
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[80%]">
+                    {isOutOfStock ? (
+                      <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                        <XCircle className="w-3 h-3" />
+                        Rupture • Réappro requis
                       </span>
-                    )}
+                    ) : isLowStock ? (
+                      <span className="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+                        <AlertTriangle className="w-3 h-3" />
+                        Sous seuil min ({product.stock}/{product.lowStockThreshold})
+                      </span>
+                    ) : null}
+
+                    <div className="flex items-center gap-1">
+                      <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded-md">
+                        {product.sku}
+                      </span>
+                      {category && (
+                        <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md shadow-xs truncate">
+                          {category.name}
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Edit button */}
                   <button
                     type="button"
                     onClick={() => setEditingProduct(product)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer"
-                    title="Modifier l'article"
+                    className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
+                    title="Modifier l'article et son seuil"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                   </button>
 
                   {/* In Cart Indicator */}
                   {inCartQty > 0 && (
-                    <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1">
+                    <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 z-10">
                       <Check className="w-3 h-3" />
                       {inCartQty} au panier
                     </div>
@@ -385,14 +444,14 @@ export const ProductCatalogView: React.FC = () => {
                     {/* Stock Status Pill */}
                     <div className="mt-2.5 flex items-center justify-between text-xs">
                       {isOutOfStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
                           <XCircle className="w-3 h-3" />
-                          Rupture
+                          Rupture (0)
                         </span>
                       ) : isLowStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
-                          <AlertTriangle className="w-3 h-3 text-amber-500" />
-                          Reste {product.stock} (Alerte)
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md">
+                          <AlertTriangle className="w-3 h-3 text-amber-600" />
+                          Stock {product.stock} (Seuil {product.lowStockThreshold})
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
@@ -406,6 +465,44 @@ export const ProductCatalogView: React.FC = () => {
                         {product.barcode.slice(-4)}
                       </span>
                     </div>
+
+                    {/* Reorder Needs Visual Indicator Panel */}
+                    {(isLowStock || isOutOfStock) && (
+                      <div className={`mt-2.5 p-2 rounded-xl text-[10px] border ${
+                        isOutOfStock
+                          ? 'bg-rose-50/90 border-rose-200 text-rose-900'
+                          : 'bg-amber-50/90 border-amber-200 text-amber-900'
+                      }`}>
+                        <div className="flex items-center justify-between font-bold">
+                          <span className="flex items-center gap-1">
+                            <Truck className="w-3 h-3 text-amber-600" />
+                            Réappro requis :
+                          </span>
+                          <span className="font-mono font-black">
+                            {product.stock} / {product.lowStockThreshold} min
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-300 ${isOutOfStock ? 'bg-rose-500 w-0' : 'bg-amber-500'}`}
+                            style={{ width: `${Math.min(100, Math.round((product.stock / Math.max(1, product.lowStockThreshold)) * 100))}%` }}
+                          />
+                        </div>
+                        <div className="mt-1.5 flex items-center justify-between text-[9px] gap-1">
+                          <span>
+                            Déficit : <strong className="font-bold">{Math.max(0, product.lowStockThreshold - product.stock)} unité(s)</strong>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateProduct({ ...product, stock: product.stock + 10 })}
+                            className="px-1.5 py-0.5 bg-white hover:bg-slate-50 text-indigo-700 font-bold rounded border border-slate-200 shadow-2xs hover:border-indigo-300 transition-colors cursor-pointer"
+                            title="Ajouter 10 unités pour réapprovisionner"
+                          >
+                            +10 Réappro
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {/* Price & Action Section */}

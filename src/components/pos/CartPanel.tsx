@@ -17,9 +17,11 @@ import {
   Printer,
   CheckCircle2,
   X,
+  Eye,
 } from 'lucide-react';
 import { PaymentMethod } from '../../types';
 import { PrintableReceiptModal } from '../receipt/PrintableReceiptModal';
+import { TransactionPrintPreviewModal } from '../receipt/TransactionPrintPreviewModal';
 
 export const CartPanel: React.FC<{
   onOpenCheckout?: () => void;
@@ -44,12 +46,17 @@ export const CartPanel: React.FC<{
     completeSale,
     lastCompletedSale,
     setLastCompletedSale,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    isPrintPreviewOpen,
+    setIsPrintPreviewOpen,
+    selectedPaymentMethod,
+    setSelectedPaymentMethod,
+    amountTenderedInput,
+    setAmountTenderedInput,
+    initiateCheckout,
   } = usePos();
 
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('CASH');
-  const [amountTenderedInput, setAmountTenderedInput] = useState<string>('');
-  const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [editingItemDiscountId, setEditingItemDiscountId] = useState<number | null>(null);
 
   // Format currency in DA
@@ -63,21 +70,25 @@ export const CartPanel: React.FC<{
 
   // Handle open checkout
   const handleStartCheckout = () => {
+    initiateCheckout();
+  };
+
+  // Open thermal print preview modal before submission
+  const handleOpenPrintPreview = () => {
     if (cart.length === 0) return;
-    setAmountTenderedInput(cartSummary.totalTTC.toString());
-    setIsCheckoutOpen(true);
+    if (!amountTenderedInput) {
+      setAmountTenderedInput(cartSummary.totalTTC.toString());
+    }
+    setIsPrintPreviewOpen(true);
   };
 
   // Handle submit checkout
   const handleConfirmPayment = () => {
     const tendered = Number(amountTenderedInput) || cartSummary.totalTTC;
-    const res = completeSale(selectedPaymentMethod, tendered);
-    if (res.success) {
-      setIsCheckoutOpen(false);
-    }
+    completeSale(selectedPaymentMethod, tendered);
   };
 
-  const tenderedAmount = Number(amountTenderedInput) || 0;
+  const tenderedAmount = Number(amountTenderedInput) || cartSummary.totalTTC;
   const changeToReturn = Math.max(0, tenderedAmount - cartSummary.totalTTC);
 
   return (
@@ -316,20 +327,40 @@ export const CartPanel: React.FC<{
           </div>
         </div>
 
-        {/* Action Button */}
-        <button
-          type="button"
-          disabled={cart.length === 0}
-          onClick={handleStartCheckout}
-          className={`w-full py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            cart.length === 0
-              ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-              : 'bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white shadow-emerald-500/20'
-          }`}
-        >
-          <Receipt className="w-4 h-4" />
-          Encaisser {cart.length > 0 && `• ${formatMoney(cartSummary.totalTTC)}`}
-        </button>
+        {/* Action Buttons: Encaisser + Aperçu 80mm */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={cart.length === 0}
+            onClick={handleOpenPrintPreview}
+            className={`py-3 px-3.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+              cart.length === 0
+                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:border-slate-400 shadow-2xs'
+            }`}
+            title="Aperçu Ticket thermique 80mm avant encaissement"
+          >
+            <Printer className="w-4 h-4 text-indigo-600" />
+            <span className="hidden sm:inline">Aperçu 80mm</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={cart.length === 0}
+            onClick={handleStartCheckout}
+            className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              cart.length === 0
+                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
+                : 'bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white shadow-emerald-500/20'
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Encaisser {cart.length > 0 && `• ${formatMoney(cartSummary.totalTTC)}`}</span>
+            <kbd className="hidden sm:inline-block bg-emerald-800/60 text-emerald-200 text-[10px] px-1.5 py-0.5 rounded-md font-mono">
+              F2
+            </kbd>
+          </button>
+        </div>
       </div>
 
       {/* Checkout Modal */}
@@ -469,27 +500,45 @@ export const CartPanel: React.FC<{
               </div>
 
               {/* Actions */}
-              <div className="pt-3 border-t border-slate-100 flex items-center gap-3">
+              <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsCheckoutOpen(false)}
-                  className="flex-1 py-2.5 px-3 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
+                  className="px-3 py-2.5 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                 >
                   Annuler
                 </button>
                 <button
                   type="button"
+                  onClick={() => setIsPrintPreviewOpen(true)}
+                  className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Aperçu ticket 80mm avant validation finale"
+                >
+                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Aperçu (80mm)</span>
+                </button>
+                <button
+                  type="button"
                   onClick={handleConfirmPayment}
-                  className="flex-2 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
-                  Valider l'Encaissement
+                  <span>Valider l'Encaissement</span>
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+
+      {/* 80mm Thermal Receipt Print Preview Modal (Before Final Submission) */}
+      <TransactionPrintPreviewModal
+        isOpen={isPrintPreviewOpen}
+        onClose={() => setIsPrintPreviewOpen(false)}
+        onConfirmPayment={handleConfirmPayment}
+        paymentMethod={selectedPaymentMethod}
+        amountTendered={tenderedAmount}
+      />
 
       {/* Sale Success & Printable Receipt Modal */}
       {lastCompletedSale && (

@@ -16,6 +16,9 @@ import {
   Volume2,
   Zap,
   Sparkles,
+  Keyboard,
+  HelpCircle,
+  ArrowRight,
 } from 'lucide-react';
 
 export const PosRegisterView: React.FC = () => {
@@ -24,6 +27,12 @@ export const PosRegisterView: React.FC = () => {
     categories,
     cart,
     addToCart,
+    clearCart,
+    initiateCheckout,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    isPrintPreviewOpen,
+    setIsPrintPreviewOpen,
     scanAndAddToCart,
     cartSummary,
     isCartDrawerOpen,
@@ -39,6 +48,12 @@ export const PosRegisterView: React.FC = () => {
     type: 'success' | 'error' | 'warning';
     latencyMs?: number;
   } | null>(null);
+  const [shortcutFeedback, setShortcutFeedback] = useState<{
+    key: string;
+    label: string;
+    type?: 'info' | 'success' | 'warning';
+  } | null>(null);
+  const [showShortcutGuideModal, setShowShortcutGuideModal] = useState(false);
   const [lastScannedId, setLastScannedId] = useState<number | null>(null);
   const [stockWarningToast, setStockWarningToast] = useState<{
     productName: string;
@@ -47,6 +62,7 @@ export const PosRegisterView: React.FC = () => {
   } | null>(null);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Helper to trigger low stock warning toast
   const checkLowStockAlert = (product: Product) => {
@@ -60,19 +76,90 @@ export const PosRegisterView: React.FC = () => {
     }
   };
 
-  // Hardware Barcode Scanner Buffer (USB / Bluetooth HID)
-  // Scanners rapidly stream keystrokes ending with 'Enter'
+  // Keyboard shortcut mapping system (F1, F2, Esc) & Barcode Scanner Buffer
   useEffect(() => {
     let buffer = '';
     let lastKeyTime = Date.now();
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't intercept if user is actively typing in a standard text field other than barcode input
+      // 1. F1: Focus the product search input
+      if (e.key === 'F1') {
+        e.preventDefault();
+        if (searchInputRef.current) {
+          searchInputRef.current.focus();
+          searchInputRef.current.select();
+        }
+        setShortcutFeedback({
+          key: 'F1',
+          label: 'Recherche produit ciblée',
+          type: 'info',
+        });
+        setTimeout(() => setShortcutFeedback(null), 2200);
+        return;
+      }
+
+      // 2. F2: Initiate transaction (Open checkout modal)
+      if (e.key === 'F2') {
+        e.preventDefault();
+        if (cart.length > 0) {
+          initiateCheckout();
+          setShortcutFeedback({
+            key: 'F2',
+            label: 'Transaction initiée • Encaissement',
+            type: 'success',
+          });
+        } else {
+          setShortcutFeedback({
+            key: 'F2',
+            label: 'Panier vide : ajoutez des articles avant d\'encaisser',
+            type: 'warning',
+          });
+        }
+        setTimeout(() => setShortcutFeedback(null), 2500);
+        return;
+      }
+
+      // 3. Esc (Escape): Clear current cart or dismiss modals
+      if (e.key === 'Escape') {
+        if (isPrintPreviewOpen) {
+          e.preventDefault();
+          setIsPrintPreviewOpen(false);
+          return;
+        }
+        if (isCheckoutOpen) {
+          e.preventDefault();
+          setIsCheckoutOpen(false);
+          return;
+        }
+        if (showShortcutGuideModal) {
+          e.preventDefault();
+          setShowShortcutGuideModal(false);
+          return;
+        }
+        if (isCartDrawerOpen) {
+          e.preventDefault();
+          setIsCartDrawerOpen(false);
+          return;
+        }
+        if (cart.length > 0) {
+          e.preventDefault();
+          clearCart();
+          setShortcutFeedback({
+            key: 'Échap',
+            label: 'Panier de vente vidé avec succès',
+            type: 'warning',
+          });
+          setTimeout(() => setShortcutFeedback(null), 2200);
+          return;
+        }
+      }
+
+      // Hardware Barcode Scanner Buffer (USB / Bluetooth HID)
       const target = e.target as HTMLElement;
       const isInput =
         target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable;
 
-      // Allow barcode input box to receive characters
+      // Allow barcode input box to receive characters without hijacking other inputs
       if (isInput && target !== barcodeInputRef.current) {
         return;
       }
@@ -98,7 +185,18 @@ export const PosRegisterView: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [
+    cart.length,
+    initiateCheckout,
+    clearCart,
+    isPrintPreviewOpen,
+    setIsPrintPreviewOpen,
+    isCheckoutOpen,
+    setIsCheckoutOpen,
+    isCartDrawerOpen,
+    setIsCartDrawerOpen,
+    showShortcutGuideModal,
+  ]);
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('fr-DZ', {

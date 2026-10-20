@@ -38,6 +38,15 @@ interface PosContextType {
   setIsMobileMenuOpen: (open: boolean) => void;
   isCartDrawerOpen: boolean;
   setIsCartDrawerOpen: (open: boolean) => void;
+  isCheckoutOpen: boolean;
+  setIsCheckoutOpen: (open: boolean) => void;
+  isPrintPreviewOpen: boolean;
+  setIsPrintPreviewOpen: (open: boolean) => void;
+  selectedPaymentMethod: PaymentMethod;
+  setSelectedPaymentMethod: (method: PaymentMethod) => void;
+  amountTenderedInput: string;
+  setAmountTenderedInput: (val: string) => void;
+  initiateCheckout: () => void;
 
   // Offline & Network status
   isOffline: boolean;
@@ -250,6 +259,12 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [lastCompletedSale, setLastCompletedSale] = useState<Sale | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Sale | null>(null);
+
+  // Global Checkout & 80mm Print Preview state
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isPrintPreviewOpen, setIsPrintPreviewOpen] = useState(false);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod>('CASH');
+  const [amountTenderedInput, setAmountTenderedInput] = useState<string>('');
 
   // Supabase Config state
   const [supabaseConfig, setSupabaseConfigState] = useState<SupabaseConfig>(() =>
@@ -505,6 +520,16 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return newCust;
   };
 
+  // Initiate transaction checkout
+  const initiateCheckout = useCallback(() => {
+    if (cart.length === 0) {
+      posSounds.playScanError();
+      return;
+    }
+    setAmountTenderedInput(cartSummary.totalTTC.toString());
+    setIsCheckoutOpen(true);
+  }, [cart.length, cartSummary.totalTTC]);
+
   // Complete checkout
   const completeSale = (
     paymentMethod: PaymentMethod,
@@ -577,6 +602,10 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSales((prev) => [newSale, ...prev]);
     setLastCompletedSale(newSale);
     ultraLocalDb.queueSaleForSync(newSale).then(() => refreshPendingSyncCount());
+
+    // Close checkout and preview modals
+    setIsCheckoutOpen(false);
+    setIsPrintPreviewOpen(false);
 
     // Register chime
     posSounds.playPaymentSuccess();
@@ -713,6 +742,15 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setLastCompletedSale,
         selectedInvoice,
         setSelectedInvoice,
+        isCheckoutOpen,
+        setIsCheckoutOpen,
+        isPrintPreviewOpen,
+        setIsPrintPreviewOpen,
+        selectedPaymentMethod,
+        setSelectedPaymentMethod,
+        amountTenderedInput,
+        setAmountTenderedInput,
+        initiateCheckout,
         completeSale,
         dailyStats,
         todayStats,

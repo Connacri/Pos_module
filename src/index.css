@@ -40,18 +40,21 @@
   }
 
   #printable-receipt,
-  #printable-receipt * {
+  #printable-receipt *,
+  #thermal-preview-receipt,
+  #thermal-preview-receipt * {
     visibility: visible;
   }
 
-  #printable-receipt {
+  #printable-receipt,
+  #thermal-preview-receipt {
     position: absolute;
     left: 0;
     top: 0;
     width: 100% !important;
     max-width: 80mm !important;
     margin: 0 auto;
-    padding: 10px;
+    padding: 8px;
     background: white !important;
     color: black !important;
     box-shadow: none !important;
