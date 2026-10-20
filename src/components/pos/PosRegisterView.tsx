@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
+import { Product } from '../../types';
 import { CartPanel } from './CartPanel';
 import {
   Search,
@@ -35,12 +36,29 @@ export const PosRegisterView: React.FC = () => {
   const [barcodeInput, setBarcodeInput] = useState('');
   const [scanFeedback, setScanFeedback] = useState<{
     message: string;
-    type: 'success' | 'error';
+    type: 'success' | 'error' | 'warning';
     latencyMs?: number;
   } | null>(null);
   const [lastScannedId, setLastScannedId] = useState<number | null>(null);
+  const [stockWarningToast, setStockWarningToast] = useState<{
+    productName: string;
+    stock: number;
+    threshold: number;
+  } | null>(null);
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper to trigger low stock warning toast
+  const checkLowStockAlert = (product: Product) => {
+    if (product.stock > 0 && product.stock <= product.lowStockThreshold) {
+      setStockWarningToast({
+        productName: product.name,
+        stock: product.stock,
+        threshold: product.lowStockThreshold,
+      });
+      setTimeout(() => setStockWarningToast(null), 4500);
+    }
+  };
 
   // Hardware Barcode Scanner Buffer (USB / Bluetooth HID)
   // Scanners rapidly stream keystrokes ending with 'Enter'
@@ -105,6 +123,7 @@ export const PosRegisterView: React.FC = () => {
     if (res.success && res.product) {
       setLastScannedId(res.product.id);
       setTimeout(() => setLastScannedId(null), 1500);
+      checkLowStockAlert(res.product);
       setScanFeedback({
         message: `Ajouté: ${res.product.name} (Code: ${cleanCode})`,
         type: 'success',
@@ -234,6 +253,33 @@ export const PosRegisterView: React.FC = () => {
             </div>
           )}
 
+          {/* Low Stock Threshold Warning Toast */}
+          {stockWarningToast && (
+            <div className="p-3 bg-amber-50 text-amber-900 border-2 border-amber-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2.5">
+                <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                <div>
+                  <div className="font-extrabold text-amber-950">
+                    ⚠️ Attention : Stock Minimal Dépassé !
+                  </div>
+                  <div className="text-[11px] font-normal text-amber-800">
+                    "{stockWarningToast.productName}" ne dispose plus que de{' '}
+                    <strong className="font-bold underline">{stockWarningToast.stock} unité(s)</strong>{' '}
+                    en stock (seuil minimal d'alerte : {stockWarningToast.threshold}).
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStockWarningToast(null)}
+                className="touch-btn p-1 text-amber-600 hover:text-amber-900 transition-colors"
+                title="Ignorer l'alerte"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
           {/* Search + Category chips */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
@@ -306,7 +352,10 @@ export const PosRegisterView: React.FC = () => {
                   <div
                     key={p.id}
                     onClick={() => {
-                      if (!isOutOfStock) addToCart(p, 1);
+                      if (!isOutOfStock) {
+                        addToCart(p, 1);
+                        checkLowStockAlert(p);
+                      }
                     }}
                     className={`p-3 rounded-2xl border transition-all flex flex-col justify-between group cursor-pointer relative ${
                       isRecentlyScanned

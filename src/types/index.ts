@@ -35,6 +35,7 @@ export interface Customer {
   taxId?: string;
   notes?: string;
   balanceDue?: number;
+  loyaltyPoints?: number;
 }
 
 export interface CartItem {

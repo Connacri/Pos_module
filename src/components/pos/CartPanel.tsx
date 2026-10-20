@@ -187,6 +187,13 @@ export const CartPanel: React.FC<{
                         <span>(TVA {Math.round(item.product.taxRate * 100)}%)</span>
                       )}
                     </div>
+                    {item.product.stock <= item.product.lowStockThreshold && (
+                      <div className="mt-1">
+                        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                          ⚠️ Seuil minimal : {item.product.stock} restant(s)
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Line Total */}
