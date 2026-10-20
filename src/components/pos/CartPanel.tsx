@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import { PaymentMethod } from '../../types';
+import { PrintableReceiptModal } from '../receipt/PrintableReceiptModal';
 
 export const CartPanel: React.FC<{
   onOpenCheckout?: () => void;
@@ -485,79 +486,10 @@ export const CartPanel: React.FC<{
 
       {/* Sale Success & Printable Receipt Modal */}
       {lastCompletedSale && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="p-6 text-center space-y-4">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto">
-                <CheckCircle2 className="w-8 h-8" />
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-slate-900">Vente Encaissée !</h3>
-                <p className="text-xs text-slate-500 font-mono mt-0.5">
-                  N° {lastCompletedSale.saleNumber}
-                </p>
-              </div>
-
-              {/* Ticket receipt preview */}
-              <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 text-left text-xs font-mono space-y-2">
-                <div className="text-center font-bold pb-2 border-b border-dashed border-slate-300">
-                  POS MODULE PRO
-                  <div className="text-[10px] font-normal text-slate-500">
-                    {new Date(lastCompletedSale.createdAt).toLocaleString('fr-FR')}
-                  </div>
-                </div>
-
-                <div className="space-y-1 py-1 border-b border-dashed border-slate-300">
-                  {lastCompletedSale.items.map((it) => (
-                    <div key={it.productId} className="flex justify-between text-[11px]">
-                      <span>{it.quantity}x {it.productName.slice(0, 18)}</span>
-                      <span>{formatMoney(it.totalTTC)}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-1 space-y-0.5 text-[11px]">
-                  <div className="flex justify-between">
-                    <span>Sous-total HT:</span>
-                    <span>{formatMoney(lastCompletedSale.subtotalHT)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>TVA:</span>
-                    <span>{formatMoney(lastCompletedSale.taxTotal)}</span>
-                  </div>
-                  <div className="flex justify-between font-bold text-xs pt-1 border-t border-slate-300">
-                    <span>TOTAL TTC:</span>
-                    <span>{formatMoney(lastCompletedSale.totalTTC)}</span>
-                  </div>
-                  {lastCompletedSale.changeGiven ? (
-                    <div className="flex justify-between text-slate-500 text-[10px]">
-                      <span>Monnaie rendue:</span>
-                      <span>{formatMoney(lastCompletedSale.changeGiven)}</span>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="flex-1 py-2 px-3 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl hover:bg-slate-50 flex items-center justify-center gap-1.5 cursor-pointer"
-                >
-                  <Printer className="w-3.5 h-3.5" />
-                  Imprimer Ticket
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLastCompletedSale(null)}
-                  className="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl cursor-pointer"
-                >
-                  Nouvelle Vente
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PrintableReceiptModal
+          sale={lastCompletedSale}
+          onClose={() => setLastCompletedSale(null)}
+        />
       )}
     </div>
   );

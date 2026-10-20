@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { Sale } from '../../types';
 import { InvoiceDetailView } from './InvoiceDetailView';
+import { PrintableReceiptModal } from '../receipt/PrintableReceiptModal';
 import {
   Search,
   Filter,
@@ -13,12 +14,14 @@ import {
   FileText,
   ArrowRight,
   TrendingUp,
+  Printer,
 } from 'lucide-react';
 
 export const SalesHistoryView: React.FC = () => {
   const { sales, selectedInvoice, setSelectedInvoice } = usePos();
   const [searchQuery, setSearchQuery] = useState('');
   const [paymentFilter, setPaymentFilter] = useState<'ALL' | 'CASH' | 'CARD' | 'CHEQUE'>('ALL');
+  const [receiptToPrint, setReceiptToPrint] = useState<Sale | null>(null);
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('fr-DZ', {
@@ -195,17 +198,31 @@ export const SalesHistoryView: React.FC = () => {
                       {formatMoney(sale.totalTTC)}
                     </td>
                     <td className="py-3.5 px-4 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedInvoice(sale);
-                        }}
-                        className="touch-btn px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[11px] font-semibold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-indigo-600" />
-                        <span>Voir</span>
-                      </button>
+                      <div className="inline-flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedInvoice(sale);
+                          }}
+                          className="touch-btn px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[11px] font-semibold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Détails</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReceiptToPrint(sale);
+                          }}
+                          className="touch-btn px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-xl text-[11px] font-semibold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                          title="Imprimer le ticket de caisse"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Ticket</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -214,6 +231,14 @@ export const SalesHistoryView: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Printable Receipt Modal */}
+      {receiptToPrint && (
+        <PrintableReceiptModal
+          sale={receiptToPrint}
+          onClose={() => setReceiptToPrint(null)}
+        />
+      )}
     </div>
   );
 };

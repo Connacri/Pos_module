@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePos } from '../../context/PosContext';
 import { Sale } from '../../types';
+import { PrintableReceiptModal } from '../receipt/PrintableReceiptModal';
 import {
   ArrowLeft,
   CreditCard,
@@ -30,6 +31,7 @@ export const InvoiceDetailView: React.FC<{
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'lines' | 'details' | 'docs' | 'notes'>('lines');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   const customer = customers.find((c) => c.id === sale.customerId);
 
@@ -81,11 +83,11 @@ export const InvoiceDetailView: React.FC<{
         <div className="flex items-center gap-2 flex-wrap">
           <button
             type="button"
-            onClick={() => window.print()}
-            className="touch-btn px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold rounded-2xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+            onClick={() => setShowReceiptModal(true)}
+            className="touch-btn px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-xs font-semibold rounded-2xl flex items-center gap-1.5 shadow-2xs transition-all cursor-pointer"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span className="hidden min-[400px]:inline">Imprimer</span>
+            <span>Imprimer Ticket</span>
           </button>
           <button
             type="button"
@@ -424,6 +426,14 @@ export const InvoiceDetailView: React.FC<{
           </div>
         </div>
       </div>
+
+      {/* Printable Receipt Modal */}
+      {showReceiptModal && (
+        <PrintableReceiptModal
+          sale={sale}
+          onClose={() => setShowReceiptModal(false)}
+        />
+      )}
     </div>
   );
 };

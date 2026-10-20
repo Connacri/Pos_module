@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { DailyRevenueChart } from './DailyRevenueChart';
+import { InventoryAlertWidget } from './InventoryAlertWidget';
 import {
   TrendingUp,
   CreditCard,
@@ -227,6 +228,9 @@ export const DashboardView: React.FC = () => {
 
       {/* Main Section: Daily Revenue Trends (Recharts) */}
       <DailyRevenueChart />
+
+      {/* Inventory Monitoring & Configurable Minimum Stock Threshold Widget */}
+      <InventoryAlertWidget />
 
       {/* Secondary Analytics Row: Category breakdown + Top selling products */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

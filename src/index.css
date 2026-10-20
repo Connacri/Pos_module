@@ -32,3 +32,35 @@
   min-height: 44px;
   min-width: 44px;
 }
+
+/* Professional Print Styles for Receipt (80mm POS thermal receipt & A4) */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #printable-receipt,
+  #printable-receipt * {
+    visibility: visible;
+  }
+
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+    max-width: 80mm !important;
+    margin: 0 auto;
+    padding: 10px;
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+    font-family: 'JetBrains Mono', monospace, Courier, sans-serif !important;
+    font-size: 11px !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}
