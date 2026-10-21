@@ -91,8 +91,8 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
   const is58mm = activeWidth === '58mm';
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden my-4 flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden my-4 flex flex-col max-h-[94dvh]">
         {/* Modal Top Bar (Hidden during print) */}
         <div className="no-print px-5 py-3.5 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
@@ -165,8 +165,8 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
             id="thermal-preview-receipt"
             className={`bg-white rounded-xl shadow-md border border-[#d6cbba] font-mono text-slate-800 transition-all ${
               is58mm
-                ? 'w-[230px] p-3 text-[10px] space-y-2.5'
-                : 'w-[320px] p-5 text-xs space-y-3.5'
+                ? 'w-[230px] max-w-full p-3 text-[10px] space-y-2.5'
+                : 'w-[320px] max-w-full p-5 text-xs space-y-3.5'
             }`}
           >
             {/* Specimen watermark pill */}

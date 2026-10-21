@@ -1491,8 +1491,8 @@ export const AdminSyncView: React.FC = () => {
                   <div
                     className={`bg-white rounded-lg shadow-md border border-[#d6cbba] font-mono text-slate-900 transition-all ${
                       printerForm.paperWidth === '58mm'
-                        ? 'w-[230px] p-3 text-[10px] space-y-2.5'
-                        : 'w-[310px] p-4 text-xs space-y-3.5'
+                        ? 'w-[230px] max-w-full p-3 text-[10px] space-y-2.5'
+                        : 'w-[310px] max-w-full p-4 text-xs space-y-3.5'
                     }`}
                   >
                     {/* Thermal Cut Mark */}

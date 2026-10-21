@@ -79,7 +79,7 @@ export const AppNavbar: React.FC = () => {
                   <span className="hidden sm:inline">Hors-Ligne (100% Autonome)</span>
                   <span className="sm:hidden">Hors-Ligne</span>
                   {pendingSyncCount > 0 && (
-                    <span className="px-1.5 py-0.2 bg-amber-600 text-white rounded-full text-[10px]">
+                    <span className="px-1.5 py-0.5 bg-amber-600 text-white rounded-full text-[10px]">
                       {pendingSyncCount}
                     </span>
                   )}
@@ -134,7 +134,7 @@ export const AppNavbar: React.FC = () => {
             >
               <ShoppingCart className="w-4 h-4 text-emerald-300" />
               <span className="hidden sm:inline">Panier</span>
-              <span className="px-1.5 py-0.2 bg-indigo-800 text-white rounded-full text-[11px] font-mono">
+              <span className="px-1.5 py-0.5 bg-indigo-800 text-white rounded-full text-[11px] font-mono">
                 {cartSummary.totalItems}
               </span>
             </button>
@@ -165,7 +165,7 @@ export const AppNavbar: React.FC = () => {
       {/* Mobile Menu Backdrop & Drawer */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-50 md:hidden bg-slate-900/40 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl p-6 shadow-2xl border-t border-slate-200 max-h-[85vh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
+          <div className="bg-white rounded-t-3xl p-6 shadow-2xl border-t border-slate-200 max-h-[85dvh] overflow-y-auto animate-in slide-in-from-bottom duration-200">
             {/* Mobile Drawer Header */}
             <div className="flex items-center justify-between pb-4 border-b border-slate-100">
               <div className="flex items-center gap-2">

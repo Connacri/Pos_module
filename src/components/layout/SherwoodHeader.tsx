@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePos } from '../../context/PosContext';
+import { useIsDesktop } from '../../hooks/useMediaQuery';
 import {
   Wifi,
   WifiOff,
@@ -20,6 +21,7 @@ export const SherwoodHeader: React.FC = () => {
     setActiveView,
   } = usePos();
 
+  const isDesktop = useIsDesktop();
   const [currentTime, setCurrentTime] = useState<string>('');
   const [currentDate, setCurrentDate] = useState<string>('');
 
@@ -47,9 +49,9 @@ export const SherwoodHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 bg-[#fdfbf7]/90 backdrop-blur-md border-b border-[#e5dcce] px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-2xs">
+    <header className="sticky top-0 z-30 bg-[#fdfbf7]/90 backdrop-blur-md border-b border-[#e5dcce] px-4 sm:px-6 pb-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] flex items-center justify-between gap-2 shadow-2xs">
       {/* Left: Mobile Menu Trigger + Brand / Subtitle */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button
           type="button"
           onClick={() => setIsMobileMenuOpen(true)}
@@ -59,8 +61,8 @@ export const SherwoodHeader: React.FC = () => {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black text-[#223d2b] font-serif-title tracking-tight leading-tight flex items-center gap-2">
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl truncate font-black text-[#223d2b] font-serif-title tracking-tight leading-tight flex items-center gap-2">
             <span>Caisse Sherwood</span>
           </h1>
           <p className="text-xs text-[#605547] font-medium hidden sm:block">
@@ -70,7 +72,7 @@ export const SherwoodHeader: React.FC = () => {
       </div>
 
       {/* Right Controls: Date, Clock, Offline/Online Status, Cart */}
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Date Pill */}
         {currentDate && (
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#fdfbf7] border border-[#e5dcce] rounded-full text-xs font-semibold text-[#483d31] shadow-2xs">
@@ -104,7 +106,7 @@ export const SherwoodHeader: React.FC = () => {
               <WifiOff className="w-3.5 h-3.5 text-[#a85a18]" />
               <span className="hidden sm:inline">Hors ligne</span>
               {pendingSyncCount > 0 && (
-                <span className="px-1.5 py-0.2 bg-[#a85a18] text-white rounded-full text-xs font-mono">
+                <span className="px-1.5 py-0.5 bg-[#a85a18] text-white rounded-full text-xs font-mono">
                   {pendingSyncCount}
                 </span>
               )}
@@ -123,7 +125,7 @@ export const SherwoodHeader: React.FC = () => {
           type="button"
           onClick={() => {
             setActiveView('pos');
-            setIsCartDrawerOpen(true);
+            if (!isDesktop) setIsCartDrawerOpen(true);
           }}
           className="touch-btn px-3.5 py-1.5 bg-[#85522b] hover:bg-[#6e3e1c] text-[#fff6ec] rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer shadow-xs active:scale-95"
           title="Ouvrir le panier"
@@ -131,7 +133,7 @@ export const SherwoodHeader: React.FC = () => {
         >
           <ShoppingCart className="w-4 h-4 text-[#fcdbb6]" />
           <span className="hidden sm:inline">Panier</span>
-          <span className="px-1.5 py-0.2 bg-[#5d3112] text-[#fff2e2] rounded-full text-xs font-mono">
+          <span className="px-1.5 py-0.5 bg-[#5d3112] text-[#fff2e2] rounded-full text-xs font-mono">
             {cartSummary.totalItems}
           </span>
         </button>

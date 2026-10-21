@@ -746,7 +746,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
       <div className="sherwood-panel w-full max-w-lg p-0 overflow-hidden shadow-2xl my-8">
         <div className="px-6 py-4 bg-[#1f3d29] text-white flex items-center justify-between">
           <h3 className="font-serif-title font-black text-sm flex items-center gap-2">
@@ -777,7 +777,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Référence SKU
@@ -808,7 +808,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Prix Vente (DA) *
@@ -852,7 +852,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Quantité en Stock
@@ -880,7 +880,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Code-barres EAN

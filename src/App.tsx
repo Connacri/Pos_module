@@ -16,7 +16,7 @@ const MainContent: React.FC = () => {
   const { activeView } = usePos();
 
   return (
-    <main className="p-3 sm:p-6 pb-24 lg:pb-8 flex-1 overflow-x-hidden">
+    <main className="p-3 sm:p-6 pb-[calc(var(--bottom-nav-h)+1.5rem+env(safe-area-inset-bottom))] lg:pb-8 flex-1 w-full max-w-[1760px] mx-auto overflow-x-hidden">
       {activeView === 'dashboard' && <DashboardView />}
       {activeView === 'pos' && <PosRegisterView />}
       {activeView === 'catalog' && <ProductCatalogView />}
@@ -42,7 +42,7 @@ export const AppLayout: React.FC = () => {
   }, [isMobileMenuOpen, setIsMobileMenuOpen]);
 
   return (
-    <div className="min-h-screen bg-[#f4efe4] text-[#2c241c] flex flex-row antialiased">
+    <div className="min-h-dvh bg-[#f4efe4] text-[#2c241c] flex flex-row antialiased">
       {/* Desktop Sherwood Forest Sidebar */}
       <div className="hidden lg:flex shrink-0">
         <SherwoodSidebar />
@@ -88,7 +88,7 @@ export const AppLayout: React.FC = () => {
         aria-label="Messages de notification et alertes"
         aria-live="polite"
         aria-atomic="false"
-        className="fixed top-20 right-4 sm:right-6 z-50 pointer-events-none space-y-2 max-w-sm w-full"
+        className="fixed inset-x-4 top-[calc(var(--header-h)+0.5rem+env(safe-area-inset-top))] sm:inset-x-auto sm:right-6 sm:w-96 z-50 pointer-events-none space-y-2"
       >
         {globalToast && (
           <div

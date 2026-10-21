@@ -3,6 +3,7 @@ import { usePos } from '../../context/PosContext';
 import { Product } from '../../types';
 import { ProductImage } from '../common/ProductImage';
 import { CartPanel } from './CartPanel';
+import { useIsDesktop } from '../../hooks/useMediaQuery';
 import {
   Search,
   Barcode,
@@ -56,18 +57,8 @@ export const PosRegisterView: React.FC = () => {
     threshold: number;
   } | null>(null);
 
-  // Responsive state to prevent double mounting of CartPanel on mobile
-  const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
-  );
-  // Dedicated mobile/tablet tab switch so users can directly see the cart and item list
-  const [mobilePosTab, setMobilePosTab] = useState<'products' | 'cart'>('products');
-
-  useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  // CartPanel monté une seule fois : colonne fixe (>= lg) OU tiroir (< lg)
+  const isDesktop = useIsDesktop();
 
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -159,6 +150,8 @@ export const PosRegisterView: React.FC = () => {
 
       // 4. Hardware Barcode Scanner Buffer interceptor
       const target = e.target as HTMLElement;
+      // Le champ code-barres a son propre <form onSubmit> : évite le double ajout au panier
+      if (target === barcodeInputRef.current) return;
       const isInput =
         target.tagName === 'INPUT' ||
         target.tagName === 'TEXTAREA' ||
@@ -262,7 +255,7 @@ export const PosRegisterView: React.FC = () => {
   }, [products, selectedCatId, searchQuery]);
 
   return (
-    <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px] relative">
+    <div className="flex flex-col lg:flex-row items-stretch gap-4 lg:gap-6 lg:h-[calc(100dvh-var(--header-h)-3rem)] lg:min-h-[560px] relative">
       {/* FLOATING OVERLAY NOTIFICATIONS (Scan & Stock Warnings) - Does NOT push or jump product grid */}
       <div
         id="pos-toast-notifications"
@@ -270,7 +263,7 @@ export const PosRegisterView: React.FC = () => {
         aria-label="Notifications et alertes de caisse"
         aria-live="polite"
         aria-atomic="false"
-        className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none"
+        className="fixed inset-x-4 bottom-[calc(var(--bottom-nav-h)+5.5rem+env(safe-area-inset-bottom))] lg:inset-x-auto lg:bottom-6 lg:left-1/2 lg:-translate-x-1/2 lg:w-96 z-50 space-y-2 pointer-events-none"
       >
         {scanFeedback && (
           <div
@@ -343,51 +336,8 @@ export const PosRegisterView: React.FC = () => {
         )}
       </div>
 
-      {/* Mobile/Tablet View Switcher (lg:hidden): lets users switch between Product Grid and Cart Items */}
-      <div className="lg:hidden flex items-center p-1 bg-[#e7ddca] rounded-2xl gap-1 shrink-0 w-full mb-1">
-        <button
-          type="button"
-          onClick={() => setMobilePosTab('products')}
-          className={`touch-btn min-h-[44px] flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            mobilePosTab === 'products'
-              ? 'bg-[#1f3d29] text-white shadow-xs'
-              : 'text-[#483d31] hover:text-[#1f3d29]'
-          }`}
-        >
-          <Package className="w-4 h-4 shrink-0" />
-          <span>Rayons & Articles ({filteredProducts.length})</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setMobilePosTab('cart')}
-          className={`touch-btn min-h-[44px] flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            mobilePosTab === 'cart'
-              ? 'bg-[#85522b] text-white shadow-xs'
-              : 'text-[#483d31] hover:text-[#85522b]'
-          }`}
-        >
-          <ShoppingCart className="w-4 h-4 shrink-0" />
-          <span>Panier de vente</span>
-          <span
-            className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-black ${
-              mobilePosTab === 'cart' ? 'bg-white/20 text-white' : 'bg-[#faeee2] text-[#85522b]'
-            }`}
-          >
-            {cartSummary.totalItems}
-          </span>
-        </button>
-      </div>
-
-      {/* Mobile-only Full Page Cart View when 'cart' tab is selected */}
-      {!isDesktop && mobilePosTab === 'cart' && (
-        <div className="flex-1 lg:hidden flex flex-col sherwood-card overflow-hidden">
-          <CartPanel />
-        </div>
-      )}
-
       {/* Left Column: Product Selection & Barcode scanner */}
-      <div className={`flex-1 flex-col sherwood-card p-4 sm:p-5 overflow-hidden ${!isDesktop && mobilePosTab === 'cart' ? 'hidden' : 'flex'}`}>
+      <div className="flex-1 min-w-0 flex flex-col sherwood-card p-3 sm:p-5 lg:overflow-hidden">
         {/* Top Header & Barcode scanner tool */}
         <div className="space-y-3 pb-3 border-b border-sand-100">
           {/* Barcode scanner form with latency indicator */}
@@ -399,8 +349,8 @@ export const PosRegisterView: React.FC = () => {
                 type="text"
                 value={barcodeInput}
                 onChange={(e) => setBarcodeInput(e.target.value)}
-                placeholder="Scanner un code-barres EAN (ou tapez SKU / EAN et Entrée)..."
-                className="w-full pl-11 pr-24 py-2.5 bg-sand-100/60 border border-sand-300/80 rounded-2xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-ink-600 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
+                placeholder="Scanner ou saisir un code EAN / SKU"
+                className="w-full pl-11 pr-3 sm:pr-24 py-3 lg:py-2.5 bg-sand-100/60 border border-sand-300/80 rounded-2xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-ink-600 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
               />
               <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
                 <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-forest-800 bg-sand-200/80 px-2 py-0.5 rounded-md">
@@ -466,26 +416,18 @@ export const PosRegisterView: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filtrer les articles par nom ou référence... [F1]"
-                className="w-full pl-9 pr-12 py-2 bg-sand-50 border border-sand-200 rounded-xl text-xs text-ink-900 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
+                placeholder="Rechercher un article ou une réf."
+                className="w-full pl-9 pr-3 lg:pr-12 py-3 lg:py-2 bg-sand-50 border border-sand-200 rounded-xl text-xs text-ink-900 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
               />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-xs text-forest-800 bg-sand-100 border border-sand-300 px-1.5 py-0.5 rounded shadow-2xs">
+              <span className="hidden lg:inline absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-xs text-forest-800 bg-sand-100 border border-sand-300 px-1.5 py-0.5 rounded shadow-2xs">
                 F1
               </span>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setIsCartDrawerOpen(true)}
-              className="lg:hidden touch-btn px-3 py-2 bg-forest-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
-            >
-              <ShoppingCart className="w-4 h-4 text-emerald-300" />
-              <span>Panier ({cartSummary.totalItems})</span>
-            </button>
           </div>
 
           {/* Keyboard Shortcuts Mapping Bar */}
-          <div className="flex items-center justify-between bg-sand-50 border border-sand-200/80 rounded-xl px-3 py-1.5 text-xs">
+          <div className="hidden lg:flex items-center justify-between bg-sand-50 border border-sand-200/80 rounded-xl px-3 py-1.5 text-xs">
             <div className="flex items-center gap-2 overflow-x-auto text-xs">
               <span className="font-bold text-ink-600 flex items-center gap-1 shrink-0">
                 <Keyboard className="w-3.5 h-3.5 text-forest-700" />
@@ -529,7 +471,7 @@ export const PosRegisterView: React.FC = () => {
           </div>
 
           {/* Category Chips scroll - Accessible min 44px touch targets */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 -mx-3 px-3 sm:mx-0 sm:px-0 text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x">
             <button
               type="button"
               onClick={() => setSelectedCatId('ALL')}
@@ -581,7 +523,7 @@ export const PosRegisterView: React.FC = () => {
         </div>
 
         {/* Product Grid (Fast Touch-friendly tiles directly under categories) */}
-        <div className="flex-1 overflow-y-auto pt-3 pr-1">
+        <div className="flex-1 min-h-0 lg:overflow-y-auto pt-3 lg:pr-1 pb-24 lg:pb-0">
           {filteredProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center text-ink-600">
               <Package className="w-10 h-10 mb-2 text-sand-300" />
@@ -589,7 +531,7 @@ export const PosRegisterView: React.FC = () => {
               <p className="text-xs text-ink-600 mt-1">Essayez un autre mot-clé ou réinitialisez le rayon sélectionné.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-3">
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-2.5 sm:gap-3">
               {filteredProducts.map((p) => {
                 const inCart = cartQtyMap.get(p.id) || 0;
                 const isOutOfStock = p.stock <= 0;
@@ -653,7 +595,7 @@ export const PosRegisterView: React.FC = () => {
 
                     {/* Details */}
                     <div>
-                      <h4 className="font-bold text-xs sm:text-sm text-ink-900 line-clamp-2 min-h-[2.2rem] leading-snug">
+                      <h4 className="font-bold text-sm text-ink-900 line-clamp-2 min-h-[2.2rem] leading-snug">
                         {p.name}
                       </h4>
                       <div className="text-xs text-ink-600 font-mono mt-0.5 flex items-center justify-between">
@@ -683,7 +625,7 @@ export const PosRegisterView: React.FC = () => {
 
         {/* Mobile / Tablet Floating Cart Bar (Accessible min 44px touch targets & instant feedback) */}
         {cart.length > 0 && (
-          <div className="lg:hidden sticky bottom-1 sm:bottom-2 z-30 pt-2 animate-in slide-in-from-bottom-2 duration-200">
+          <div className="lg:hidden fixed inset-x-3 sm:inset-x-6 bottom-[calc(var(--bottom-nav-h)+0.5rem+env(safe-area-inset-bottom))] z-30 animate-in slide-in-from-bottom-2 duration-200">
             <div className="bg-[#1f3d29] text-[#fdfbf7] p-3 sm:p-3.5 rounded-2xl shadow-xl border border-[#2d563a] flex items-center justify-between gap-3">
               <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
                 <div className="relative p-2 bg-[#8d5732] rounded-xl text-[#fcdbb6] shadow-xs shrink-0">
@@ -705,11 +647,10 @@ export const PosRegisterView: React.FC = () => {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setMobilePosTab('cart')}
+                  onClick={() => setIsCartDrawerOpen(true)}
                   className="touch-btn min-h-[44px] px-3.5 sm:px-4 py-2 bg-[#fdfbf7] text-[#1f3d29] hover:bg-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                 >
-                  <span>Voir Panier</span>
-                  <span className="text-xs">🍃</span>
+                  <span>Voir le panier</span>
                 </button>
               </div>
             </div>
@@ -718,14 +659,14 @@ export const PosRegisterView: React.FC = () => {
       </div>
 
       {/* Right Column: Sticky Cart and Checkout Panel (Desktop only, mounted only on large screens) */}
-      <div className="w-full lg:w-[380px] xl:w-[420px] shrink-0 hidden lg:flex flex-col">
+      <div className="w-[360px] xl:w-[420px] shrink-0 hidden lg:flex flex-col min-h-0">
         {isDesktop && <CartPanel />}
       </div>
 
       {/* Keyboard Shortcuts Guide Modal */}
       {showShortcutGuideModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
-          <div role="dialog" aria-modal="true" aria-labelledby="shortcut-guide-title" className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-sand-200 overflow-hidden">
+          <div role="dialog" aria-modal="true" aria-labelledby="shortcut-guide-title" className="bg-white w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl shadow-2xl border border-sand-200">
             <div className="px-5 py-4 bg-ink-900 text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Keyboard className="w-5 h-5 text-sand-300" />

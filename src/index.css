@@ -2,18 +2,30 @@
 
 /* Design tokens (Sherwood) : une seule source pour les couleurs de l'UI caisse */
 @theme {
-  --color-forest-900: #1f3d29;
-  --color-forest-800: #234931;
-  --color-forest-700: #2d563a;
-  --color-forest-600: #3b6f4c;
+  /* Valeurs réellement rendues jusqu'ici (les anciens overrides :root l'emportaient sur @theme) */
+  --color-forest-900: #14281b;
+  --color-forest-800: #1b3825;
+  --color-forest-700: #234931;
+  --color-forest-600: #2d5d3e;
+  --color-forest-100: #e8f1e8;
   --color-sand-50: #fdfbf7;
   --color-sand-100: #f7f2e7;
   --color-sand-200: #e5dcce;
   --color-sand-300: #d8cdba;
+  --color-sand-400: #bfae98; /* était utilisé sans être défini */
   --color-ink-900: #2c241c;
+  --color-ink-800: #483d31; /* idem : 18 usages text-ink-800 sans effet */
   --color-ink-700: #5d5244;
   --color-ink-600: #6e6354; /* >= 5:1 sur sand-100 : texte secondaire lisible */
-  --color-wood-600: #8d5732;
+  --color-wood-800: #482611;
+  --color-wood-700: #6e3e1c;
+  --color-wood-600: #85522b;
+  --color-wood-500: #9f673c;
+  --color-wood-100: #faeee2;
+
+  /* Hauteurs de chrome partagées (header + marges) pour calculer la zone caisse */
+  --header-h: 4rem;
+  --bottom-nav-h: 4.5rem;
 }
 
 @layer base {
@@ -23,22 +35,14 @@
     --color-sherwood-subtle: #f7f2e7;
     --color-sherwood-border: #e7ddca;
     --color-sherwood-border-subtle: #e2d7c2;
-    --color-forest-900: #14281b;
-    --color-forest-800: #1b3825;
-    --color-forest-700: #234931;
-    --color-forest-600: #2d5d3e;
-    --color-forest-100: #e8f1e8;
-    --color-wood-800: #482611;
-    --color-wood-700: #6e3e1c;
-    --color-wood-600: #85522b;
-    --color-wood-500: #9f673c;
-    --color-wood-100: #faeee2;
     --color-text-main: #2c241c;
     --color-text-muted: #605547;
   }
 
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
   body {
-    @apply antialiased text-[#2c241c] bg-[#f4efe4] min-h-screen selection:bg-[#234931] selection:text-[#fdfbf7];
+    @apply antialiased text-[#2c241c] bg-[#f4efe4] min-h-dvh selection:bg-[#234931] selection:text-[#fdfbf7];
     font-family: 'Quicksand', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
@@ -248,5 +252,32 @@
 
   .no-print {
     display: none !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE & ERGONOMIE TACTILE
+   ============================================================ */
+
+/* iOS/Android zooment sur tout champ < 16px : on neutralise sur écrans tactiles */
+@media (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Zones sûres (encoche, barre de gestes) pour les éléments collés aux bords */
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* Respect de prefers-reduced-motion (vestibulaire, batterie des postes bas de gamme) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

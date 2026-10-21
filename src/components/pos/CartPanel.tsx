@@ -222,7 +222,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ isDrawer = false, onClose 
         </div>
 
         {/* Global Discount toggle */}
-        <div className="flex items-center justify-between text-xs pt-0.5">
+        <div className="flex flex-wrap items-center justify-between gap-y-1.5 text-xs pt-0.5">
           <div className="flex items-center gap-1.5">
             <Tag className="w-3.5 h-3.5 text-[#605547]" />
             <span className="text-[#483d31] font-bold">Remise globale :</span>
@@ -482,9 +482,9 @@ export const CartPanel: React.FC<CartPanelProps> = ({ isDrawer = false, onClose 
             role="dialog"
             aria-modal="true"
             aria-labelledby="checkout-title"
-            className="bg-sand-50 w-full max-w-md rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-sand-50 w-full max-w-md max-h-[92dvh] flex flex-col rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden animate-in fade-in zoom-in-95 duration-200"
           >
-            <div className="px-5 py-4 bg-forest-900 text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
+            <div className="px-5 py-4 shrink-0 bg-forest-900 text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
               <h3
                 id="checkout-title"
                 className="font-bold text-sm flex items-center gap-2 font-serif-title"
@@ -502,7 +502,7 @@ export const CartPanel: React.FC<CartPanelProps> = ({ isDrawer = false, onClose 
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5 min-h-0 overflow-y-auto overscroll-contain">
               {/* Amount to pay banner */}
               <div className="bg-sand-100 border border-[#e5dcce] rounded-2xl p-4 text-center">
                 <div className="text-xs font-bold text-[#8d5732] uppercase tracking-wider">

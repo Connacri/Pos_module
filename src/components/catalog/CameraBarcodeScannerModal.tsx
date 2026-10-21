@@ -189,8 +189,8 @@ export const CameraBarcodeScannerModal: React.FC<CameraBarcodeScannerModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden flex flex-col max-h-[94dvh]">
         {/* Top Header */}
         <div className="px-5 py-4 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
