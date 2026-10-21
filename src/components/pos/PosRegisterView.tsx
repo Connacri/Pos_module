@@ -635,6 +635,41 @@ export const PosRegisterView: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Mobile / Tablet Floating Cart Bar (Accessible min 44px touch targets & instant feedback) */}
+        {cart.length > 0 && (
+          <div className="lg:hidden sticky bottom-1 sm:bottom-2 z-30 pt-2 animate-in slide-in-from-bottom-2 duration-200">
+            <div className="bg-[#1f3d29] text-[#fdfbf7] p-3 sm:p-3.5 rounded-2xl shadow-xl border border-[#2d563a] flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                <div className="relative p-2 bg-[#8d5732] rounded-xl text-[#fcdbb6] shadow-xs shrink-0">
+                  <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="absolute -top-1.5 -right-1.5 bg-[#dc2626] text-white text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-[#1f3d29]">
+                    {cartSummary.totalItems}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11px] text-[#c5ddc5] font-semibold truncate">
+                    {cartSummary.uniqueCount} réf. en caisse
+                  </div>
+                  <div className="text-base sm:text-lg font-black font-mono text-[#86efac]">
+                    {formatMoney(cartSummary.totalTTC)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsCartDrawerOpen(true)}
+                  className="touch-btn min-h-[44px] px-3.5 sm:px-4 py-2 bg-[#fdfbf7] text-[#1f3d29] hover:bg-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+                >
+                  <span>Voir Panier</span>
+                  <span className="text-xs">🍃</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right Column: Sticky Cart and Checkout Panel (Desktop only, mounted only on large screens) */}

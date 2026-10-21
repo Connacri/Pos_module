@@ -27,12 +27,14 @@ export const ProductCatalogView: React.FC = () => {
     products,
     categories,
     cart,
+    cartSummary,
     addToCart,
     incrementQuantity,
     decrementQuantity,
     updateProduct,
     addProduct,
     setActiveView,
+    setIsCartDrawerOpen,
   } = usePos();
 
   // Search & Filter state
@@ -137,11 +139,11 @@ export const ProductCatalogView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
+        <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setIsCameraScannerOpen(true)}
-            className="touch-btn inline-flex items-center gap-2 px-3.5 py-2 sherwood-btn-outline text-xs font-bold shadow-2xs"
+            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-outline text-xs font-bold shadow-2xs flex-1 sm:flex-initial"
             title="Ouvrir le scanner caméra pour scanner un code-barres"
           >
             <Camera className="w-4 h-4 text-[#234931]" />
@@ -151,7 +153,7 @@ export const ProductCatalogView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsCreatingNew(true)}
-            className="touch-btn inline-flex items-center gap-2 px-4 py-2 sherwood-btn-forest text-xs font-bold"
+            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs flex-1 sm:flex-initial"
           >
             <Plus className="w-4 h-4" />
             <span>Nouveau Produit</span>
@@ -160,8 +162,8 @@ export const ProductCatalogView: React.FC = () => {
           {cart.length > 0 && (
             <button
               type="button"
-              onClick={() => setActiveView('pos')}
-              className="touch-btn inline-flex items-center gap-2 px-4 py-2 sherwood-btn-wood text-xs font-bold"
+              onClick={() => setIsCartDrawerOpen(true)}
+              className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-wood text-xs font-bold shadow-xs w-full sm:w-auto"
             >
               <ShoppingCart className="w-4 h-4 text-[#fcdbb6]" />
               <span>Voir Panier ({cart.reduce((sum, item) => sum + item.quantity, 0)})</span>
@@ -401,7 +403,7 @@ export const ProductCatalogView: React.FC = () => {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-5">
           {filteredProducts.map((product) => {
             const inCartQty = cartQuantityMap.get(product.id) || 0;
             const category = categories.find((c) => c.id === product.categoryId);
@@ -429,7 +431,7 @@ export const ProductCatalogView: React.FC = () => {
                   />
 
                   {/* Top Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[80%]">
+                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[75%]">
                     {isOutOfStock ? (
                       <span className="bg-[#dc2626] text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
                         <XCircle className="w-3 h-3" />
@@ -442,7 +444,7 @@ export const ProductCatalogView: React.FC = () => {
                       </span>
                     ) : null}
 
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 flex-wrap">
                       <span className="bg-[#1f3d29]/90 text-white text-[10px] font-mono px-2 py-0.5 rounded-md font-bold">
                         {product.sku}
                       </span>
@@ -454,11 +456,11 @@ export const ProductCatalogView: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Edit button */}
+                  {/* Edit button with >= 44x44px touch target (Fitts's Law) */}
                   <button
                     type="button"
                     onClick={() => setEditingProduct(product)}
-                    className="touch-btn absolute top-2 right-2 w-9 h-9 bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2]"
+                    className="touch-btn absolute top-2 right-2 w-11 h-11 min-w-[44px] min-h-[44px] bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-2xl flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2] focus:outline-hidden focus:ring-2 focus:ring-[#234931]"
                     title="Modifier l'article et son seuil"
                     aria-label={`Modifier ${product.name}`}
                   >
@@ -467,21 +469,21 @@ export const ProductCatalogView: React.FC = () => {
 
                   {/* In Cart Indicator */}
                   {inCartQty > 0 && (
-                    <div className="absolute bottom-2 left-2 bg-[#85522b] text-white text-[11px] font-black px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 z-10 font-mono">
-                      <Check className="w-3 h-3" />
+                    <div className="absolute bottom-2 left-2 bg-[#85522b] text-white text-[11px] font-black px-2.5 py-1 rounded-lg shadow-sm flex items-center gap-1.5 z-10 font-mono">
+                      <Check className="w-3.5 h-3.5" />
                       {inCartQty} au panier
                     </div>
                   )}
                 </div>
 
                 {/* Content */}
-                <div className="p-3.5 flex-1 flex flex-col justify-between">
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
                   <div>
-                    <h4 className="font-bold text-sm text-[#2c241c] line-clamp-1 group-hover:text-[#234931] transition-colors" title={product.name}>
+                    <h4 className="font-bold text-sm text-[#2c241c] line-clamp-2 group-hover:text-[#234931] transition-colors leading-snug" title={product.name}>
                       {product.name}
                     </h4>
                     {product.description && (
-                      <p className="text-[11px] text-[#877a6b] line-clamp-1 mt-0.5 font-medium" title={product.description}>
+                      <p className="text-[11px] text-[#877a6b] line-clamp-1 mt-1 font-medium" title={product.description}>
                         {product.description}
                       </p>
                     )}
@@ -489,58 +491,58 @@ export const ProductCatalogView: React.FC = () => {
                     {/* Stock Status Pill */}
                     <div className="mt-2.5 flex items-center justify-between text-xs">
                       {isOutOfStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#fef2f2] px-2 py-0.5 rounded-md border border-[#fecaca]">
-                          <XCircle className="w-3 h-3" />
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#fef2f2] px-2.5 py-1 rounded-lg border border-[#fecaca]">
+                          <XCircle className="w-3.5 h-3.5" />
                           Rupture (0)
                         </span>
                       ) : isLowStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400e] bg-[#fef3c7] px-2 py-0.5 rounded-md border border-[#fde68a]">
-                          <AlertTriangle className="w-3 h-3 text-[#d97706]" />
-                          Stock {product.stock} (Seuil {product.lowStockThreshold})
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400e] bg-[#fef3c7] px-2.5 py-1 rounded-lg border border-[#fde68a]">
+                          <AlertTriangle className="w-3.5 h-3.5 text-[#d97706]" />
+                          Stock {product.stock} (Min {product.lowStockThreshold})
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#234931] bg-[#eaf2e8] px-2 py-0.5 rounded-md border border-[#cbe0cb]">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#234931] bg-[#eaf2e8] px-2.5 py-1 rounded-lg border border-[#cbe0cb]">
+                          <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
                           Stock : {product.stock}
                         </span>
                       )}
 
-                      <span className="text-[10px] text-[#877a6b] font-mono flex items-center gap-1">
-                        <Barcode className="w-3 h-3" />
+                      <span className="text-[11px] text-[#877a6b] font-mono flex items-center gap-1">
+                        <Barcode className="w-3.5 h-3.5" />
                         {product.barcode.slice(-4)}
                       </span>
                     </div>
 
-                    {/* Reorder Needs Visual Indicator Panel */}
+                    {/* Reorder Needs Visual Indicator Panel with >=44px touch button */}
                     {(isLowStock || isOutOfStock) && (
-                      <div className={`mt-2.5 p-2 rounded-xl text-[10px] border ${
+                      <div className={`mt-3 p-2.5 rounded-2xl text-[11px] border ${
                         isOutOfStock
                           ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
                           : 'bg-[#fef3c7] border-[#fde68a] text-[#78350f]'
                       }`}>
                         <div className="flex items-center justify-between font-bold">
-                          <span className="flex items-center gap-1">
-                            <Truck className="w-3 h-3 text-[#d97706]" />
+                          <span className="flex items-center gap-1.5">
+                            <Truck className="w-3.5 h-3.5 text-[#d97706]" />
                             Réappro requis :
                           </span>
                           <span className="font-mono font-black">
                             {product.stock} / {product.lowStockThreshold} min
                           </span>
                         </div>
-                        <div className="w-full bg-[#e2d7c2] rounded-full h-1.5 mt-1.5 overflow-hidden">
+                        <div className="w-full bg-[#e2d7c2] rounded-full h-2 mt-2 overflow-hidden">
                           <div
                             className={`h-full rounded-full transition-all duration-300 ${isOutOfStock ? 'bg-[#dc2626] w-0' : 'bg-[#d97706]'}`}
                             style={{ width: `${Math.min(100, Math.round((product.stock / Math.max(1, product.lowStockThreshold)) * 100))}%` }}
                           />
                         </div>
-                        <div className="mt-1.5 flex items-center justify-between text-[9px] gap-1">
-                          <span>
+                        <div className="mt-2 flex items-center justify-between text-xs gap-2">
+                          <span className="text-[10px]">
                             Déficit : <strong className="font-bold">{Math.max(0, product.lowStockThreshold - product.stock)} unité(s)</strong>
                           </span>
                           <button
                             type="button"
                             onClick={() => updateProduct({ ...product, stock: product.stock + 10 })}
-                            className="px-2 py-0.5 bg-white text-[#234931] font-bold rounded border border-[#d8cdba] hover:bg-[#f7f2e7] transition-colors cursor-pointer"
+                            className="touch-btn min-h-[44px] px-3.5 py-2 bg-white text-[#234931] font-bold rounded-xl border border-[#d8cdba] hover:bg-[#f7f2e7] transition-colors cursor-pointer flex items-center justify-center text-xs shadow-2xs"
                             title="Ajouter 10 unités pour réapprovisionner"
                           >
                             +10 Réappro
@@ -550,29 +552,29 @@ export const ProductCatalogView: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Price & Action Section */}
-                  <div className="mt-4 pt-3 border-t border-[#e7ddca] flex items-center justify-between gap-2">
+                  {/* Price & Action Section with >= 44x44px touch targets (Fitts's Law) */}
+                  <div className="pt-3 border-t border-[#e7ddca] flex items-center justify-between gap-2">
                     <div>
                       <div className="text-base font-black text-[#234931] font-mono leading-tight">
                         {formatMoney(product.price)}
                       </div>
                       <div className="text-[10px] text-[#877a6b] font-medium">
-                        {product.taxRate > 0 ? `TVA ${Math.round(product.taxRate * 100)}% incluse` : 'Exonéré TVA'}
+                        {product.taxRate > 0 ? `TVA ${Math.round(product.taxRate * 100)}%` : 'Exonéré TVA'}
                       </div>
                     </div>
 
-                    {/* Cart Controls with accessible touch targets */}
+                    {/* Cart Controls with accessible touch targets (all >= 44x44px) */}
                     {inCartQty > 0 ? (
-                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-xl overflow-hidden p-0.5 shadow-2xs">
+                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-2xl overflow-hidden p-0.5 shadow-2xs">
                         <button
                           type="button"
                           onClick={() => decrementQuantity(product.id)}
                           aria-label={`Retirer une unité de ${product.name}`}
-                          className="touch-btn w-9 h-9 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] rounded-lg font-bold text-sm transition-colors cursor-pointer"
+                          className="touch-btn w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] active:bg-[#e4be9c] rounded-xl font-bold text-base transition-colors cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="w-8 text-center font-black text-xs text-[#482611] font-mono">
+                        <span className="w-9 text-center font-black text-xs text-[#482611] font-mono">
                           {inCartQty}
                         </span>
                         <button
@@ -580,7 +582,7 @@ export const ProductCatalogView: React.FC = () => {
                           onClick={() => incrementQuantity(product.id)}
                           disabled={inCartQty >= product.stock}
                           aria-label={`Ajouter une unité de ${product.name}`}
-                          className="touch-btn w-9 h-9 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] disabled:opacity-40 disabled:hover:bg-transparent rounded-lg font-bold text-sm transition-colors cursor-pointer"
+                          className="touch-btn w-11 h-11 min-w-[44px] min-h-[44px] flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] active:bg-[#e4be9c] disabled:opacity-40 disabled:hover:bg-transparent rounded-xl font-bold text-base transition-colors cursor-pointer"
                         >
                           +
                         </button>
@@ -591,13 +593,13 @@ export const ProductCatalogView: React.FC = () => {
                         onClick={() => addToCart(product, 1)}
                         disabled={isOutOfStock}
                         aria-label={`Ajouter ${product.name} au panier`}
-                        className={`touch-btn min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        className={`touch-btn min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
                           isOutOfStock
                             ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
                             : 'sherwood-btn-forest'
                         }`}
                       >
-                        <ShoppingCart className="w-3.5 h-3.5" />
+                        <ShoppingCart className="w-4 h-4" />
                         <span>Ajouter</span>
                       </button>
                     )}
@@ -606,6 +608,41 @@ export const ProductCatalogView: React.FC = () => {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Mobile Floating Cart Summary Bar (Consistent with Caisse POS) */}
+      {cart.length > 0 && (
+        <div className="lg:hidden sticky bottom-1 sm:bottom-2 z-30 pt-2 animate-in slide-in-from-bottom-2 duration-200">
+          <div className="bg-[#1f3d29] text-[#fdfbf7] p-3 sm:p-3.5 rounded-2xl shadow-xl border border-[#2d563a] flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="relative p-2 bg-[#8d5732] rounded-xl text-[#fcdbb6] shadow-xs shrink-0">
+                <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="absolute -top-1.5 -right-1.5 bg-[#dc2626] text-white text-[10px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border-2 border-[#1f3d29]">
+                  {cartSummary.totalItems}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] text-[#c5ddc5] font-semibold truncate">
+                  {cartSummary.uniqueCount} réf. • Total Commande
+                </div>
+                <div className="text-base sm:text-lg font-black font-mono text-[#86efac]">
+                  {formatMoney(cartSummary.totalTTC)}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsCartDrawerOpen(true)}
+                className="touch-btn min-h-[44px] px-3.5 sm:px-4 py-2 bg-[#fdfbf7] text-[#1f3d29] hover:bg-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
+              >
+                <span>Voir Panier</span>
+                <span className="text-xs">🍃</span>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

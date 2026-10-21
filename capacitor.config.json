@@ -1,0 +1,8 @@
+{
+  "appId": "com.connacri.posmodule",
+  "appName": "POS Module Pro",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  }
+}

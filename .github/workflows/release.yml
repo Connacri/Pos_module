@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   release:
-    name: Créer la release Web / PWA
+    name: Créer la release Web, PWA & Android (APK)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -31,6 +31,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+
+      - name: Configuration de Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
 
       - name: Installation des dépendances
         run: |
@@ -43,7 +51,7 @@ jobs:
       - name: Vérification des types
         run: npm run lint
 
-      - name: Build de production
+      - name: Build de production Web
         run: npm run build
 
       - name: Déterminer la version
@@ -59,19 +67,77 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Créer l'archive zip pour déploiement
+      - name: Créer l'archive zip Web pour déploiement
         shell: bash
         run: |
           cd dist && zip -r ../pos-module-web-${{ steps.version.outputs.version }}.zip . && cd ..
 
-      - name: Créer le tag et la release GitHub
+      - name: Synchroniser les assets avec le projet Android Capacitor
+        run: |
+          npx cap sync android
+
+      - name: Rendre gradlew exécutable
+        run: |
+          chmod +x android/gradlew
+
+      - name: Compiler les packages Android APK (Debug & Release)
+        working-directory: android
+        run: |
+          ./gradlew assembleDebug assembleRelease --no-daemon
+
+      - name: Organiser et nommer les livrables APK et Web
+        shell: bash
+        run: |
+          VER="${{ steps.version.outputs.version }}"
+          mkdir -p release-artifacts
+
+          # Copier et nommer l'APK universel installable directement sur tout appareil Android
+          if [ -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
+            cp android/app/build/outputs/apk/debug/app-debug.apk release-artifacts/pos-module-pro-v${VER}.apk
+            cp android/app/build/outputs/apk/debug/app-debug.apk release-artifacts/pos-module-pro-v${VER}-debug.apk
+          fi
+
+          # Copier l'APK Release
+          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release.apk release-artifacts/pos-module-pro-v${VER}-release.apk
+          elif [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]; then
+            cp android/app/build/outputs/apk/release/app-release-unsigned.apk release-artifacts/pos-module-pro-v${VER}-release-unsigned.apk
+          fi
+
+          # Déplacer l'archive Web
+          cp pos-module-web-${VER}.zip release-artifacts/
+
+          echo "Livrables préparés :"
+          ls -lh release-artifacts/
+
+      - name: Uploader les artefacts APK vers GitHub Actions
+        uses: actions/upload-artifact@v4
+        with:
+          name: pos-module-pro-android-apk-${{ steps.version.outputs.version }}
+          path: release-artifacts/*.apk
+          retention-days: 30
+
+      - name: Publier la Release GitHub avec les fichiers APK et Web
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
-          name: Release ${{ steps.version.outputs.version }}
+          name: POS Module Pro v${{ steps.version.outputs.version }}
           body: |
-            ## POS Module Pro - Release ${{ steps.version.outputs.version }}
-            - Application Point de Vente Web & PWA
-            - Build de production optimisé prêt à déployer
+            ## 🍃 POS Module Pro — Version ${{ steps.version.outputs.version }}
+
+            ### 📱 Application Android (APK)
+            - **[pos-module-pro-v${{ steps.version.outputs.version }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/pos-module-pro-v${{ steps.version.outputs.version }}.apk)** : APK installable directement sur smartphones, tablettes et terminaux POS Android de caisse.
+            - **pos-module-pro-v${{ steps.version.outputs.version }}-release.apk** : Version release optimisée.
+
+            ### 🌐 Application Web & PWA
+            - **pos-module-web-${{ steps.version.outputs.version }}.zip** : Fichiers statiques prêts pour hébergement Cloud ou serveur local (Apache / Nginx).
+
+            ### ⚡ Caractéristiques
+            - Moteur hors-ligne IndexedDB O(1)
+            - Impression thermique 80 mm ESC/POS
+            - Scanner caméra & lecteurs code-barres USB/Bluetooth
+            - Réplication décentralisée PostgreSQL / Supabase
           files: |
-            pos-module-web-${{ steps.version.outputs.version }}.zip
+            release-artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

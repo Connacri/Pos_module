@@ -1,0 +1,1107 @@
+diff --git a/src/components/pos/CartPanel.tsx b/src/components/pos/CartPanel.tsx
+index 8b1e289..431d55b 100644
+--- a/src/components/pos/CartPanel.tsx
++++ b/src/components/pos/CartPanel.tsx
+@@ -1,4 +1,4 @@
+-import React, { useState } from 'react';
++import React, { useEffect, useState } from 'react';
+ import { usePos } from '../../context/PosContext';
+ import {
+   ShoppingCart,
+@@ -58,6 +58,23 @@ export const CartPanel: React.FC<{
+   } = usePos();
+ 
+   const [editingItemDiscountId, setEditingItemDiscountId] = useState<number | null>(null);
++  const [confirmClear, setConfirmClear] = useState(false);
++
++  // Vidage en deux temps : un premier appui arme, un second confirme (annulé après 4 s)
++  useEffect(() => {
++    if (!confirmClear) return;
++    const t = setTimeout(() => setConfirmClear(false), 4000);
++    return () => clearTimeout(t);
++  }, [confirmClear]);
++
++  const handleClearClick = () => {
++    if (confirmClear) {
++      clearCart();
++      setConfirmClear(false);
++    } else {
++      setConfirmClear(true);
++    }
++  };
+ 
+   // Format currency in DA
+   const formatMoney = (val: number) => {
+@@ -91,17 +108,27 @@ export const CartPanel: React.FC<{
+   const tenderedAmount = Number(amountTenderedInput) || cartSummary.totalTTC;
+   const changeToReturn = Math.max(0, tenderedAmount - cartSummary.totalTTC);
+ 
++  // Montant exact, puis arrondis au 500 / 1000 / 2000 DA supérieur (plus gros billet en circulation : 2000 DA)
++  const cashSuggestions = Array.from(
++    new Set([
++      cartSummary.totalTTC,
++      ...[500, 1000, 2000].map((step) => Math.ceil(cartSummary.totalTTC / step) * step),
++    ])
++  )
++    .filter((v) => v > 0 && v >= cartSummary.totalTTC)
++    .slice(0, 4);
++
+   return (
+     <div className="sherwood-card flex flex-col h-full overflow-hidden">
+       {/* Cart Top Bar */}
+-      <div className="p-4 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between">
++      <div className="p-4 bg-forest-900 text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between">
+         <div className="flex items-center gap-2.5">
+           <div className="p-2 bg-[#8d5732] rounded-xl text-[#fcdbb6] shadow-xs">
+             <ShoppingCart className="w-4 h-4" />
+           </div>
+           <div>
+             <h3 className="font-bold text-sm text-[#fff5ea] font-serif-title">🍃 Panier de Vente</h3>
+-            <p className="text-[11px] text-[#c5ddc5]">
++            <p className="text-xs text-[#c5ddc5]">
+               {cartSummary.totalItems} articles ({cartSummary.uniqueCount} réf.)
+             </p>
+           </div>
+@@ -110,24 +137,28 @@ export const CartPanel: React.FC<{
+         {cart.length > 0 && (
+           <button
+             type="button"
+-            onClick={clearCart}
+-            className="text-xs text-[#f1a8a2] hover:text-[#fff2f0] flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#284f35] transition-colors cursor-pointer"
++            onClick={handleClearClick}
++            className={`touch-btn text-xs flex items-center gap-1 px-3 rounded-lg transition-colors cursor-pointer ${
++              confirmClear
++                ? 'bg-rose-700 text-white font-bold'
++                : 'text-[#f1a8a2] hover:text-[#fff2f0] hover:bg-[#284f35]'
++            }`}
+             title="Vider le panier"
+           >
+             <RotateCcw className="w-3.5 h-3.5" />
+-            Vider
++            {confirmClear ? 'Confirmer ?' : 'Vider'}
+           </button>
+         )}
+       </div>
+ 
+       {/* Customer Selector & Quick Options */}
+-      <div className="p-3 bg-[#f7f2e7] border-b border-[#e5dcce] space-y-2">
++      <div className="p-3 bg-sand-100 border-b border-[#e5dcce] space-y-2">
+         <div className="flex items-center gap-2">
+           <User className="w-4 h-4 text-[#8a7f72] shrink-0" />
+           <select
+             value={selectedCustomerId}
+             onChange={(e) => setSelectedCustomerId(Number(e.target.value))}
+-            className="flex-1 bg-[#fdfbf7] border border-[#e2d6c1] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#233d2a] focus:outline-hidden focus:ring-2 focus:ring-[#234931]/20"
++            className="flex-1 bg-sand-50 border border-[#e2d6c1] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#233d2a] focus:outline-hidden focus:ring-2 focus:ring-[#234931]/20"
+           >
+             {customers.map((c) => (
+               <option key={c.id} value={c.id}>
+@@ -149,10 +180,10 @@ export const CartPanel: React.FC<{
+                 key={pct}
+                 type="button"
+                 onClick={() => setGlobalDiscountPercent(pct)}
+-                className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
++                className={`px-2 py-0.5 rounded-md text-xs font-semibold transition-colors cursor-pointer ${
+                   globalDiscountPercent === pct
+-                    ? 'bg-[#234931] text-[#fdfbf7]'
+-                    : 'bg-[#fdfbf7] border border-[#e2d6c1] text-[#5d5244] hover:bg-[#efe8d8]'
++                    ? 'bg-forest-800 text-[#fdfbf7]'
++                    : 'bg-sand-50 border border-[#e2d6c1] text-[#5d5244] hover:bg-[#efe8d8]'
+                 }`}
+               >
+                 {pct}%
+@@ -163,14 +194,14 @@ export const CartPanel: React.FC<{
+       </div>
+ 
+       {/* Cart Items Scrollable List */}
+-      <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1">
++      <div className="flex-1 overflow-y-auto divide-y divide-sand-100 p-2 space-y-1">
+         {cart.length === 0 ? (
+-          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-400">
+-            <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-300">
++          <div className="h-full flex flex-col items-center justify-center p-6 text-center text-ink-600">
++            <div className="w-12 h-12 rounded-full bg-sand-100 flex items-center justify-center mb-3 text-sand-300">
+               <ShoppingCart className="w-6 h-6" />
+             </div>
+-            <p className="font-semibold text-sm text-slate-700">Le panier est vide</p>
+-            <p className="text-xs text-slate-400 mt-1 max-w-[200px]">
++            <p className="font-semibold text-sm text-ink-700">Le panier est vide</p>
++            <p className="text-xs text-ink-600 mt-1 max-w-[200px]">
+               Sélectionnez des articles dans le catalogue ou scannez un code-barres.
+             </p>
+           </div>
+@@ -183,14 +214,14 @@ export const CartPanel: React.FC<{
+             return (
+               <div
+                 key={item.product.id}
+-                className="p-2.5 rounded-xl hover:bg-slate-50 transition-colors space-y-1.5"
++                className="p-2.5 rounded-xl hover:bg-sand-50 transition-colors space-y-1.5"
+               >
+                 <div className="flex items-start justify-between gap-2">
+                   <div className="flex-1 min-w-0">
+-                    <div className="font-semibold text-xs text-slate-900 truncate">
++                    <div className="font-semibold text-xs text-ink-900 truncate">
+                       {item.product.name}
+                     </div>
+-                    <div className="flex items-center gap-2 text-[10px] text-slate-400">
++                    <div className="flex items-center gap-2 text-xs text-ink-600">
+                       <span>{item.product.sku}</span>
+                       <span>•</span>
+                       <span>{formatMoney(item.unitPrice)} / u</span>
+@@ -200,7 +231,7 @@ export const CartPanel: React.FC<{
+                     </div>
+                     {item.product.stock <= item.product.lowStockThreshold && (
+                       <div className="mt-1">
+-                        <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
++                        <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                           ⚠️ Seuil minimal : {item.product.stock} restant(s)
+                         </span>
+                       </div>
+@@ -209,11 +240,11 @@ export const CartPanel: React.FC<{
+ 
+                   {/* Line Total */}
+                   <div className="text-right">
+-                    <div className="font-bold text-xs text-slate-900">
++                    <div className="font-bold text-xs text-ink-900">
+                       {formatMoney(lineNetTTC)}
+                     </div>
+                     {item.discountPercent > 0 && (
+-                      <div className="text-[10px] text-emerald-600 line-through">
++                      <div className="text-xs text-emerald-600 line-through">
+                         {formatMoney(lineOriginalTTC)}
+                       </div>
+                     )}
+@@ -223,28 +254,32 @@ export const CartPanel: React.FC<{
+                 {/* Controls: Quantity + Discount + Delete */}
+                 <div className="flex items-center justify-between pt-1">
+                   {/* Quantity adjustment buttons */}
+-                  <div className="inline-flex items-center bg-white border border-slate-200 rounded-lg overflow-hidden shadow-2xs">
++                  <div className="inline-flex items-center bg-white border border-sand-200 rounded-lg overflow-hidden shadow-2xs">
+                     <button
+                       type="button"
+                       onClick={() => decrementQuantity(item.product.id)}
+-                      className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold text-xs cursor-pointer"
++                      aria-label={`Retirer une unité de ${item.product.name}`}
++                      className="touch-btn flex items-center justify-center text-ink-700 hover:bg-sand-100 font-bold text-xs cursor-pointer"
+                     >
+                       <Minus className="w-3 h-3" />
+                     </button>
+                     <input
+                       type="number"
++                      inputMode="numeric"
+                       min="1"
++                      aria-label={`Quantité de ${item.product.name}`}
+                       value={item.quantity}
+                       onChange={(e) =>
+                         updateQuantity(item.product.id, Math.max(1, Number(e.target.value)))
+                       }
+-                      className="w-8 text-center text-xs font-bold text-slate-800 border-x border-slate-200 py-0.5 focus:outline-hidden"
++                      className="w-12 h-11 text-center text-sm font-bold text-ink-900 border-x border-sand-200 focus:outline-hidden"
+                     />
+                     <button
+                       type="button"
+                       onClick={() => incrementQuantity(item.product.id)}
+                       disabled={item.quantity >= item.product.stock}
+-                      className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-100 disabled:opacity-30 font-bold text-xs cursor-pointer"
++                      aria-label={`Ajouter une unité de ${item.product.name}`}
++                      className="touch-btn flex items-center justify-center text-ink-700 hover:bg-sand-100 disabled:opacity-30 font-bold text-xs cursor-pointer"
+                     >
+                       <Plus className="w-3 h-3" />
+                     </button>
+@@ -253,7 +288,7 @@ export const CartPanel: React.FC<{
+                   <div className="flex items-center gap-2">
+                     {/* Item Discount Trigger */}
+                     {isEditingDiscount ? (
+-                      <div className="inline-flex items-center gap-1 bg-white border border-indigo-300 rounded-md px-1 py-0.5">
++                      <div className="inline-flex items-center gap-1 bg-white border border-sand-300 rounded-md px-1 py-0.5">
+                         <input
+                           type="number"
+                           min="0"
+@@ -265,20 +300,21 @@ export const CartPanel: React.FC<{
+                             setItemDiscount(item.product.id, Number(e.target.value))
+                           }
+                           onBlur={() => setEditingItemDiscountId(null)}
+-                          className="w-8 text-[11px] font-semibold text-center focus:outline-hidden"
++                          className="w-8 text-xs font-semibold text-center focus:outline-hidden"
+                         />
+-                        <span className="text-[10px] text-slate-400">%</span>
++                        <span className="text-xs text-ink-600">%</span>
+                       </div>
+                     ) : (
+                       <button
+                         type="button"
+                         onClick={() => setEditingItemDiscountId(item.product.id)}
+-                        className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium border flex items-center gap-0.5 cursor-pointer ${
++                        className={`touch-btn text-xs px-2 rounded-md font-medium border inline-flex items-center justify-center gap-1 cursor-pointer ${
+                           item.discountPercent > 0
+                             ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+-                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-100'
++                            : 'bg-white text-ink-600 border-sand-200 hover:bg-sand-100'
+                         }`}
+                         title="Appliquer une remise article"
++                        aria-label={`Remise sur ${item.product.name}`}
+                       >
+                         <Percent className="w-2.5 h-2.5" />
+                         {item.discountPercent > 0 ? `-${item.discountPercent}%` : 'Remise'}
+@@ -289,8 +325,9 @@ export const CartPanel: React.FC<{
+                     <button
+                       type="button"
+                       onClick={() => removeFromCart(item.product.id)}
+-                      className="text-slate-400 hover:text-rose-600 p-1 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
++                      className="touch-btn inline-flex items-center justify-center text-ink-600 hover:text-rose-600 rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
+                       title="Retirer du panier"
++                      aria-label={`Retirer ${item.product.name} du panier`}
+                     >
+                       <Trash2 className="w-3.5 h-3.5" />
+                     </button>
+@@ -303,15 +340,15 @@ export const CartPanel: React.FC<{
+       </div>
+ 
+       {/* Real-time Totals & Checkout Trigger */}
+-      <div className="p-4 bg-slate-50 border-t border-slate-200/80 space-y-3">
++      <div className="p-4 bg-sand-50 border-t border-sand-200/80 space-y-3">
+         <div className="space-y-1.5 text-xs">
+-          <div className="flex justify-between text-slate-500">
++          <div className="flex justify-between text-ink-600">
+             <span>Sous-total (HT):</span>
+-            <span className="font-medium text-slate-700">{formatMoney(cartSummary.subtotalHT)}</span>
++            <span className="font-medium text-ink-700">{formatMoney(cartSummary.subtotalHT)}</span>
+           </div>
+-          <div className="flex justify-between text-slate-500">
++          <div className="flex justify-between text-ink-600">
+             <span>TVA calculée:</span>
+-            <span className="font-medium text-slate-700">{formatMoney(cartSummary.totalTax)}</span>
++            <span className="font-medium text-ink-700">{formatMoney(cartSummary.totalTax)}</span>
+           </div>
+           {cartSummary.discountAmount > 0 && (
+             <div className="flex justify-between text-emerald-600 font-medium">
+@@ -319,9 +356,9 @@ export const CartPanel: React.FC<{
+               <span>-{formatMoney(cartSummary.discountAmount)}</span>
+             </div>
+           )}
+-          <div className="pt-2 border-t border-slate-200 flex justify-between items-baseline">
+-            <span className="text-sm font-bold text-slate-900">Total Net TTC:</span>
+-            <span className="text-xl font-extrabold text-indigo-600">
++          <div className="pt-2 border-t border-sand-200 flex justify-between items-baseline">
++            <span className="text-sm font-bold text-ink-900">Total Net TTC:</span>
++            <span className="text-xl font-extrabold text-forest-700">
+               {formatMoney(cartSummary.totalTTC)}
+             </span>
+           </div>
+@@ -335,8 +372,8 @@ export const CartPanel: React.FC<{
+             onClick={handleOpenPrintPreview}
+             className={`py-3 px-3.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
+               cart.length === 0
+-                ? 'bg-[#f7f2e7] text-[#9c9182] border-[#e5dcce] cursor-not-allowed'
+-                : 'bg-[#fdfbf7] hover:bg-[#f7f2e7] text-[#5d5244] border-[#e2d6c1] shadow-2xs'
++                ? 'bg-sand-100 text-[#9c9182] border-[#e5dcce] cursor-not-allowed'
++                : 'bg-sand-50 hover:bg-sand-100 text-[#5d5244] border-[#e2d6c1] shadow-2xs'
+             }`}
+             title="Aperçu Ticket thermique 80mm avant encaissement"
+           >
+@@ -351,12 +388,12 @@ export const CartPanel: React.FC<{
+             className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
+               cart.length === 0
+                 ? 'bg-[#ece2d1] text-[#9c9182] cursor-not-allowed shadow-none'
+-                : 'bg-[#2d563a] hover:bg-[#23442e] active:scale-98 text-[#fdfbf7] shadow-[#2d563a]/20 border border-[#21402b]'
++                : 'bg-forest-700 hover:bg-[#23442e] active:scale-98 text-[#fdfbf7] shadow-[#2d563a]/20 border border-[#21402b]'
+             }`}
+           >
+             <Receipt className="w-4 h-4 text-[#c5ddc5]" />
+             <span>Encaisser {cart.length > 0 && `• ${formatMoney(cartSummary.totalTTC)}`}</span>
+-            <kbd className="hidden sm:inline-block bg-[#1f3d29] text-[#e8f1e8] text-[10px] px-1.5 py-0.5 rounded-md font-mono">
++            <kbd className="hidden sm:inline-block bg-forest-900 text-[#e8f1e8] text-xs px-1.5 py-0.5 rounded-md font-mono">
+               F2
+             </kbd>
+           </button>
+@@ -366,16 +403,17 @@ export const CartPanel: React.FC<{
+       {/* Checkout Modal */}
+       {isCheckoutOpen && (
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+-          <div className="bg-[#fdfbf7] w-full max-w-md rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+-            <div className="px-5 py-4 bg-[#1f3d29] text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
+-              <h3 className="font-bold text-sm flex items-center gap-2 font-serif-title">
++          <div role="dialog" aria-modal="true" aria-labelledby="checkout-title" className="bg-sand-50 w-full max-w-md rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
++            <div className="px-5 py-4 bg-forest-900 text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
++              <h3 id="checkout-title" className="font-bold text-sm flex items-center gap-2 font-serif-title">
+                 <Receipt className="w-4 h-4 text-[#a8d3a8]" />
+                 🍃 Règlement de la Vente Sherwood
+               </h3>
+               <button
+                 type="button"
+                 onClick={() => setIsCheckoutOpen(false)}
+-                className="text-[#c5ddc5] hover:text-white transition-colors cursor-pointer"
++                aria-label="Fermer la fenêtre d'encaissement"
++                className="touch-btn inline-flex items-center justify-center text-[#c5ddc5] hover:text-white transition-colors cursor-pointer"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+@@ -383,7 +421,7 @@ export const CartPanel: React.FC<{
+ 
+             <div className="p-6 space-y-5">
+               {/* Amount to pay banner */}
+-              <div className="bg-[#f7f2e7] border border-[#e5dcce] rounded-2xl p-4 text-center">
++              <div className="bg-sand-100 border border-[#e5dcce] rounded-2xl p-4 text-center">
+                 <div className="text-xs font-semibold text-[#8d5732] uppercase tracking-wider">
+                   Montant Total à Payer
+                 </div>
+@@ -397,44 +435,47 @@ export const CartPanel: React.FC<{
+ 
+               {/* Payment Method Selector */}
+               <div>
+-                <label className="block text-xs font-semibold text-slate-700 mb-2">
++                <label className="block text-xs font-semibold text-ink-700 mb-2">
+                   Mode de règlement
+                 </label>
+                 <div className="grid grid-cols-3 gap-2">
+                   <button
+                     type="button"
+                     onClick={() => setSelectedPaymentMethod('CASH')}
++                    aria-pressed={selectedPaymentMethod === 'CASH'}
+                     className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                       selectedPaymentMethod === 'CASH'
+-                        ? 'bg-emerald-50 border-emerald-500 text-emerald-800 ring-2 ring-emerald-500/20'
+-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
++                        ? 'bg-sand-100 border-forest-700 text-forest-900 ring-2 ring-forest-700/30'
++                        : 'bg-white border-sand-200 text-ink-700 hover:bg-sand-50'
+                     }`}
+                   >
+-                    <Banknote className="w-5 h-5 text-emerald-600" />
++                    <Banknote className="w-5 h-5 text-forest-700" />
+                     Espèces
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => setSelectedPaymentMethod('CARD')}
++                    aria-pressed={selectedPaymentMethod === 'CARD'}
+                     className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                       selectedPaymentMethod === 'CARD'
+-                        ? 'bg-blue-50 border-blue-500 text-blue-800 ring-2 ring-blue-500/20'
+-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
++                        ? 'bg-sand-100 border-forest-700 text-forest-900 ring-2 ring-forest-700/30'
++                        : 'bg-white border-sand-200 text-ink-700 hover:bg-sand-50'
+                     }`}
+                   >
+-                    <CreditCard className="w-5 h-5 text-blue-600" />
++                    <CreditCard className="w-5 h-5 text-forest-700" />
+                     Carte bancaire
+                   </button>
+                   <button
+                     type="button"
+                     onClick={() => setSelectedPaymentMethod('CHEQUE')}
++                    aria-pressed={selectedPaymentMethod === 'CHEQUE'}
+                     className={`p-3 rounded-xl border text-xs font-bold flex flex-col items-center gap-2 transition-all cursor-pointer ${
+                       selectedPaymentMethod === 'CHEQUE'
+-                        ? 'bg-amber-50 border-amber-500 text-amber-800 ring-2 ring-amber-500/20'
+-                        : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
++                        ? 'bg-sand-100 border-forest-700 text-forest-900 ring-2 ring-forest-700/30'
++                        : 'bg-white border-sand-200 text-ink-700 hover:bg-sand-50'
+                     }`}
+                   >
+-                    <FileText className="w-5 h-5 text-amber-600" />
++                    <FileText className="w-5 h-5 text-forest-700" />
+                     Chèque / Vir.
+                   </button>
+                 </div>
+@@ -442,41 +483,38 @@ export const CartPanel: React.FC<{
+ 
+               {/* Cash Calculator if CASH selected */}
+               {selectedPaymentMethod === 'CASH' && (
+-                <div className="space-y-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
++                <div className="space-y-3 bg-sand-50 p-3.5 rounded-xl border border-sand-200/80">
+                   <div className="flex items-center justify-between text-xs">
+-                    <span className="font-semibold text-slate-700">Espèces reçues :</span>
++                    <span className="font-semibold text-ink-700">Espèces reçues :</span>
+                     <input
+                       type="number"
+                       min={cartSummary.totalTTC}
+                       value={amountTenderedInput}
+                       onChange={(e) => setAmountTenderedInput(e.target.value)}
+-                      className="w-28 px-2 py-1 text-right text-sm font-bold bg-white border border-slate-300 rounded-lg text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30"
++                      className="w-28 px-2 py-1 text-right text-sm font-bold bg-white border border-sand-300 rounded-lg text-ink-900 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/30"
+                     />
+                   </div>
+ 
+                   {/* Quick cash denomination chips */}
+                   <div className="flex items-center gap-1.5 flex-wrap">
+-                    {[cartSummary.totalTTC, 1000, 2000, 5000, 10000]
+-                      .filter((val, idx, arr) => val >= cartSummary.totalTTC && arr.indexOf(val) === idx)
+-                      .slice(0, 4)
+-                      .map((val) => (
++                    {cashSuggestions.map((val) => (
+                         <button
+                           key={val}
+                           type="button"
+                           onClick={() => setAmountTenderedInput(val.toString())}
+-                          className="px-2 py-1 bg-white border border-slate-200 rounded-md text-[11px] font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
++                          className="touch-btn px-3 bg-white border border-sand-200 rounded-md text-xs font-semibold text-ink-700 hover:bg-sand-100 cursor-pointer"
+                         >
+-                          {val} DA
++                          {val === cartSummary.totalTTC ? `Exact · ${formatMoney(val)}` : formatMoney(val)}
+                         </button>
+                       ))}
+                   </div>
+ 
+                   {/* Change returned feedback */}
+-                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs">
+-                    <span className="text-slate-600 font-medium">Monnaie à rendre :</span>
++                  <div className="pt-2 border-t border-sand-200 flex items-center justify-between text-xs">
++                    <span className="text-ink-700 font-medium">Monnaie à rendre :</span>
+                     <span
+                       className={`text-sm font-black ${
+-                        changeToReturn > 0 ? 'text-emerald-700' : 'text-slate-500'
++                        changeToReturn > 0 ? 'text-emerald-700' : 'text-ink-600'
+                       }`}
+                     >
+                       {formatMoney(changeToReturn)}
+@@ -487,7 +525,7 @@ export const CartPanel: React.FC<{
+ 
+               {/* Order note optional */}
+               <div>
+-                <label className="block text-xs font-semibold text-slate-700 mb-1">
++                <label className="block text-xs font-semibold text-ink-700 mb-1">
+                   Note ticket / Bon de livraison (optionnel)
+                 </label>
+                 <input
+@@ -495,32 +533,32 @@ export const CartPanel: React.FC<{
+                   value={orderNote}
+                   onChange={(e) => setOrderNote(e.target.value)}
+                   placeholder="Ex: Commande N°42, livrer après 16h..."
+-                  className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl"
++                  className="w-full px-3 py-1.5 text-xs bg-sand-50 border border-sand-200 rounded-xl"
+                 />
+               </div>
+ 
+               {/* Actions */}
+-              <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
++              <div className="pt-3 border-t border-sand-100 flex items-center gap-2">
+                 <button
+                   type="button"
+                   onClick={() => setIsCheckoutOpen(false)}
+-                  className="px-3 py-2.5 border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors cursor-pointer"
++                  className="px-3 py-2.5 border border-sand-200 text-xs font-semibold text-ink-700 hover:bg-sand-50 rounded-xl transition-colors cursor-pointer"
+                 >
+                   Annuler
+                 </button>
+                 <button
+                   type="button"
+                   onClick={() => setIsPrintPreviewOpen(true)}
+-                  className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
++                  className="px-3 py-2.5 bg-sand-100 hover:bg-sand-200 text-ink-900 border border-sand-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                   title="Aperçu ticket 80mm avant validation finale"
+                 >
+-                  <Eye className="w-3.5 h-3.5 text-indigo-600" />
++                  <Eye className="w-3.5 h-3.5 text-forest-700" />
+                   <span>Aperçu (80mm)</span>
+                 </button>
+                 <button
+                   type="button"
+                   onClick={handleConfirmPayment}
+-                  className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
++                  className="flex-1 py-2.5 px-4 bg-forest-700 hover:bg-forest-800 text-sand-50 text-xs font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                 >
+                   <CheckCircle2 className="w-4 h-4" />
+                   <span>Valider l'Encaissement</span>
+diff --git a/src/components/pos/PosRegisterView.tsx b/src/components/pos/PosRegisterView.tsx
+index f5fcd50..d1dfe86 100644
+--- a/src/components/pos/PosRegisterView.tsx
++++ b/src/components/pos/PosRegisterView.tsx
+@@ -27,7 +27,6 @@ export const PosRegisterView: React.FC = () => {
+     categories,
+     cart,
+     addToCart,
+-    clearCart,
+     initiateCheckout,
+     isCheckoutOpen,
+     setIsCheckoutOpen,
+@@ -141,17 +140,6 @@ export const PosRegisterView: React.FC = () => {
+           setIsCartDrawerOpen(false);
+           return;
+         }
+-        if (cart.length > 0) {
+-          e.preventDefault();
+-          clearCart();
+-          setShortcutFeedback({
+-            key: 'Échap',
+-            label: 'Panier de vente vidé avec succès',
+-            type: 'warning',
+-          });
+-          setTimeout(() => setShortcutFeedback(null), 2200);
+-          return;
+-        }
+       }
+ 
+       // Hardware Barcode Scanner Buffer (USB / Bluetooth HID)
+@@ -188,7 +176,6 @@ export const PosRegisterView: React.FC = () => {
+   }, [
+     cart.length,
+     initiateCheckout,
+-    clearCart,
+     isPrintPreviewOpen,
+     setIsPrintPreviewOpen,
+     isCheckoutOpen,
+@@ -262,24 +249,24 @@ export const PosRegisterView: React.FC = () => {
+   return (
+     <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px]">
+       {/* Left Column: Product Selection & Barcode scanner */}
+-      <div className="flex-1 flex flex-col bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-xs p-4 sm:p-5 overflow-hidden">
++      <div className="flex-1 flex flex-col sherwood-card p-4 sm:p-5 overflow-hidden">
+         {/* Top Header & Barcode scanner tool */}
+-        <div className="space-y-3 pb-3 border-b border-slate-100">
++        <div className="space-y-3 pb-3 border-b border-sand-100">
+           {/* Barcode scanner form with latency indicator */}
+           <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
+             <div className="relative flex-1">
+-              <Barcode className="w-5 h-5 text-indigo-600 absolute left-3.5 top-1/2 -translate-y-1/2" />
++              <Barcode className="w-5 h-5 text-forest-700 absolute left-3.5 top-1/2 -translate-y-1/2" />
+               <input
+                 ref={barcodeInputRef}
+                 type="text"
+                 value={barcodeInput}
+                 onChange={(e) => setBarcodeInput(e.target.value)}
+                 placeholder="Scanner un code-barres EAN (ou tapez SKU / EAN et Entrée)..."
+-                className="w-full pl-11 pr-24 py-2.5 bg-indigo-50/60 border border-indigo-200/80 rounded-2xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
++                className="w-full pl-11 pr-24 py-2.5 bg-sand-100/60 border border-sand-300/80 rounded-2xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-ink-600 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
+               />
+               <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-2 py-0.5 rounded-md">
+-                  <Zap className="w-3 h-3 text-indigo-600" />
++                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-forest-800 bg-sand-200/80 px-2 py-0.5 rounded-md">
++                  <Zap className="w-3 h-3 text-forest-700" />
+                   Auto-Scan Actif
+                 </span>
+               </div>
+@@ -287,52 +274,56 @@ export const PosRegisterView: React.FC = () => {
+ 
+             <button
+               type="submit"
+-              className="touch-btn px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
++              className="touch-btn px-4 py-2.5 bg-forest-700 hover:bg-forest-800 text-white rounded-2xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+             >
+               <Barcode className="w-4 h-4" />
+               <span>Valider</span>
+             </button>
+           </form>
+ 
+-          {/* Quick Barcode Test Chips for Cashiers */}
+-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
+-            <span className="text-slate-400 font-semibold shrink-0 flex items-center gap-1">
++          {/* Chips de test EAN : visibles en développement uniquement */}
++          {import.meta.env.DEV && (
++<div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
++            <span className="text-ink-600 font-semibold shrink-0 flex items-center gap-1">
+               <Sparkles className="w-3 h-3 text-amber-500" />
+               Test rapide EAN :
+             </span>
+             <button
+               type="button"
+               onClick={() => executeScan('613000000001')}
+-              className="px-2.5 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
++              className="px-2.5 py-1 bg-white hover:bg-sand-100 border border-sand-200 hover:border-sand-300 text-ink-700 hover:text-forest-800 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
+             >
+               Coca-Cola (613000000001)
+             </button>
+             <button
+               type="button"
+               onClick={() => executeScan('613000000004')}
+-              className="px-2.5 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
++              className="px-2.5 py-1 bg-white hover:bg-sand-100 border border-sand-200 hover:border-sand-300 text-ink-700 hover:text-forest-800 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
+             >
+               Huile Olive (613000000004)
+             </button>
+             <button
+               type="button"
+               onClick={() => executeScan('613000000012')}
+-              className="px-2.5 py-1 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-700 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
++              className="px-2.5 py-1 bg-white hover:bg-sand-100 border border-sand-200 hover:border-sand-300 text-ink-700 hover:text-forest-800 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
+             >
+               Écouteurs BT (613000000012)
+             </button>
+             <button
+               type="button"
+               onClick={() => executeScan('613000000013')}
+-              className="px-2.5 py-1 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 text-slate-700 hover:text-rose-700 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
++              className="px-2.5 py-1 bg-white hover:bg-rose-50 border border-sand-200 hover:border-rose-300 text-ink-700 hover:text-rose-700 rounded-xl font-mono transition-colors shrink-0 cursor-pointer"
+             >
+               Pain Rupture (613000000013)
+             </button>
+           </div>
++          )}
+ 
+           {/* Barcode feedback banner */}
+           {scanFeedback && (
+             <div
++              role="status"
++              aria-live="polite"
+               className={`p-3 rounded-2xl text-xs font-semibold flex items-center justify-between animate-in fade-in zoom-in-95 duration-150 ${
+                 scanFeedback.type === 'success'
+                   ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+@@ -344,7 +335,7 @@ export const PosRegisterView: React.FC = () => {
+                 <span>{scanFeedback.message}</span>
+               </div>
+               {scanFeedback.latencyMs !== undefined && (
+-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-white/80 shadow-2xs">
++                <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-white/80 shadow-2xs">
+                   ⚡ {scanFeedback.latencyMs} ms
+                 </span>
+               )}
+@@ -353,14 +344,14 @@ export const PosRegisterView: React.FC = () => {
+ 
+           {/* Low Stock Threshold Warning Toast */}
+           {stockWarningToast && (
+-            <div className="p-3 bg-amber-50 text-amber-900 border-2 border-amber-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md animate-in slide-in-from-top-2 duration-200">
++            <div role="alert" className="p-3 bg-amber-50 text-amber-900 border-2 border-amber-300 rounded-2xl text-xs font-bold flex items-center justify-between shadow-md animate-in slide-in-from-top-2 duration-200">
+               <div className="flex items-center gap-2.5">
+                 <AlertCircle className="w-5 h-5 text-amber-600 shrink-0" />
+                 <div>
+                   <div className="font-extrabold text-amber-950">
+                     ⚠️ Attention : Stock Minimal Dépassé !
+                   </div>
+-                  <div className="text-[11px] font-normal text-amber-800">
++                  <div className="text-xs font-normal text-amber-800">
+                     "{stockWarningToast.productName}" ne dispose plus que de{' '}
+                     <strong className="font-bold underline">{stockWarningToast.stock} unité(s)</strong>{' '}
+                     en stock (seuil minimal d'alerte : {stockWarningToast.threshold}).
+@@ -370,8 +361,9 @@ export const PosRegisterView: React.FC = () => {
+               <button
+                 type="button"
+                 onClick={() => setStockWarningToast(null)}
+-                className="touch-btn p-1 text-amber-600 hover:text-amber-900 transition-colors"
++                className="touch-btn p-1 text-amber-700 hover:text-amber-900 transition-colors"
+                 title="Ignorer l'alerte"
++                aria-label="Ignorer l'alerte de stock"
+               >
+                 <X className="w-4 h-4" />
+               </button>
+@@ -381,16 +373,16 @@ export const PosRegisterView: React.FC = () => {
+           {/* Search Input with F1 shortcut badge */}
+           <div className="flex items-center gap-2">
+             <div className="relative flex-1">
+-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
++              <Search className="w-4 h-4 text-ink-600 absolute left-3 top-1/2 -translate-y-1/2" />
+               <input
+                 ref={searchInputRef}
+                 type="text"
+                 value={searchQuery}
+                 onChange={(e) => setSearchQuery(e.target.value)}
+                 placeholder="Filtrer les articles par nom ou référence... [F1]"
+-                className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
++                className="w-full pl-9 pr-12 py-2 bg-sand-50 border border-sand-200 rounded-xl text-xs text-ink-900 focus:outline-hidden focus:ring-2 focus:ring-forest-700/20 focus:border-forest-700"
+               />
+-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
++              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-xs text-forest-800 bg-sand-100 border border-sand-300 px-1.5 py-0.5 rounded shadow-2xs">
+                 F1
+               </span>
+             </div>
+@@ -399,7 +391,7 @@ export const PosRegisterView: React.FC = () => {
+             <button
+               type="button"
+               onClick={() => setIsCartDrawerOpen(true)}
+-              className="lg:hidden touch-btn px-3 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
++              className="lg:hidden touch-btn px-3 py-2 bg-forest-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer shrink-0"
+             >
+               <ShoppingCart className="w-4 h-4 text-emerald-300" />
+               <span>Panier ({cartSummary.totalItems})</span>
+@@ -407,10 +399,10 @@ export const PosRegisterView: React.FC = () => {
+           </div>
+ 
+           {/* Keyboard Shortcuts Mapping Bar */}
+-          <div className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs">
+-            <div className="flex items-center gap-2 overflow-x-auto text-[11px]">
+-              <span className="font-bold text-slate-500 flex items-center gap-1 shrink-0">
+-                <Keyboard className="w-3.5 h-3.5 text-indigo-600" />
++          <div className="flex items-center justify-between bg-sand-50 border border-sand-200/80 rounded-xl px-3 py-1.5 text-xs">
++            <div className="flex items-center gap-2 overflow-x-auto text-xs">
++              <span className="font-bold text-ink-600 flex items-center gap-1 shrink-0">
++                <Keyboard className="w-3.5 h-3.5 text-forest-700" />
+                 Raccourcis :
+               </span>
+               <button
+@@ -419,36 +411,30 @@ export const PosRegisterView: React.FC = () => {
+                   searchInputRef.current?.focus();
+                   searchInputRef.current?.select();
+                 }}
+-                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
++                className="inline-flex items-center gap-1 bg-white hover:bg-sand-100 px-2 py-0.5 rounded-lg border border-sand-200 shadow-2xs transition-colors cursor-pointer"
+                 title="Cibler la recherche produit"
+               >
+-                <kbd className="font-mono font-black text-[10px] bg-indigo-50 text-indigo-700 px-1 rounded">F1</kbd>
+-                <span className="text-slate-700">Recherche</span>
++                <kbd className="font-mono font-black text-xs bg-sand-100 text-forest-800 px-1 rounded">F1</kbd>
++                <span className="text-ink-700">Recherche</span>
+               </button>
+               <button
+                 type="button"
+                 onClick={initiateCheckout}
+-                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
++                className="inline-flex items-center gap-1 bg-white hover:bg-sand-100 px-2 py-0.5 rounded-lg border border-sand-200 shadow-2xs transition-colors cursor-pointer"
+                 title="Initier l'encaissement"
+               >
+-                <kbd className="font-mono font-black text-[10px] bg-emerald-50 text-emerald-800 px-1 rounded">F2</kbd>
+-                <span className="text-slate-700">Encaisser</span>
+-              </button>
+-              <button
+-                type="button"
+-                onClick={clearCart}
+-                disabled={cart.length === 0}
+-                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 disabled:opacity-40 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+-                title="Vider le panier"
+-              >
+-                <kbd className="font-mono font-black text-[10px] bg-rose-50 text-rose-800 px-1 rounded">Échap</kbd>
+-                <span className="text-slate-700">Vider Panier</span>
++                <kbd className="font-mono font-black text-xs bg-emerald-50 text-emerald-800 px-1 rounded">F2</kbd>
++                <span className="text-ink-700">Encaisser</span>
+               </button>
++              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-ink-700">
++                <kbd className="font-mono font-black text-xs bg-rose-50 text-rose-800 px-1 rounded">Échap</kbd>
++                <span>Fermer</span>
++              </span>
+             </div>
+             <button
+               type="button"
+               onClick={() => setShowShortcutGuideModal(true)}
+-              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 shrink-0 cursor-pointer ml-2"
++              className="text-xs font-bold text-forest-700 hover:text-forest-900 flex items-center gap-1 shrink-0 cursor-pointer ml-2"
+               title="Guide des raccourcis caisse"
+             >
+               <HelpCircle className="w-3.5 h-3.5" />
+@@ -459,16 +445,18 @@ export const PosRegisterView: React.FC = () => {
+           {/* Keyboard shortcut feedback toast */}
+           {shortcutFeedback && (
+             <div
++              role="status"
++              aria-live="polite"
+               className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-1 duration-150 ${
+                 shortcutFeedback.type === 'success'
+                   ? 'bg-emerald-50 text-emerald-900 border border-emerald-300'
+                   : shortcutFeedback.type === 'warning'
+                   ? 'bg-amber-50 text-amber-900 border border-amber-300'
+-                  : 'bg-indigo-50 text-indigo-900 border border-indigo-300'
++                  : 'bg-sand-100 text-forest-900 border border-sand-300'
+               }`}
+             >
+               <div className="flex items-center gap-2">
+-                <kbd className="font-mono bg-white px-2 py-0.5 rounded-md border border-slate-300 shadow-2xs font-black">
++                <kbd className="font-mono bg-white px-2 py-0.5 rounded-md border border-sand-300 shadow-2xs font-black">
+                   {shortcutFeedback.key}
+                 </kbd>
+                 <span>{shortcutFeedback.label}</span>
+@@ -481,10 +469,10 @@ export const PosRegisterView: React.FC = () => {
+             <button
+               type="button"
+               onClick={() => setSelectedCatId('ALL')}
+-              className={`px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
++              className={`touch-btn px-4 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                 selectedCatId === 'ALL'
+-                  ? 'bg-slate-900 text-white shadow-2xs'
+-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
++                  ? 'bg-ink-900 text-white shadow-2xs'
++                  : 'bg-sand-100 text-ink-700 hover:bg-sand-200'
+               }`}
+             >
+               Tous
+@@ -494,10 +482,10 @@ export const PosRegisterView: React.FC = () => {
+                 key={c.id}
+                 type="button"
+                 onClick={() => setSelectedCatId(c.id)}
+-                className={`px-3 py-1.5 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
++                className={`touch-btn px-4 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                   selectedCatId === c.id
+-                    ? 'bg-indigo-600 text-white shadow-2xs'
+-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
++                    ? 'bg-forest-700 text-white shadow-2xs'
++                    : 'bg-sand-100 text-ink-700 hover:bg-sand-200'
+                 }`}
+               >
+                 {c.name}
+@@ -509,8 +497,8 @@ export const PosRegisterView: React.FC = () => {
+         {/* Product Grid (Fast Touch-friendly tiles) */}
+         <div className="flex-1 overflow-y-auto pt-3 pr-1">
+           {filteredProducts.length === 0 ? (
+-            <div className="h-full flex flex-col items-center justify-center p-8 text-center text-slate-400">
+-              <Package className="w-10 h-10 mb-2 text-slate-300" />
++            <div className="h-full flex flex-col items-center justify-center p-8 text-center text-ink-600">
++              <Package className="w-10 h-10 mb-2 text-sand-300" />
+               <p className="text-xs font-semibold">Aucun produit ne correspond</p>
+             </div>
+           ) : (
+@@ -521,32 +509,35 @@ export const PosRegisterView: React.FC = () => {
+                 const isRecentlyScanned = lastScannedId === p.id;
+ 
+                 return (
+-                  <div
++                  <button
++                    type="button"
+                     key={p.id}
++                    disabled={isOutOfStock}
++                    aria-label={`Ajouter ${p.name}, ${formatMoney(p.price)}${isOutOfStock ? ', rupture de stock' : ''}`}
+                     onClick={() => {
+                       if (!isOutOfStock) {
+                         addToCart(p, 1);
+                         checkLowStockAlert(p);
+                       }
+                     }}
+-                    className={`p-3 rounded-2xl border transition-all flex flex-col justify-between group cursor-pointer relative ${
++                    className={`p-3 text-left w-full rounded-2xl border transition-all flex flex-col justify-between group cursor-pointer relative focus-visible:ring-4 focus-visible:ring-forest-700/40 ${
+                       isRecentlyScanned
+-                        ? 'ring-4 ring-indigo-500/40 border-indigo-500 scale-102 bg-indigo-50/50'
++                        ? 'ring-4 ring-forest-700/40 border-forest-700 scale-102 bg-sand-100/50'
+                         : isOutOfStock
+-                        ? 'bg-slate-50/70 border-slate-200 opacity-60 cursor-not-allowed'
+-                        : 'bg-white border-slate-200/80 hover:border-indigo-400 hover:shadow-md active:scale-98'
++                        ? 'bg-sand-50/70 border-sand-200 opacity-60 cursor-not-allowed'
++                        : 'bg-white border-sand-200/80 hover:border-forest-600 hover:shadow-md active:scale-98'
+                     }`}
+                   >
+                     {/* Image / Thumbnail */}
+-                    <div className="aspect-4/3 rounded-xl bg-slate-100 overflow-hidden mb-2 relative">
++                    <div className="aspect-4/3 rounded-xl bg-sand-100 overflow-hidden mb-2 relative">
+                       {p.imageUrl ? (
+                         <img
+                           src={p.imageUrl}
+-                          alt={p.name}
++                          alt=""
+                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                         />
+                       ) : (
+-                        <div className="w-full h-full flex items-center justify-center text-slate-300">
++                        <div className="w-full h-full flex items-center justify-center text-sand-300">
+                           <Package className="w-8 h-8" />
+                         </div>
+                       )}
+@@ -554,11 +545,11 @@ export const PosRegisterView: React.FC = () => {
+                       {/* Stock badge */}
+                       <div className="absolute top-1.5 left-1.5">
+                         {isOutOfStock ? (
+-                          <span className="bg-rose-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
++                          <span className="bg-rose-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-md">
+                             Rupture
+                           </span>
+                         ) : p.stock <= p.lowStockThreshold ? (
+-                          <span className="bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md">
++                          <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-md">
+                             Reste {p.stock}
+                           </span>
+                         ) : null}
+@@ -566,7 +557,7 @@ export const PosRegisterView: React.FC = () => {
+ 
+                       {/* Cart badge on tile */}
+                       {inCart > 0 && (
+-                        <div className="absolute top-1.5 right-1.5 bg-indigo-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-lg shadow-sm">
++                        <div className="absolute top-1.5 right-1.5 bg-forest-700 text-white text-xs font-black px-1.5 py-0.5 rounded-lg shadow-sm">
+                           x{inCart}
+                         </div>
+                       )}
+@@ -574,29 +565,28 @@ export const PosRegisterView: React.FC = () => {
+ 
+                     {/* Details */}
+                     <div>
+-                      <h4 className="font-bold text-xs text-slate-800 line-clamp-1">
++                      <h4 className="font-bold text-xs text-ink-900 line-clamp-1">
+                         {p.name}
+                       </h4>
+-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 flex items-center justify-between">
++                      <div className="text-xs text-ink-600 font-mono mt-0.5 flex items-center justify-between">
+                         <span>{p.sku}</span>
+-                        <span className="text-[9px] text-slate-400">{p.barcode.slice(-4)}</span>
++                        <span className="text-xs text-ink-600">{p.barcode.slice(-4)}</span>
+                       </div>
+                     </div>
+ 
+                     {/* Price and tap to add button */}
+-                    <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+-                      <div className="font-extrabold text-xs text-indigo-600">
++                    <div className="mt-2 pt-2 border-t border-sand-100 flex items-center justify-between">
++                      <div className="font-extrabold text-xs text-forest-700">
+                         {formatMoney(p.price)}
+                       </div>
+-                      <button
+-                        type="button"
+-                        disabled={isOutOfStock}
+-                        className="touch-btn w-7 h-7 rounded-xl bg-indigo-50 group-hover:bg-indigo-600 text-indigo-700 group-hover:text-white flex items-center justify-center transition-colors shadow-2xs"
++                      <span
++                        aria-hidden="true"
++                        className="w-9 h-9 rounded-xl bg-sand-100 group-hover:bg-forest-700 text-forest-800 group-hover:text-white flex items-center justify-center transition-colors shadow-2xs"
+                       >
+                         <Plus className="w-4 h-4" />
+-                      </button>
++                      </span>
+                     </div>
+-                  </div>
++                  </button>
+                 );
+               })}
+             </div>
+@@ -611,14 +601,15 @@ export const PosRegisterView: React.FC = () => {
+ 
+       {/* Mobile Cart Slide-over Drawer / Bottom Sheet */}
+       {isCartDrawerOpen && (
+-        <div className="fixed inset-0 z-50 lg:hidden bg-slate-900/50 backdrop-blur-xs flex flex-col justify-end">
+-          <div className="bg-white rounded-t-3xl max-h-[92vh] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+-            <div className="p-3 bg-slate-100 border-b border-slate-200 flex items-center justify-between">
+-              <span className="w-10 h-1 bg-slate-300 rounded-full mx-auto block mb-1"></span>
++        <div className="fixed inset-0 z-50 lg:hidden bg-ink-900/50 backdrop-blur-xs flex flex-col justify-end">
++          <div role="dialog" aria-modal="true" aria-label="Panier de vente" className="relative bg-white rounded-t-3xl max-h-[92vh] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
++            <div className="p-3 bg-sand-100 border-b border-sand-200 flex items-center justify-between">
++              <span className="w-10 h-1 bg-sand-300 rounded-full mx-auto block mb-1"></span>
+               <button
+                 type="button"
+                 onClick={() => setIsCartDrawerOpen(false)}
+-                className="touch-btn p-1 text-slate-500 hover:text-slate-800 absolute right-3 top-2"
++                aria-label="Fermer le panier"
++                className="touch-btn p-1 text-ink-600 hover:text-ink-900 absolute right-3 top-2"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+@@ -632,44 +623,45 @@ export const PosRegisterView: React.FC = () => {
+ 
+       {/* Keyboard Shortcuts Guide Modal */}
+       {showShortcutGuideModal && (
+-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+-            <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
++        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
++          <div role="dialog" aria-modal="true" aria-labelledby="shortcut-guide-title" className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-sand-200 overflow-hidden">
++            <div className="px-5 py-4 bg-ink-900 text-white flex items-center justify-between">
+               <div className="flex items-center gap-2">
+-                <Keyboard className="w-5 h-5 text-indigo-400" />
+-                <h3 className="font-bold text-sm">Raccourcis Clavier du Poste Caisse</h3>
++                <Keyboard className="w-5 h-5 text-sand-300" />
++                <h3 id="shortcut-guide-title" className="font-bold text-sm">Raccourcis Clavier du Poste Caisse</h3>
+               </div>
+               <button
+                 type="button"
+                 onClick={() => setShowShortcutGuideModal(false)}
+-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
++                aria-label="Fermer le guide des raccourcis"
++                className="touch-btn inline-flex items-center justify-center text-sand-300 hover:text-white transition-colors cursor-pointer"
+               >
+                 <X className="w-5 h-5" />
+               </button>
+             </div>
+ 
+             <div className="p-5 space-y-4">
+-              <p className="text-xs text-slate-500">
++              <p className="text-xs text-ink-600">
+                 Utilisez ces raccourcis clavier pour accélérer les opérations en caisse sans toucher à la souris :
+               </p>
+ 
+               <div className="space-y-2.5">
+-                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
++                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-sand-50 border border-sand-200/80">
+                   <div>
+-                    <div className="font-bold text-xs text-slate-800">Cibler la Recherche Produit</div>
+-                    <div className="text-[11px] text-slate-500 mt-0.5">
++                    <div className="font-bold text-xs text-ink-900">Cibler la Recherche Produit</div>
++                    <div className="text-xs text-ink-600 mt-0.5">
+                       Place le focus et sélectionne le texte du champ de recherche d'articles.
+                     </div>
+                   </div>
+-                  <kbd className="font-mono font-bold text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg border border-indigo-200 shadow-2xs shrink-0">
++                  <kbd className="font-mono font-bold text-xs bg-sand-100 text-forest-800 px-2 py-1 rounded-lg border border-sand-300 shadow-2xs shrink-0">
+                     F1
+                   </kbd>
+                 </div>
+ 
+-                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
++                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-sand-50 border border-sand-200/80">
+                   <div>
+-                    <div className="font-bold text-xs text-slate-800">Initier l'Encaissement (Transaction)</div>
+-                    <div className="text-[11px] text-slate-500 mt-0.5">
++                    <div className="font-bold text-xs text-ink-900">Initier l'Encaissement (Transaction)</div>
++                    <div className="text-xs text-ink-600 mt-0.5">
+                       Ouvre la fenêtre de règlement et de paiement pour la commande en cours.
+                     </div>
+                   </div>
+@@ -678,11 +670,11 @@ export const PosRegisterView: React.FC = () => {
+                   </kbd>
+                 </div>
+ 
+-                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
++                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-sand-50 border border-sand-200/80">
+                   <div>
+-                    <div className="font-bold text-xs text-slate-800">Vider le Panier / Fermer Modales</div>
+-                    <div className="text-[11px] text-slate-500 mt-0.5">
+-                      Ferme les dialogues ouverts ou réinitialise immédiatement le panier de vente.
++                    <div className="font-bold text-xs text-ink-900">Fermer les fenêtres</div>
++                    <div className="text-xs text-ink-600 mt-0.5">
++                      Ferme les fenêtres ouvertes. Le panier n'est jamais vidé par ce raccourci.
+                     </div>
+                   </div>
+                   <kbd className="font-mono font-bold text-xs bg-rose-50 text-rose-800 px-2 py-1 rounded-lg border border-rose-200 shadow-2xs shrink-0">
+@@ -690,14 +682,14 @@ export const PosRegisterView: React.FC = () => {
+                   </kbd>
+                 </div>
+ 
+-                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
++                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-sand-50 border border-sand-200/80">
+                   <div>
+-                    <div className="font-bold text-xs text-slate-800">Lecteur Code-barres USB / Bluetooth</div>
+-                    <div className="text-[11px] text-slate-500 mt-0.5">
++                    <div className="font-bold text-xs text-ink-900">Lecteur Code-barres USB / Bluetooth</div>
++                    <div className="text-xs text-ink-600 mt-0.5">
+                       Validation automatique lors du scan d'un code EAN-13 ou code-barres.
+                     </div>
+                   </div>
+-                  <kbd className="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded-lg border border-slate-300 shadow-2xs shrink-0">
++                  <kbd className="font-mono font-bold text-xs bg-sand-100 text-ink-900 px-2 py-1 rounded-lg border border-sand-300 shadow-2xs shrink-0">
+                     Entrée ↵
+                   </kbd>
+                 </div>
+@@ -707,7 +699,7 @@ export const PosRegisterView: React.FC = () => {
+                 <button
+                   type="button"
+                   onClick={() => setShowShortcutGuideModal(false)}
+-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
++                  className="w-full py-2 bg-forest-700 hover:bg-forest-800 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                 >
+                   Compris
+                 </button>
+diff --git a/src/index.css b/src/index.css
+index 43e7961..ec236cb 100644
+--- a/src/index.css
++++ b/src/index.css
+@@ -1,5 +1,21 @@
+ @import "tailwindcss";
+ 
++/* Design tokens (Sherwood) : une seule source pour les couleurs de l'UI caisse */
++@theme {
++  --color-forest-900: #1f3d29;
++  --color-forest-800: #234931;
++  --color-forest-700: #2d563a;
++  --color-forest-600: #3b6f4c;
++  --color-sand-50: #fdfbf7;
++  --color-sand-100: #f7f2e7;
++  --color-sand-200: #e5dcce;
++  --color-sand-300: #d8cdba;
++  --color-ink-900: #2c241c;
++  --color-ink-700: #5d5244;
++  --color-ink-600: #6e6354; /* >= 5:1 sur sand-100 : texte secondaire lisible */
++  --color-wood-600: #8d5732;
++}
++
+ @layer base {
+   body {
+     @apply antialiased text-[#2c241c] bg-[#f4efe4] min-h-screen selection:bg-[#234931] selection:text-[#fdfbf7];
+@@ -7,6 +23,14 @@
+     -webkit-tap-highlight-color: transparent;
+   }
+ 
++  /* Anneau de focus clavier visible sur tous les boutons et liens */
++  button:focus-visible,
++  a:focus-visible,
++  [role="button"]:focus-visible {
++    outline: 2px solid var(--color-forest-700);
++    outline-offset: 2px;
++  }
++
+   h1, h2, h3, .font-serif-title {
+     font-family: 'Fraunces', 'Plus Jakarta Sans', serif;
+   }
+diff --git a/src/vite-env.d.ts b/src/vite-env.d.ts
+new file mode 100644
+index 0000000..11f02fe
+--- /dev/null
++++ b/src/vite-env.d.ts
+@@ -0,0 +1 @@
++/// <reference types="vite/client" />

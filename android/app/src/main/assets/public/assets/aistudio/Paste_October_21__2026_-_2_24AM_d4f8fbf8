@@ -1,0 +1,285 @@
+Loin d’être de simples règles techniques, les lois de l’UX s’inspirent de la psychologie humaine, de la cognition et des comportements naturels des utilisateurs. Elles visent à créer des interfaces qui respectent les limitations et les capacités humaines, en favorisant une interaction fluide et intuitive.
+
+Sommaire
+Lois et principes fondamentaux de l’UX
+Loi de Hick
+Loi de Jakob
+Loi de Miller
+Loi de Parkinson
+Loi de Fitts
+Loi de Postel
+Loi de Prägnanz
+Loi de Tesler
+La loi de l’affordance
+Effet Von Restorff
+Effet Zeigarnik
+Serial position effect
+Goal-gradient Effect
+Effet IKEA
+Les 7 lois de la gestalt
+Seuil de Doherty
+Conclusion
+Lois et principes fondamentaux de l’UX
+L’Expérience Utilisateur (UX) est un domaine essentiel dans le design de produits numériques, visant à améliorer la satisfaction et la facilité d’utilisation pour les utilisateurs finaux. Maîtriser les lois et principes fondamentaux de l’UX est donc essentiel pour les designers, les développeurs et tous ceux qui participent à la création d’interfaces numériques. Ces principes constituent des lignes directrices éprouvées qui permettent de concevoir des interfaces intuitives, efficaces et agréables à utiliser, offrant ainsi une expérience utilisateur optimale.
+
+Loi de Hick
+Définition
+La loi de Hick indique que le temps nécessaire pour prendre une décision augmente logarithmiquement avec le nombre de choix disponibles.
+
+En d’autres termes, plus le nombre d’options présentées à un utilisateur est élevé, plus il mettra de temps à prendre une décision, ce qui peut entraîner une surcharge cognitive et de la frustration.
+
+Application
+Dans le design UX, cette loi est cruciale pour structurer et simplifier les interfaces. Par exemple, un menu de navigation comportant trop d’options peut devenir déroutant et décourageant. Il est donc préférable de regrouper les options similaires et d’utiliser des sous-menus pour réduire la complexité. De plus, l’utilisation de filtres et de catégories peut aider à guider l’utilisateur vers la bonne décision plus rapidement. Dans un site de commerce électronique, au lieu de présenter une longue liste de produits, les designers peuvent introduire des catégories et des sous-catégories pour aider l’utilisateur à affiner sa recherche progressivement. Cette approche réduit la surcharge cognitive en limitant le nombre de choix à chaque étape du processus de navigation.
+
+Courbe loi de Hick
+
+Le temps nécessaire pour prendre une décision augmente logarithmiquement avec le nombre d’options disponibles, soulignant ainsi l’importance de la simplification des choix pour une meilleure expérience utilisateur
+
+Source : Définition de la loi de Hick par Usabilis
+
+Exemple d’utilisation
+Menus de navigation : Plutôt que de présenter un grand nombre d’options de navigation en une seule fois, il est souvent plus efficace de regrouper les éléments dans des sous-menus ou des catégories logiques. Par exemple, sur un site de commerce électronique, les produits peuvent être classés par catégories (vêtements, électronique, maison, etc.), avec des sous-catégories pour affiner les choix.
+Formulaires : Dans les formulaires en ligne, proposer des options prédéfinies (comme des listes déroulantes) peut aider les utilisateurs à prendre des décisions plus rapidement que s’ils devaient saisir manuellement des informations. De plus, diviser les formulaires longs en sections plus petites et logiques permet de réduire la surcharge cognitive et facilite la saisie des données.
+Loi de Jakob
+Définition
+Formulée par Jakob Nielsen qui lui a donné son nom, la loi de Jakob affirme que les utilisateurs passent la majorité de leur temps sur d’autres sites et préfèrent que votre site fonctionne de la même manière que ceux qu’ils connaissent déjà.
+
+Les utilisateurs développent des modèles mentaux basés sur leurs expériences précédentes, et ils s’attendent à ce que les nouvelles interfaces soient intuitives et familières.
+
+Lire cet article sur les heuristiques de J.Nielsen
+
+Application
+Les designers UX doivent donc respecter les conventions web pour garantir une courbe d’apprentissage minimale. Par exemple, les utilisateurs s’attendent à trouver le logo de l’entreprise en haut à gauche de l’écran, et ils savent qu’un clic sur ce logo les ramènera à la page d’accueil. De même, les liens hypertextes sont généralement soulignés et d’une couleur différente du texte normal. En suivant ces conventions, les designers s’assurent que les utilisateurs peuvent naviguer sur le site sans confusion ni frustration, ce qui améliore l’expérience globale. Respecter les conventions web permet de réduire les frictions et d’augmenter la confiance des utilisateurs, car ils savent à quoi s’attendre et comment interagir avec l’interface.
+
+Exemple d’utilisation
+Navigation et structure : Utiliser des conventions de navigation standard telles que placer le logo en haut à gauche de la page qui renvoie à la page d’accueil, avoir une barre de navigation horizontale en haut de la page ou un menu de navigation latéral. Ces éléments doivent être familiers aux utilisateurs et conformes à ce qu’ils attendent.
+Design visuel et interactions : Les boutons doivent ressembler à des boutons, avec des formes et des couleurs qui indiquent clairement leur cliquabilité. Les liens hypertexte doivent être soulignés et d’une couleur différente pour indiquer leur interactivité. Utiliser des icônes courantes pour des actions fréquentes (comme une loupe pour la recherche ou une corbeille pour supprimer) aide également à la compréhension immédiate.
+Loi de Miller
+Loi de MillerDéfinition
+Selon la loi de Miller, la mémoire à court terme humaine peut contenir environ 7 éléments d’information, plus ou moins 2.
+
+Cette limitation cognitive signifie que les individus ne peuvent traiter qu’une quantité limitée d’informations à la fois sans se sentir submergés.
+
+Application
+En UX, cette loi implique que les informations et les choix devraient être segmentés en petits groupes de 5 à 9 éléments. Par exemple, lors de la conception d’un formulaire en ligne, il est préférable de diviser les champs en sections logiques et de présenter un nombre limité de champs à la fois. Les numéros de téléphone sont également divisés en groupes de chiffres pour faciliter la mémorisation et la saisie. De plus, les menus de navigation doivent être concis et regroupés en catégories intuitives pour éviter de surcharger l’utilisateur. En segmentant les informations de manière logique, les designers peuvent aider les utilisateurs à traiter et à mémoriser les informations plus facilement, améliorant ainsi l’efficacité de l’interface.
+
+Exemple d’utilisation
+Menus de navigation : Limiter le nombre d’éléments dans les menus de navigation à 7 options ou moins, ou utiliser des sous-menus pour diviser un grand nombre d’options en groupes plus petits. Par exemple, un site web de commerce électronique pourrait avoir des catégories principales (Vêtements, Électronique, Maison, etc.) avec des sous-catégories spécifiques sous chacune d’elles.
+Groupement d’informations : Lors de la conception de formulaires ou de tableaux de bord, regrouper les informations connexes en sections distinctes de 5 à 9 éléments. Par exemple, un formulaire d’inscription peut être divisé en sections telles que Informations personnelles, Informations de connexion, et Préférences, chacune contenant un nombre limité de champs.
+Loi de Parkinson
+Schéma loi de parkinson
+
+L’axe vertical représente l’intensité des efforts, tandis que l’axe horizontal représente le temps. Les points D et I indiquent respectivement le début et la fin de l’effort
+
+Source
+
+Définition
+La loi de Parkinson postule que « le travail s’étend pour remplir le temps disponible pour son achèvement ».
+
+En d’autres termes, si vous allouez plus de temps à une tâche, cette tâche prendra plus de temps à être accomplie, même si ce n’est pas nécessaire.
+
+Application
+En UX, cela se traduit par l’importance de limiter les fonctionnalités et d’imposer des contraintes de temps pour éviter les interfaces surchargées et les fonctionnalités superflues qui peuvent diluer l’expérience utilisateur. Par exemple, lors de la conception d’une application, il peut être tentant d’ajouter de nombreuses fonctionnalités, mais cela peut rendre l’interface complexe et difficile à utiliser. En se concentrant sur les fonctionnalités essentielles et en fixant des délais serrés pour le développement, les designers peuvent créer des produits plus simples, plus efficaces et plus intuitifs. Limiter les fonctionnalités à l’essentiel permet également de réduire les coûts de développement et de maintenance, tout en offrant une meilleure expérience utilisateur.
+
+Exemple d’utilisation
+Limitation du temps : Pour les formulaires en ligne ou les processus de paiement, définir des délais raisonnables peut encourager les utilisateurs à compléter les tâches sans procrastiner. Par exemple, une session de paiement en ligne peut expirer après un certain temps pour inciter à une finalisation rapide de l’achat.
+Étapes claires et concises : Simplifier les étapes d’un processus peut aider à réduire le temps nécessaire à son achèvement. Par exemple, lors de la configuration d’un compte utilisateur, diviser le processus en étapes claires et concises avec des instructions minimales mais suffisantes pour guider l’utilisateur rapidement.
+Loi de Fitts
+Définition
+La loi de Fitts, formulée par le psychologue américain Paul Fitts en 1954, décrit la relation entre la taille d’une cible, sa distance par rapport à l’utilisateur et le temps nécessaire pour atteindre cette cible.
+
+Selon cette loi, le temps nécessaire pour atteindre une cible avec un dispositif de pointage (comme une souris ou un doigt sur un écran tactile) est proportionnel à la distance de la cible et inversement proportionnel à sa taille.
+
+Application
+En UX, cette loi guide la conception des interfaces pour améliorer l’accessibilité et la rapidité d’interaction. Par exemple, les boutons et les liens importants doivent être suffisamment grands et placés de manière accessible pour faciliter leur utilisation. Les éléments fréquemment utilisés, comme les boutons de navigation ou les options principales, devraient être placés dans des zones facilement atteignables, réduisant ainsi le temps et l’effort nécessaires pour interagir avec eux. En optimisant la taille et la position des éléments interactifs, les designers peuvent améliorer la réactivité et la convivialité de l’interface.
+
+La loi de Fitts
+
+Source
+
+Exemple d’utilisation
+Taille des clics : Les boutons et les liens interactifs doivent être suffisamment grands pour être facilement cliquables, surtout sur les appareils mobiles où les utilisateurs ont moins de précision. Une taille de 44×44 pixels est souvent recommandée pour assurer une accessibilité optimale.
+Disposition des éléments : Placer les éléments interactifs fréquemment utilisés à des endroits stratégiques où ils sont facilement accessibles sans nécessiter un mouvement excessif du curseur ou du doigt. Par exemple, les boutons de retour à l’accueil ou de retour en arrière sont souvent placés dans des zones facilement atteignables.
+Loi de Postel
+Définition
+La loi de Postel, également connue sous le nom de « Principe de robustesse », conseille de « soyez libéral dans ce que vous acceptez et conservateur dans ce que vous émettez ».
+
+En d’autres termes, un système doit être tolérant aux variations et aux erreurs d’entrée tout en émettant des sorties conformes aux normes attendues.
+
+Application
+En UX, cela signifie que les interfaces devraient être conçues pour tolérer les erreurs des utilisateurs et fournir des retours d’information clairs pour les corriger. Par exemple, les formulaires en ligne peuvent accepter divers formats de saisie (comme des dates ou des numéros de téléphone) et convertir ces entrées dans le format requis. Les messages d’erreur devraient être informatifs et guider l’utilisateur vers la correction nécessaire, améliorant ainsi l’expérience utilisateur globale. En concevant des systèmes tolérants aux erreurs et en fournissant des retours d’information clairs, les designers peuvent réduire la frustration des utilisateurs et améliorer la convivialité de l’interface.
+
+Exemple d’utilisation
+Validation des données : Lorsque les utilisateurs saisissent des données dans un formulaire, il est important de fournir des indications claires sur les formats acceptés et d’effectuer une validation côté client et côté serveur pour garantir que seules les données valides sont acceptées.
+Messages d’erreur : En cas d’erreur de saisie ou de problème de traitement, les messages d’erreur doivent être clairs et informatifs, indiquant à l’utilisateur ce qui s’est passé et comment résoudre le problème. Évitez les messages techniques ou cryptiques qui peuvent frustrer les utilisateurs.
+Loi de Prägnanz
+Loi de Prägnanz
+
+Source
+
+Définition
+Également connue sous le nom de « loi de la simplicité », la loi de Prägnanz stipule que les gens percevront et interpréteront les images complexes sous leur forme la plus simple.
+
+Le cerveau humain cherche naturellement à simplifier les formes et les structures complexes en des formes de base reconnaissables.
+
+Application
+Les interfaces doivent être conçues de manière claire et concise, en simplifiant les éléments visuels pour qu’ils soient faciles à comprendre et à utiliser. Par exemple, les icônes doivent être simples et immédiatement reconnaissables pour éviter toute confusion. Les mises en page doivent utiliser des grilles et des alignements pour créer des structures claires et ordonnées. De plus, l’utilisation d’espaces blancs peut aider à séparer les éléments visuels et à éviter l’encombrement, rendant ainsi l’interface plus agréable et plus facile à naviguer. Simplifier les éléments visuels permet d’améliorer la lisibilité et de réduire la charge cognitive, ce qui est essentiel pour une bonne expérience utilisateur.
+
+Exemple d’utilisation
+Design visuel épuré: Utiliser des mises en page simples, des couleurs contrastées et des polices lisibles pour rendre l’interface plus facile à parcourir et à comprendre. Éviter les éléments visuels superflus qui pourraient distraire les utilisateurs de l’information principale.
+Organisation logique : Structurer les informations et les fonctionnalités de manière cohérente et intuitive, en utilisant des hiérarchies visuelles et des regroupements logiques pour guider les utilisateurs à travers l’interface de manière naturelle.
+
+
+Loi de Tesler
+Définition
+La loi de la conservation de la complexité de Larry Tesler affirme que pour toute application, il y a une certaine complexité qui ne peut pas être éliminée. Cette complexité doit être gérée, soit par le système, soit par l’utilisateur.
+
+Application
+Les designers doivent décider judicieusement où placer cette complexité. Par exemple, dans une application de traitement de texte, de nombreuses fonctions avancées sont nécessaires pour répondre aux besoins des utilisateurs professionnels. Cependant, ces fonctionnalités sont souvent cachées dans des menus et des sous-menus pour ne pas encombrer l’interface principale destinée aux utilisateurs occasionnels. En déplaçant la complexité derrière des éléments interactifs comme des boutons de configuration ou des options avancées, les designers peuvent rendre l’expérience utilisateur plus fluide et plus intuitive pour la majorité des utilisateurs tout en permettant aux utilisateurs avancés d’accéder à des fonctionnalités supplémentaires lorsque cela est nécessaire. Cette approche permet de gérer la complexité de manière efficace, en équilibrant les besoins des différents types d’utilisateurs.
+
+Exemple d’utilisation
+Priorisation des fonctionnalités : Identifier les fonctionnalités essentielles et les plus utilisées par les utilisateurs et les mettre en avant, tout en reléguant les fonctionnalités moins fréquentes ou moins importantes dans des menus ou des paramètres avancés.
+Conception modulaire : Diviser les fonctionnalités complexes en étapes ou en modules plus simples et faciles à comprendre, permettant aux utilisateurs de traiter l’information par petites unités digestibles plutôt que d’être submergés par une interface trop dense.
+
+
+La loi de l’affordance
+Loi de l'affordance
+
+Définition
+La loi de l’affordance, concept introduit par le psychologue James J. Gibson, fait référence aux propriétés d’un objet qui suggèrent comment il peut être utilisé.
+
+En d’autres termes, une affordance est une caractéristique de l’objet qui informe son utilisateur sur la manière de l’utiliser. Par exemple, une poignée de porte suggère qu’elle peut être tirée ou poussée.
+
+Application
+En UX, les affordances doivent être clairement indiquées pour guider les utilisateurs sur la manière d’interagir avec les éléments de l’interface. Par exemple, les boutons doivent ressembler à des boutons (avec un effet de relief) pour que les utilisateurs sachent qu’ils peuvent cliquer dessus. Les champs de saisie doivent ressembler à des zones où l’on peut entrer du texte. En utilisant des affordances claires et intuitives, les designers peuvent créer des interfaces faciles à comprendre et à utiliser.
+
+Exemple d’utilisation
+Boutons et contrôles : Les boutons doivent ressembler à des éléments cliquables, souvent réalisés en utilisant des effets visuels tels que l’ombrage ou le relief pour suggérer une pressabilité. Un bouton de lecture dans un lecteur vidéo, par exemple, utilise souvent un symbole de triangle orienté vers la droite, clairement compréhensible comme signifiant « lecture ».
+Champs de saisie : Les champs de texte doivent ressembler à des zones où l’on peut entrer des informations, généralement avec des bordures et un fond en retrait. L’utilisation de curseurs clignotants à l’intérieur des champs de saisie est une affordance visuelle claire indiquant qu’ils sont prêts à recevoir du texte.
+Effet Von Restorff
+L'effet von restorff
+
+Source
+
+Définition
+Aussi connu sous le nom d’effet d’isolation, l’effet Von Restorff stipule qu’un élément qui se distingue des autres sera plus susceptible d’être retenu.
+
+Lorsqu’un objet se démarque par sa couleur, sa forme ou toute autre caractéristique, il devient plus mémorable.
+
+Application
+En UX, cet effet peut être utilisé pour attirer l’attention sur des éléments spécifiques que l’on souhaite que l’utilisateur remarque. Par exemple, des boutons d’appel à l’action (CTA) peuvent être conçus dans une couleur contrastante par rapport au reste de la page pour se démarquer et inciter l’utilisateur à cliquer. De même, les notifications importantes ou les messages d’erreur peuvent être stylisés de manière distincte pour être facilement identifiables. En utilisant des éléments visuels contrastants, les designers peuvent guider l’attention de l’utilisateur vers les actions ou informations essentielles, améliorant ainsi l’efficacité de l’interface.
+
+Exemple d’utilisation
+Mise en évidence visuelle : Utiliser des couleurs vives, des tailles de police plus grandes ou des animations pour mettre en évidence des éléments importants tels que des titres, des boutons d’action ou des informations critiques dans l’interface.
+Contraste : Placer délibérément des éléments distincts ou inhabituels au sein d’une interface pour les rendre saillants et faciles à remarquer par rapport aux autres éléments similaires qui les entourent.
+Effet Zeigarnik
+Définition
+L’effet Zeigarnik postule que les gens se souviennent mieux des tâches incomplètes ou interrompues que des tâches terminées.
+
+Cet effet est basé sur la tendance humaine à ressentir un besoin de clôturer des tâches ouvertes ou inachevées.
+
+Application
+En UX, cet effet peut être exploité pour encourager l’engagement des utilisateurs. Par exemple, les sites de commerce électronique peuvent afficher des étapes de commande en cours pour inciter les utilisateurs à compléter leur achat. Les applications de formation ou de productivité peuvent utiliser des barres de progression ou des listes de tâches à cocher pour motiver les utilisateurs à terminer ce qu’ils ont commencé. En créant un sentiment d’incomplétude, les designers peuvent inciter les utilisateurs à revenir et à compléter leurs actions, augmentant ainsi l’engagement et la satisfaction.
+
+Effet Zeigarnik
+
+Source
+
+Exemple d’utilisation
+Indicateurs de progression : Afficher des indicateurs de progression ou des barres de progression pour les tâches ou les processus en cours, afin d’aider les utilisateurs à suivre leur avancement et à se souvenir des tâches qu’ils doivent encore accomplir.
+Sauvegarde automatique : Proposer une sauvegarde automatique des progrès ou des actions de l’utilisateur dans l’interface, de manière à ce qu’ils puissent reprendre là où ils se sont arrêtés lors de leur prochaine visite.
+Serial position effect
+Définition
+L’effet de position sérielle est un phénomène psychologique qui décrit la tendance des individus à mieux se souvenir des premiers (effet de primauté) et des derniers (effet de récence) éléments d’une liste par rapport aux éléments du milieu.
+
+Cet effet a été mis en évidence par le psychologue Hermann Ebbinghaus dans ses recherches sur la mémoire et l’apprentissage.
+
+Application
+En UX, cela signifie que les informations importantes devraient être placées en début ou en fin de liste pour maximiser leur mémorisation. Par exemple, dans une liste de navigation ou un menu, les éléments critiques comme les options de connexion ou les fonctions principales devraient être placés en haut ou en bas. Cette approche garantit que les utilisateurs remarqueront et se souviendront des éléments clés, améliorant ainsi l’efficacité de l’interface. En structurant les informations de cette manière, les designers peuvent maximiser la mémorisation et la pertinence des éléments importants pour les utilisateurs.
+
+serial position effect
+
+L’effet de récence disparaît lorsque les personnes pensent à d’autres sujets pendant trente secondes après la présentation du dernier élément de la liste.
+
+Source
+
+Exemple d’utilisation
+Menus et listes : Dans un menu de navigation, placez les options les plus importantes ou les plus utilisées en haut (effet de primauté) et en bas (effet de récence) de la liste. Les options moins cruciales peuvent être positionnées au milieu.
+Pages de produits : Sur une page de produits, les informations essentielles, comme les fonctionnalités principales et les avantages, devraient être présentées en premier, tandis que les appels à l’action (CTA) ou les éléments de conclusion devraient être placés à la fin pour garantir qu’ils soient bien mémorisés.
+Goal-gradient Effect
+Définition
+L’effet de gradient de but (Goal-gradient Effect) stipule que les individus sont plus motivés à accomplir une tâche à mesure qu’ils se rapprochent de l’atteinte de leur objectif.
+
+En d’autres termes, l’effort et l’engagement augmentent à mesure que l’on se rapproche de la finalisation d’une tâche ou de l’obtention d’une récompense.
+
+Application
+En UX, cet effet peut être exploité en montrant clairement les étapes nécessaires pour atteindre un objectif, comme lors de la finalisation d’un achat en ligne. Par exemple, en affichant une barre de progression lors du processus de paiement, les utilisateurs peuvent voir combien d’étapes il leur reste à franchir, ce qui les incite à compléter l’achat. Cela peut également s’appliquer à des systèmes de récompenses où les utilisateurs sont motivés à continuer leurs efforts à mesure qu’ils se rapprochent de la récompense finale.
+
+Goal Gradient Effect
+
+Le Goal gradient effect montre que le temps nécessaire pour parcourir chaque section de la course diminue à mesure que l’athlète se rapproche de la fin. Ainsi, l’effort et la motivation augmentent à mesure que l’objectif final est en vue.
+
+Source
+
+Exemple d’utilisation
+Dans une application de commerce électronique, vous pouvez diviser le processus de paiement en plusieurs étapes et afficher une barre de progression. Chaque étape franchie (adresse de livraison, méthode de paiement, confirmation) montre visuellement que l’utilisateur se rapproche de la finalisation de son achat. Cela réduit l’abandon de panier et augmente le taux de conversion.
+
+Effet IKEAEffet IKEA
+Définition
+L’effet IKEA, également connu sous le nom d’effet d’assemblage, est un phénomène psychologique qui se produit lorsque les individus accordent une valeur plus élevée aux produits qu’ils ont eux-mêmes assemblés.
+
+Cet effet tire son nom de la célèbre société suédoise de meubles en kit, IKEA, où les clients doivent souvent assembler eux-mêmes les meubles achetés.
+
+Application
+En UX, cet effet peut être utilisé pour augmenter l’engagement et la satisfaction des utilisateurs. Par exemple, les applications qui permettent aux utilisateurs de personnaliser ou de créer des éléments (comme les avatars de jeux, les listes de lecture de musique, ou les albums photo) bénéficient de l’effet IKEA. En permettant aux utilisateurs de contribuer activement à la création de contenu, les designers peuvent renforcer le sentiment de propriété et de satisfaction des utilisateurs envers le produit.
+
+Les 7 lois de la gestalt
+Parmi les fondements psychologiques majeurs, la théorie de la Gestalt joue un rôle clé dans la compréhension des mécanismes perceptifs en UX design.
+
+Les lois de la Gestalt sont des principes psychologiques qui expliquent comment les gens perçoivent les formes et les objets dans leur ensemble plutôt que par leurs parties individuelles.
+
+Ces lois sont essentielles pour structurer des interfaces visuellement claires et intuitives :
+
+1/ Loi de la proximité
+Les éléments proches les uns des autres sont perçus comme faisant partie d’un même groupe. Les designers peuvent regrouper les éléments similaires et les placer proches les uns des autres pour indiquer qu’ils appartiennent à une même catégorie ou fonction. Par exemple, dans un formulaire, les champs de saisie liés (comme le nom et le prénom) devraient être placés côte à côte pour suggérer leur relation.
+
+2/ Loi de la similarité
+Les objets similaires sont perçus comme faisant partie d’un même groupe. Utiliser des styles visuels cohérents pour des éléments similaires peut aider les utilisateurs à comprendre leur relation. Par exemple, des boutons d’action ayant des fonctions similaires peuvent partager la même couleur et la même forme pour indiquer leur fonctionnalité commune.
+
+3/ Loi de la continuité
+Les lignes sont perçues comme suivant le chemin le plus lisse. Les mises en page doivent utiliser des grilles et des alignements pour créer des structures claires et ordonnées. Les éléments visuels doivent suivre des lignes et des chemins naturels pour guider l’œil de l’utilisateur de manière fluide à travers l’interface.
+
+4/ Loi de la clôture
+Les espaces fermés sont perçus comme des formes complètes. Les designers peuvent utiliser cette loi pour créer des éléments visuels qui semblent complets même s’ils sont partiellement dessinés. Par exemple, un logo incomplet peut toujours être perçu comme entier si les espaces manquants sont suggérés de manière claire.
+
+5/ Loi de la symétrie
+Les formes symétriques sont perçues comme des ensembles cohérents. Utiliser la symétrie dans les mises en page peut créer des interfaces harmonieuses et esthétiques. La symétrie aide également à équilibrer les éléments visuels, rendant l’interface plus agréable et plus facile à naviguer.
+
+6/ Loi de la figure-fond
+Les objets sont perçus distinctement de leur arrière-plan. Les designers doivent s’assurer que les éléments importants se distinguent clairement de l’arrière-plan. Par exemple, utiliser des contrastes de couleur et des ombres peut aider à différencier les éléments interactifs (comme les boutons) du reste de l’interface.
+
+7/ Loi du destin commun
+Des éléments qui bougent dans la même direction sont perçus comme liés.
+
+Seuil de Doherty
+Définition
+Le seuil de Doherty stipule qu’une interaction entre un utilisateur et un ordinateur est optimale lorsque le système répond à l’utilisateur en moins de 400 millisecondes. Au-delà de ce délai, l’utilisateur perçoit une lenteur et peut devenir frustré.
+
+Application
+En UX, cette loi souligne l’importance de la performance et de la réactivité des interfaces. Les designers doivent s’assurer que les actions courantes, comme les clics sur les boutons ou les chargements de pages, se produisent rapidement pour maintenir l’engagement de l’utilisateur. L’utilisation de techniques comme le chargement paresseux (lazy loading) et les animations de chargement peut aider à masquer les délais et à offrir une expérience utilisateur plus fluide. En optimisant la performance des systèmes, les designers peuvent réduire la frustration et améliorer la satisfaction utilisateur.
+
+
+
+Conclusion
+En comprenant et en appliquant ces lois, les designers UX peuvent créer des interfaces plus intuitives, efficaces et satisfaisantes pour les utilisateurs. Chaque loi offre un aperçu précieux de la manière dont les utilisateurs interagissent avec les systèmes, permettant ainsi de concevoir des expériences numériques optimisées.
+
+Lire aussi :
+
+La loi de Jakob ou la force des conventions design
+La loi de Parkinson : comment gérer son temps de travail ?
+Pourquoi appliquer la Loi de Hick dans l’UX Design ?
+Définition Loi de Pareto, principe de Pareto ou règle des 80/20
+Qu’est-ce que la Loi de Hick ?
+Qu’est-ce que la Loi de Miller ou nombre magique de Miller ?
+Qu’est-ce que la Loi de Fitts ?
+Qu’est-ce que la théorie de la Gestalt ?

@@ -35,6 +35,9 @@ import {
   Trash2,
   FileText,
   Eye,
+  EyeOff,
+  Save,
+  KeyRound,
   Info,
 } from 'lucide-react';
 
@@ -326,6 +329,7 @@ export const AdminSyncView: React.FC = () => {
   // Supabase form state
   const [url, setUrl] = useState(supabaseConfig.url);
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey);
+  const [showAnonKey, setShowAnonKey] = useState(false);
   const [syncDirection, setSyncDirection] = useState(supabaseConfig.syncDirection);
   const [autoSync, setAutoSync] = useState(supabaseConfig.autoSyncEnabled);
 
@@ -648,9 +652,9 @@ export const AdminSyncView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main Config Form */}
           <div className="lg:col-span-2 sherwood-panel space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-[#e7ddca]">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e7ddca]">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-2xl bg-[#eaf2e8] text-[#234931] flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-[#eaf2e8] text-[#234931] flex items-center justify-center font-bold shrink-0 shadow-2xs">
                   <Cloud className="w-5 h-5" />
                 </div>
                 <div>
@@ -667,20 +671,20 @@ export const AdminSyncView: React.FC = () => {
                 type="button"
                 disabled={isSyncing || isOffline}
                 onClick={handleSyncNow}
-                className={`touch-btn px-3.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                className={`touch-btn min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer w-full sm:w-auto ${
                   isOffline
                     ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
                     : 'sherwood-btn-forest'
                 }`}
               >
-                <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>Synchroniser Maintenant</span>
+                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Synchronisation...' : 'Synchroniser Maintenant'}</span>
               </button>
             </div>
 
             {/* Sync progress indicator */}
             {isSyncing && (
-              <div className="sherwood-panel-subtle p-3 space-y-1.5">
+              <div className="sherwood-panel-subtle p-3 space-y-1.5 animate-in fade-in duration-200">
                 <div className="flex justify-between text-xs text-[#234931] font-bold">
                   <span>Synchronisation Cloud en cours...</span>
                   <span className="font-mono">{syncProgress}%</span>
@@ -699,14 +703,19 @@ export const AdminSyncView: React.FC = () => {
                 <label className="block text-xs font-bold text-[#483d31] mb-1">
                   URL du projet Supabase
                 </label>
-                <input
-                  type="url"
-                  required
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder="https://xyzcompany.supabase.co"
-                  className="w-full px-3.5 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
-                />
+                <div className="relative">
+                  <input
+                    type="url"
+                    required
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://xyzcompany.supabase.co"
+                    className="w-full pl-3.5 pr-10 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
+                  />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#877a6b]">
+                    <Server className="w-4 h-4" />
+                  </div>
+                </div>
                 <span className="text-[11px] text-[#877a6b] mt-1 block">
                   Accessible depuis votre tableau de bord Supabase : Project Settings → API → Project URL
                 </span>
@@ -716,14 +725,24 @@ export const AdminSyncView: React.FC = () => {
                 <label className="block text-xs font-bold text-[#483d31] mb-1">
                   Clé Publique Anonyme (Anon Key)
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={anonKey}
-                  onChange={(e) => setAnonKey(e.target.value)}
-                  placeholder="eyJhbGciOiJIUzI1NiIsIn..."
-                  className="w-full px-3.5 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
-                />
+                <div className="relative">
+                  <input
+                    type={showAnonKey ? 'text' : 'password'}
+                    required
+                    value={anonKey}
+                    onChange={(e) => setAnonKey(e.target.value)}
+                    placeholder="eyJhbGciOiJIUzI1NiIsIn..."
+                    className="w-full pl-3.5 pr-12 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAnonKey(!showAnonKey)}
+                    aria-label={showAnonKey ? 'Masquer la clé' : 'Afficher la clé'}
+                    className="touch-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#877a6b] hover:text-[#2c241c] rounded-lg transition-colors cursor-pointer"
+                  >
+                    {showAnonKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 <span className="text-[11px] text-[#877a6b] mt-1 block">
                   Clé de niveau client pour la synchronisation POS sécurisée par RLS (Row Level Security).
                 </span>
@@ -737,7 +756,7 @@ export const AdminSyncView: React.FC = () => {
                   <select
                     value={syncDirection}
                     onChange={(e) => setSyncDirection(e.target.value as any)}
-                    className="w-full px-3 py-2.5 sherwood-input text-xs font-bold"
+                    className="w-full min-h-[44px] px-3 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
                   >
                     <option value="BIDIRECTIONAL">Bidirectionnel (Cloud ⇄ Local)</option>
                     <option value="CLOUD_TO_LOCAL">Descendant (Cloud → Caisse Locale)</option>
@@ -752,7 +771,7 @@ export const AdminSyncView: React.FC = () => {
                   <select
                     value={autoSync ? 'true' : 'false'}
                     onChange={(e) => setAutoSync(e.target.value === 'true')}
-                    className="w-full px-3 py-2.5 sherwood-input text-xs font-bold"
+                    className="w-full min-h-[44px] px-3 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
                   >
                     <option value="true">Automatique (À chaque vente)</option>
                     <option value="false">Manuelle uniquement</option>
@@ -765,7 +784,7 @@ export const AdminSyncView: React.FC = () => {
                 <div
                   role="status"
                   aria-live="polite"
-                  className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 ${
+                  className={`p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in duration-150 ${
                     testResult.success
                       ? 'bg-[#eaf2e8] text-[#234931] border border-[#cbe0cb]'
                       : 'bg-[#fef2f2] text-[#991b1b] border border-[#fecaca]'
@@ -780,29 +799,31 @@ export const AdminSyncView: React.FC = () => {
                     <span>{testResult.message}</span>
                   </div>
                   {testResult.latencyMs !== undefined && (
-                    <span className="font-mono text-[11px] px-2 py-0.5 rounded-full bg-white/70">
+                    <span className="font-mono text-[11px] px-2.5 py-0.5 rounded-full bg-white/80 border border-[#cbe0cb] font-black shrink-0">
                       {testResult.latencyMs} ms
                     </span>
                   )}
                 </div>
               )}
 
-              <div className="pt-2 flex flex-wrap items-center justify-between gap-3">
+              {/* Responsive actions bar: full-width stacked on mobile, inline on sm+ */}
+              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <button
                   type="button"
                   disabled={isTesting}
                   onClick={handleTestConnection}
-                  className="touch-btn px-4 py-2.5 sherwood-btn-outline text-xs font-bold flex items-center gap-2"
+                  className="touch-btn min-h-[46px] px-4 py-2.5 sherwood-btn-outline text-xs font-bold flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
-                  <RefreshCw className={`w-3.5 h-3.5 ${isTesting ? 'animate-spin' : ''}`} />
+                  <RefreshCw className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} />
                   <span>{isTesting ? 'Vérification en cours...' : 'Tester la Connexion'}</span>
                 </button>
 
                 <button
                   type="submit"
-                  className="touch-btn px-5 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs"
+                  className="touch-btn min-h-[46px] px-6 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
-                  Sauvegarder les Paramètres
+                  <Save className="w-4 h-4" />
+                  <span>Sauvegarder les Paramètres</span>
                 </button>
               </div>
             </form>
