@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { DailyRevenueChart } from './DailyRevenueChart';
+import { D3RevenueTrendChart } from './D3RevenueTrendChart';
 import { InventoryAlertWidget } from './InventoryAlertWidget';
 import {
   TrendingUp,
@@ -18,6 +19,7 @@ import {
 
 export const DashboardView: React.FC = () => {
   const { todayStats, sales, products, categories, setActiveView } = usePos();
+  const [chartTab, setChartTab] = React.useState<'d3-trend' | 'bar-breakdown'>('d3-trend');
 
   const formatMoney = (val: number) => {
     return new Intl.NumberFormat('fr-DZ', {
@@ -226,8 +228,51 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Section: Daily Revenue Trends (Recharts) */}
-      <DailyRevenueChart />
+      {/* Main Revenue Analytics Section with D3 7-day Trend Chart */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-2 px-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Analyse Visuelle :
+            </span>
+            <div className="inline-flex p-1 bg-slate-200/70 rounded-xl text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setChartTab('d3-trend')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  chartTab === 'd3-trend'
+                    ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Courbe Tendance D3 (7 Jours)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setChartTab('bar-breakdown')}
+                className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  chartTab === 'bar-breakdown'
+                    ? 'bg-white text-indigo-700 shadow-xs font-bold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-slate-500" />
+                <span>Histogramme Détaillé</span>
+              </button>
+            </div>
+          </div>
+          <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+            Données synchronisées en temps réel avec la caisse
+          </span>
+        </div>
+
+        {chartTab === 'd3-trend' ? (
+          <D3RevenueTrendChart days={7} />
+        ) : (
+          <DailyRevenueChart />
+        )}
+      </div>
 
       {/* Inventory Monitoring & Configurable Minimum Stock Threshold Widget */}
       <InventoryAlertWidget />
