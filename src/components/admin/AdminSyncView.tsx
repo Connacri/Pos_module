@@ -564,15 +564,15 @@ export const AdminSyncView: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Sub-Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 border-b border-[#e7ddca]">
+      {/* Navigation Sub-Tabs with min 44px touch targets and accessible chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 border-b border-[#e7ddca]">
         <button
           type="button"
           onClick={() => setActiveTab('cloud')}
-          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'cloud'
               ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
           }`}
         >
           <Cloud className="w-4 h-4" />
@@ -582,15 +582,15 @@ export const AdminSyncView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('schema')}
-          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'schema'
               ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
           }`}
         >
           <FileCode className="w-4 h-4" />
           <span>Script SQL des Tables</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-[#faeee2] text-[#85522b] text-[10px] font-mono">
+          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'schema' ? 'bg-white/20 text-white' : 'bg-[#faeee2] text-[#85522b]'}`}>
             10 tables
           </span>
         </button>
@@ -598,15 +598,15 @@ export const AdminSyncView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('printer')}
-          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'printer'
               ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
           }`}
         >
           <Printer className="w-4 h-4" />
           <span>Imprimante Thermique</span>
-          <span className="px-1.5 py-0.2 rounded-full bg-[#eaf2e8] text-[#234931] text-[10px] font-mono">
+          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'printer' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
             {printerForm.paperWidth}
           </span>
         </button>
@@ -614,10 +614,10 @@ export const AdminSyncView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('benchmark')}
-          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'benchmark'
               ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
           }`}
         >
           <Database className="w-4 h-4" />
@@ -627,16 +627,16 @@ export const AdminSyncView: React.FC = () => {
         <button
           type="button"
           onClick={() => setActiveTab('logs')}
-          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
             activeTab === 'logs'
               ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
           }`}
         >
           <Terminal className="w-4 h-4" />
           <span>Journal d'Activité</span>
           {logs.length > 0 && (
-            <span className="px-1.5 py-0.2 rounded-full bg-[#eaf2e8] text-[#234931] text-[10px] font-mono">
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'logs' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
               {logs.length}
             </span>
           )}
@@ -810,32 +810,37 @@ export const AdminSyncView: React.FC = () => {
 
           {/* Quick Stats & Cloud Topology Card */}
           <div className="space-y-5">
-            <div className="sherwood-panel space-y-4">
-              <h3 className="font-serif-title font-black text-sm text-[#234931] flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#85522b]" />
-                <span>Statut du Cluster Cloud</span>
-              </h3>
+            <div className="sherwood-panel p-5 space-y-4">
+              <div className="flex items-center gap-2.5 pb-2 border-b border-[#e7ddca]">
+                <div className="w-8 h-8 rounded-xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                  Statut du Cluster Cloud Supabase
+                </h3>
+              </div>
 
               <div className="space-y-2.5 text-xs">
-                <div className="flex items-center justify-between p-2.5 sherwood-panel-subtle">
-                  <span className="text-[#605547] font-medium">Fournisseur</span>
-                  <span className="font-bold text-[#234931]">Supabase PostgreSQL</span>
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                  <span className="text-[#483d31] font-bold">Fournisseur Cloud</span>
+                  <span className="font-extrabold text-[#234931]">Supabase PostgreSQL</span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 sherwood-panel-subtle">
-                  <span className="text-[#605547] font-medium">Sécurité RLS</span>
-                  <span className="font-bold text-emerald-700 flex items-center gap-1">
-                    <Check className="w-3.5 h-3.5" /> Activée (10 tables)
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                  <span className="text-[#483d31] font-bold">Sécurité RLS</span>
+                  <span className="font-black text-emerald-800 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Activée (10 tables)</span>
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 sherwood-panel-subtle">
-                  <span className="text-[#605547] font-medium">File d'attente locale</span>
-                  <span className="font-mono font-bold text-[#85522b]">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                  <span className="text-[#483d31] font-bold">File d'attente locale</span>
+                  <span className="font-mono font-black text-[#85522b] bg-[#faeee2] px-2.5 py-0.5 rounded-full border border-[#f0d4ba]">
                     {pendingSyncCount} ticket(s)
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-2.5 sherwood-panel-subtle">
-                  <span className="text-[#605547] font-medium">Articles synchronisables</span>
-                  <span className="font-mono font-bold text-[#234931]">
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                  <span className="text-[#483d31] font-bold">Articles synchronisables</span>
+                  <span className="font-mono font-black text-[#234931] bg-[#eaf2e8] px-2.5 py-0.5 rounded-full border border-[#cbe0cb]">
                     {products.length} articles
                   </span>
                 </div>
@@ -845,7 +850,7 @@ export const AdminSyncView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setActiveTab('schema')}
-                  className="w-full touch-btn py-2.5 sherwood-btn-wood text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full touch-btn min-h-[44px] py-2.5 sherwood-btn-wood text-xs font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                 >
                   <FileCode className="w-4 h-4" />
                   <span>Voir le Script de Création SQL</span>
@@ -854,11 +859,12 @@ export const AdminSyncView: React.FC = () => {
             </div>
 
             {/* Quick Guide Card */}
-            <div className="sherwood-panel-subtle p-4 space-y-2 text-xs">
-              <div className="font-bold text-[#234931] flex items-center gap-1.5">
-                <span>🌲</span> Mode Décentralisé & P2P
+            <div className="p-4 rounded-3xl bg-white border border-[#d8cdba] shadow-2xs space-y-2 text-xs">
+              <div className="font-black text-[#234931] flex items-center gap-2 text-sm font-serif-title">
+                <span>🌲</span>
+                <span>Mode Décentralisé & P2P Autonome</span>
               </div>
-              <p className="text-[#605547] leading-relaxed">
+              <p className="text-[#483d31] leading-relaxed font-medium">
                 Le point de vente fonctionne 100% hors-ligne. En cas de coupure Internet, les encaissements continuent normalement et sont automatiquement déversés vers Supabase dès le rétablissement du réseau.
               </p>
             </div>
@@ -905,7 +911,7 @@ export const AdminSyncView: React.FC = () => {
               </div>
             </div>
 
-            {/* List of generated tables chips */}
+            {/* List of generated tables chips with clear contrast and font */}
             <div className="flex flex-wrap gap-2 text-xs">
               {[
                 'categories',
@@ -921,7 +927,7 @@ export const AdminSyncView: React.FC = () => {
               ].map((table) => (
                 <span
                   key={table}
-                  className="px-2.5 py-1 rounded-xl bg-[#f7f2e7] border border-[#e2d7c2] font-mono text-[11px] font-bold text-[#234931]"
+                  className="px-3 py-1.5 rounded-xl bg-white border border-[#d8cdba] font-mono text-xs font-bold text-[#1f3d29] shadow-2xs hover:border-[#1f3d29] transition-colors"
                 >
                   public.{table}
                 </span>
@@ -937,33 +943,33 @@ export const AdminSyncView: React.FC = () => {
 
             {/* Step-by-Step Instructions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              <div className="sherwood-panel-subtle p-3.5 space-y-1">
-                <div className="text-xs font-bold text-[#234931] flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#234931] text-white flex items-center justify-center text-[10px]">1</span>
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs space-y-2">
+                <div className="text-xs font-black text-[#1f3d29] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#1f3d29] text-white flex items-center justify-center text-xs font-bold shrink-0">1</span>
                   <span>Ouvrir Supabase</span>
                 </div>
-                <p className="text-[11px] text-[#605547] leading-relaxed">
-                  Connectez-vous sur supabase.com et sélectionnez votre projet POS.
+                <p className="text-xs text-[#483d31] leading-relaxed font-medium">
+                  Connectez-vous sur supabase.com et accédez au tableau de bord de votre projet POS.
                 </p>
               </div>
 
-              <div className="sherwood-panel-subtle p-3.5 space-y-1">
-                <div className="text-xs font-bold text-[#234931] flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#234931] text-white flex items-center justify-center text-[10px]">2</span>
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs space-y-2">
+                <div className="text-xs font-black text-[#1f3d29] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#1f3d29] text-white flex items-center justify-center text-xs font-bold shrink-0">2</span>
                   <span>SQL Editor</span>
                 </div>
-                <p className="text-[11px] text-[#605547] leading-relaxed">
-                  Cliquez sur l'onglet <strong>SQL Editor</strong> dans la barre latérale gauche, puis <em>New query</em>.
+                <p className="text-xs text-[#483d31] leading-relaxed font-medium">
+                  Cliquez sur l'onglet <strong>SQL Editor</strong> dans le menu de gauche, puis sur <em>New query</em>.
                 </p>
               </div>
 
-              <div className="sherwood-panel-subtle p-3.5 space-y-1">
-                <div className="text-xs font-bold text-[#234931] flex items-center gap-1.5">
-                  <span className="w-5 h-5 rounded-full bg-[#234931] text-white flex items-center justify-center text-[10px]">3</span>
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs space-y-2">
+                <div className="text-xs font-black text-[#1f3d29] flex items-center gap-2">
+                  <span className="w-6 h-6 rounded-full bg-[#1f3d29] text-white flex items-center justify-center text-xs font-bold shrink-0">3</span>
                   <span>Coller & Exécuter</span>
                 </div>
-                <p className="text-[11px] text-[#605547] leading-relaxed">
-                  Collez le script SQL et cliquez sur <strong>Run</strong>. Toutes les tables, index et règles RLS sont créées.
+                <p className="text-xs text-[#483d31] leading-relaxed font-medium">
+                  Collez l'intégralité du script SQL et cliquez sur <strong>Run</strong>. Les 10 tables et politiques RLS seront créées en 1 seconde.
                 </p>
               </div>
             </div>
@@ -1619,37 +1625,37 @@ export const AdminSyncView: React.FC = () => {
               </span>
             </div>
 
-            {/* Metrics */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="p-3.5 sherwood-panel-subtle text-center">
-                <span className="text-[10px] text-[#877a6b] uppercase font-bold block">Articles Indexés</span>
-                <span className="text-lg font-black text-[#234931]">
+            {/* Metrics cards with clear typography and contrast */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs text-center">
+                <span className="text-[11px] text-[#483d31] uppercase font-bold block mb-1">Articles Indexés</span>
+                <span className="text-2xl font-black text-[#234931] font-mono">
                   {products.length.toLocaleString('fr-FR')}
                 </span>
               </div>
-              <div className="p-3.5 sherwood-panel-subtle text-center">
-                <span className="text-[10px] text-[#877a6b] uppercase font-bold block">Recherche Code-Barres</span>
-                <span className="text-lg font-black text-emerald-700 font-mono">
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs text-center">
+                <span className="text-[11px] text-[#483d31] uppercase font-bold block mb-1">Recherche Code-Barres</span>
+                <span className="text-2xl font-black text-emerald-800 font-mono">
                   &lt; 0.2 ms
                 </span>
               </div>
-              <div className="p-3.5 sherwood-panel-subtle text-center">
-                <span className="text-[10px] text-[#877a6b] uppercase font-bold block">File Hors-Ligne</span>
-                <span className="text-lg font-black text-[#85522b]">
+              <div className="p-4 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs text-center">
+                <span className="text-[11px] text-[#483d31] uppercase font-bold block mb-1">File Hors-Ligne</span>
+                <span className="text-2xl font-black text-[#85522b] font-mono">
                   {pendingSyncCount}
                 </span>
               </div>
             </div>
 
             {/* Stress-Test */}
-            <div className="sherwood-panel-subtle p-4 space-y-3">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-[#85522b]" />
-                <h4 className="text-xs font-bold text-[#234931]">
+            <div className="p-5 rounded-3xl bg-white border border-[#d8cdba] shadow-2xs space-y-3.5">
+              <div className="flex items-center gap-2 pb-2 border-b border-[#e7ddca]">
+                <Zap className="w-5 h-5 text-[#85522b]" />
+                <h4 className="text-sm font-black text-[#234931] font-serif-title">
                   Test de Charge Massive (Montée à des Milliers d'Articles)
                 </h4>
               </div>
-              <p className="text-[11px] text-[#605547] leading-relaxed">
+              <p className="text-xs text-[#483d31] leading-relaxed font-medium">
                 Injectez des séries d'articles avec codes-barres réels pour tester la réactivité de la caisse POS et de la synchronisation cloud sous charge.
               </p>
 
@@ -1658,9 +1664,9 @@ export const AdminSyncView: React.FC = () => {
                   type="button"
                   disabled={isBenchmarking}
                   onClick={() => handleRunBenchmark(5000)}
-                  className="touch-btn px-3.5 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5"
+                  className="touch-btn min-h-[44px] px-4 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5" />
+                  <Play className="w-4 h-4" />
                   <span>+5 000 Articles</span>
                 </button>
 
@@ -1668,18 +1674,18 @@ export const AdminSyncView: React.FC = () => {
                   type="button"
                   disabled={isBenchmarking}
                   onClick={() => handleRunBenchmark(15000)}
-                  className="touch-btn px-3.5 py-2 sherwood-btn-wood text-xs font-bold flex items-center gap-1.5"
+                  className="touch-btn min-h-[44px] px-4 py-2 sherwood-btn-wood text-xs font-bold flex items-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <Play className="w-3.5 h-3.5" />
+                  <Play className="w-4 h-4" />
                   <span>+15 000 Articles</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={resetDemoData}
-                  className="touch-btn px-3.5 py-2 sherwood-btn-outline text-xs font-bold flex items-center gap-1.5"
+                  className="touch-btn min-h-[44px] px-4 py-2 sherwood-btn-outline text-xs font-bold flex items-center gap-2 cursor-pointer"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
+                  <RotateCcw className="w-4 h-4" />
                   <span>Réinitialiser la Base</span>
                 </button>
               </div>

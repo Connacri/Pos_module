@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { Product } from '../../types';
+import { ProductImage } from '../common/ProductImage';
 import { CartPanel } from './CartPanel';
 import {
   Search,
@@ -482,33 +483,55 @@ export const PosRegisterView: React.FC = () => {
             </button>
           </div>
 
-          {/* Category Chips scroll */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
+          {/* Category Chips scroll - Accessible min 44px touch targets */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
             <button
               type="button"
               onClick={() => setSelectedCatId('ALL')}
-              className={`touch-btn px-4 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 shrink-0 ${
                 selectedCatId === 'ALL'
-                  ? 'bg-ink-900 text-white shadow-2xs'
-                  : 'bg-sand-100 text-ink-700 hover:bg-sand-200'
+                  ? 'bg-ink-900 text-white shadow-xs'
+                  : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100 hover:border-sand-400'
               }`}
             >
-              Tous ({products.length})
-            </button>
-            {categories.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => setSelectedCatId(c.id)}
-                className={`touch-btn px-4 rounded-xl font-semibold transition-all whitespace-nowrap cursor-pointer ${
-                  selectedCatId === c.id
-                    ? 'bg-forest-700 text-white shadow-2xs'
-                    : 'bg-sand-100 text-ink-700 hover:bg-sand-200'
+              <span>Tous les rayons</span>
+              <span
+                className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                  selectedCatId === 'ALL'
+                    ? 'bg-white/20 text-white'
+                    : 'bg-sand-200 text-ink-800'
                 }`}
               >
-                {c.name}
-              </button>
-            ))}
+                {products.length}
+              </span>
+            </button>
+            {categories.map((c) => {
+              const count = products.filter((p) => p.categoryId === c.id).length;
+              const isSelected = selectedCatId === c.id;
+              return (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => setSelectedCatId(c.id)}
+                  className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 shrink-0 ${
+                    isSelected
+                      ? 'bg-forest-700 text-white shadow-xs'
+                      : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100 hover:border-sand-400'
+                  }`}
+                >
+                  <span>{c.name}</span>
+                  <span
+                    className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${
+                      isSelected
+                        ? 'bg-white/20 text-white'
+                        : 'bg-sand-200 text-ink-800'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -517,7 +540,8 @@ export const PosRegisterView: React.FC = () => {
           {filteredProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center text-ink-600">
               <Package className="w-10 h-10 mb-2 text-sand-300" />
-              <p className="text-xs font-semibold">Aucun produit ne correspond</p>
+              <p className="text-sm font-bold text-ink-800 font-serif-title">Aucun produit ne correspond</p>
+              <p className="text-xs text-ink-600 mt-1">Essayez un autre mot-clé ou réinitialisez le rayon sélectionné.</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -525,6 +549,7 @@ export const PosRegisterView: React.FC = () => {
                 const inCart = cartQtyMap.get(p.id) || 0;
                 const isOutOfStock = p.stock <= 0;
                 const isRecentlyScanned = lastScannedId === p.id;
+                const catName = categories.find((c) => c.id === p.categoryId)?.name;
 
                 return (
                   <button
@@ -551,28 +576,23 @@ export const PosRegisterView: React.FC = () => {
                         : 'bg-white border-sand-200/80 hover:border-forest-600 hover:shadow-md active:scale-98'
                     }`}
                   >
-                    {/* Image / Thumbnail */}
+                    {/* Image / Thumbnail with guaranteed category SVG fallback */}
                     <div className="aspect-4/3 rounded-xl bg-sand-100 overflow-hidden mb-2 relative border border-sand-200">
-                      {p.imageUrl ? (
-                        <img
-                          src={p.imageUrl}
-                          alt=""
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-sand-300">
-                          <Package className="w-8 h-8" />
-                        </div>
-                      )}
+                      <ProductImage
+                        src={p.imageUrl}
+                        alt={p.name}
+                        categoryId={p.categoryId}
+                        categoryName={catName}
+                      />
 
                       {/* Stock badge */}
-                      <div className="absolute top-1.5 left-1.5">
+                      <div className="absolute top-1.5 left-1.5 z-10">
                         {isOutOfStock ? (
-                          <span className="bg-rose-600 text-white text-xs font-bold px-1.5 py-0.5 rounded-md">
+                          <span className="bg-rose-600 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md shadow-xs">
                             Rupture
                           </span>
                         ) : p.stock <= p.lowStockThreshold ? (
-                          <span className="bg-amber-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-md">
+                          <span className="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-xs">
                             Reste {p.stock}
                           </span>
                         ) : null}
@@ -580,7 +600,7 @@ export const PosRegisterView: React.FC = () => {
 
                       {/* Cart badge on tile */}
                       {inCart > 0 && (
-                        <div className="absolute top-1.5 right-1.5 bg-forest-700 text-white text-xs font-black px-1.5 py-0.5 rounded-lg shadow-sm font-mono">
+                        <div className="absolute top-1.5 right-1.5 bg-forest-700 text-white text-xs font-black px-2 py-0.5 rounded-lg shadow-sm font-mono z-10">
                           x{inCart}
                         </div>
                       )}
@@ -588,23 +608,23 @@ export const PosRegisterView: React.FC = () => {
 
                     {/* Details */}
                     <div>
-                      <h4 className="font-bold text-xs text-ink-900 line-clamp-2 min-h-[2.2rem] leading-snug">
+                      <h4 className="font-bold text-xs sm:text-sm text-ink-900 line-clamp-2 min-h-[2.2rem] leading-snug">
                         {p.name}
                       </h4>
                       <div className="text-xs text-ink-600 font-mono mt-0.5 flex items-center justify-between">
                         <span>{p.sku}</span>
-                        <span className="text-xs text-ink-600">{p.barcode.slice(-4)}</span>
+                        <span className="text-[11px] text-ink-600">{p.barcode.slice(-4)}</span>
                       </div>
                     </div>
 
-                    {/* Price and tap to add button */}
+                    {/* Price and tap to add button (min 44px touch area) */}
                     <div className="mt-2 pt-2 border-t border-sand-100 flex items-center justify-between">
-                      <div className="font-extrabold text-xs text-forest-700 font-mono">
+                      <div className="font-black text-sm text-forest-700 font-mono">
                         {formatMoney(p.price)}
                       </div>
                       <span
                         aria-hidden="true"
-                        className="w-9 h-9 rounded-xl bg-sand-100 group-hover:bg-forest-700 text-forest-800 group-hover:text-white flex items-center justify-center transition-colors shadow-2xs"
+                        className="touch-btn w-10 h-10 rounded-xl bg-sand-100 group-hover:bg-forest-700 text-forest-800 group-hover:text-white flex items-center justify-center transition-colors shadow-2xs"
                       >
                         <Plus className="w-4 h-4" />
                       </span>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import {
   Product,
   Category,
@@ -98,6 +98,8 @@ interface PosContextType {
   setItemDiscount: (productId: number, discountPercent: number) => void;
   removeFromCart: (productId: number) => void;
   clearCart: (saveForUndo?: boolean) => void;
+  canUndoClearCart: boolean;
+  undoClearCart: () => void;
 
   // High-performance barcode scanner action
   scanAndAddToCart: (

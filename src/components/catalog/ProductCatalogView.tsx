@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { Product } from '../../types';
+import { ProductImage } from '../common/ProductImage';
 import {
   Search,
   Filter,
@@ -206,54 +207,66 @@ export const ProductCatalogView: React.FC = () => {
             </button>
           </div>
 
-          {/* Stock status filter pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs font-bold">
+          {/* Stock status filter pills with min 44px touch targets */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 text-xs font-bold">
             <button
               type="button"
               onClick={() => setStockFilter('ALL')}
-              className={`touch-btn px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
                 stockFilter === 'ALL'
                   ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                  : 'sherwood-btn-outline'
+                  : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
               }`}
             >
-              Tous ({stockCounts.total})
+              <span>Tous</span>
+              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'}`}>
+                {stockCounts.total}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setStockFilter('IN_STOCK')}
-              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'IN_STOCK'
                   ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                  : 'sherwood-btn-outline text-[#234931]'
+                  : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-              <span>En stock ({stockCounts.inStock})</span>
+              <span>En stock</span>
+              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'IN_STOCK' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'}`}>
+                {stockCounts.inStock}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setStockFilter('LOW_STOCK')}
-              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'LOW_STOCK'
                   ? 'bg-[#b45309] text-white shadow-xs'
-                  : 'sherwood-btn-outline text-[#b45309]'
+                  : 'bg-white text-[#b45309] border border-amber-300 hover:bg-amber-50'
               }`}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>Alerte stock ({stockCounts.lowStock})</span>
+              <span>Alerte seuil</span>
+              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'LOW_STOCK' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'}`}>
+                {stockCounts.lowStock}
+              </span>
             </button>
             <button
               type="button"
               onClick={() => setStockFilter('OUT_OF_STOCK')}
-              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'OUT_OF_STOCK'
                   ? 'bg-[#dc2626] text-white shadow-xs'
-                  : 'sherwood-btn-outline text-[#dc2626]'
+                  : 'bg-white text-[#dc2626] border border-rose-300 hover:bg-rose-50'
               }`}
             >
               <XCircle className="w-3.5 h-3.5 text-[#ef4444]" />
-              <span>Rupture ({stockCounts.outOfStock})</span>
+              <span>Rupture</span>
+              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'OUT_OF_STOCK' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-900'}`}>
+                {stockCounts.outOfStock}
+              </span>
             </button>
           </div>
 
@@ -263,7 +276,7 @@ export const ProductCatalogView: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full sherwood-input px-2.5 py-2 text-xs font-bold"
+              className="w-full min-h-[44px] sherwood-input px-3 py-2 text-xs font-bold cursor-pointer"
             >
               <option value="name">Nom (A → Z)</option>
               <option value="price-asc">Prix (Croissant)</option>
@@ -274,7 +287,7 @@ export const ProductCatalogView: React.FC = () => {
         </div>
 
         {/* Row 2: Category Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 border-t border-[#e7ddca]">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-[#e7ddca]">
           <span className="text-xs text-[#877a6b] font-bold shrink-0 flex items-center gap-1 mr-1">
             <Filter className="w-3.5 h-3.5" />
             Rayon :
@@ -282,13 +295,20 @@ export const ProductCatalogView: React.FC = () => {
           <button
             type="button"
             onClick={() => setSelectedCategoryId('ALL')}
-            className={`touch-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-2 ${
               selectedCategoryId === 'ALL'
                 ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                : 'sherwood-btn-outline'
+                : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
             }`}
           >
-            Toutes les catégories
+            <span>Toutes les catégories</span>
+            <span
+              className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
+                selectedCategoryId === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
+              }`}
+            >
+              {products.length}
+            </span>
           </button>
           {categories.map((cat) => {
             const count = products.filter((p) => p.categoryId === cat.id).length;
@@ -298,16 +318,16 @@ export const ProductCatalogView: React.FC = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(cat.id)}
-                className={`touch-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
+                className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
                   isSelected
                     ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                    : 'sherwood-btn-outline'
+                    : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
                 }`}
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isSelected ? 'bg-[#1b3825] text-white' : 'bg-[#e2d7c2] text-[#483d31]'
+                  className={`text-[11px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                    isSelected ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
                   }`}
                 >
                   {count}
@@ -401,18 +421,12 @@ export const ProductCatalogView: React.FC = () => {
               >
                 {/* Product Image & Badges */}
                 <div className="relative aspect-4/3 bg-[#f7f2e7] overflow-hidden border-b border-[#e7ddca]">
-                  {product.imageUrl ? (
-                    <img
-                      src={product.imageUrl}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-[#c7baa3]">
-                      <Package className="w-12 h-12" />
-                    </div>
-                  )}
+                  <ProductImage
+                    src={product.imageUrl}
+                    alt={product.name}
+                    categoryId={product.categoryId}
+                    categoryName={category?.name}
+                  />
 
                   {/* Top Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[80%]">
@@ -444,10 +458,11 @@ export const ProductCatalogView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setEditingProduct(product)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2]"
+                    className="touch-btn absolute top-2 right-2 w-9 h-9 bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2]"
                     title="Modifier l'article et son seuil"
+                    aria-label={`Modifier ${product.name}`}
                   >
-                    <Edit2 className="w-3.5 h-3.5" />
+                    <Edit2 className="w-4 h-4" />
                   </button>
 
                   {/* In Cart Indicator */}
@@ -546,24 +561,26 @@ export const ProductCatalogView: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Cart Controls */}
+                    {/* Cart Controls with accessible touch targets */}
                     {inCartQty > 0 ? (
-                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-xl overflow-hidden p-0.5">
+                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-xl overflow-hidden p-0.5 shadow-2xs">
                         <button
                           type="button"
                           onClick={() => decrementQuantity(product.id)}
-                          className="w-7 h-7 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                          aria-label={`Retirer une unité de ${product.name}`}
+                          className="touch-btn w-9 h-9 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] rounded-lg font-bold text-sm transition-colors cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="w-7 text-center font-black text-xs text-[#482611] font-mono">
+                        <span className="w-8 text-center font-black text-xs text-[#482611] font-mono">
                           {inCartQty}
                         </span>
                         <button
                           type="button"
                           onClick={() => incrementQuantity(product.id)}
                           disabled={inCartQty >= product.stock}
-                          className="w-7 h-7 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] disabled:opacity-40 disabled:hover:bg-transparent rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                          aria-label={`Ajouter une unité de ${product.name}`}
+                          className="touch-btn w-9 h-9 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] disabled:opacity-40 disabled:hover:bg-transparent rounded-lg font-bold text-sm transition-colors cursor-pointer"
                         >
                           +
                         </button>
@@ -573,7 +590,8 @@ export const ProductCatalogView: React.FC = () => {
                         type="button"
                         onClick={() => addToCart(product, 1)}
                         disabled={isOutOfStock}
-                        className={`touch-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        aria-label={`Ajouter ${product.name} au panier`}
+                        className={`touch-btn min-h-[42px] inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isOutOfStock
                             ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
                             : 'sherwood-btn-forest'
