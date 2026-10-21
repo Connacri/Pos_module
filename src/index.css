@@ -2,16 +2,20 @@
 
 @layer base {
   body {
-    @apply antialiased text-slate-800 bg-[#f0f5fa] min-h-screen selection:bg-indigo-600 selection:text-white;
-    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    @apply antialiased text-[#2c241c] bg-[#f4efe6] min-h-screen selection:bg-[#2e5438] selection:text-white;
+    font-family: 'Quicksand', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  h1, h2, h3, .font-cozy-title {
+    font-family: 'Fraunces', 'Plus Jakarta Sans', serif;
   }
 }
 
-/* Custom subtle scrollbars for POS panels */
+/* Custom subtle warm scrollbars for cozy POS panels */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -19,12 +23,12 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #dcd3c3;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #bfae98;
 }
 
 /* Touch-optimized button utilities */
