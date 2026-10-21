@@ -262,9 +262,12 @@ export const PosRegisterView: React.FC = () => {
     <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px] relative">
       {/* FLOATING OVERLAY NOTIFICATIONS (Scan & Stock Warnings) - Does NOT push or jump product grid */}
       <div
-        className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none"
+        id="pos-toast-notifications"
+        role="region"
+        aria-label="Notifications et alertes de caisse"
         aria-live="polite"
         aria-atomic="false"
+        className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none"
       >
         {scanFeedback && (
           <div
@@ -533,6 +536,11 @@ export const PosRegisterView: React.FC = () => {
                       if (!isOutOfStock) {
                         addToCart(p, 1);
                         checkLowStockAlert(p);
+                        setScanFeedback({
+                          message: `Ajouté : ${p.name} (${formatMoney(p.price)})`,
+                          type: 'success',
+                        });
+                        setTimeout(() => setScanFeedback(null), 1800);
                       }
                     }}
                     className={`p-3 text-left w-full rounded-2xl border transition-all flex flex-col justify-between group cursor-pointer relative focus-visible:ring-4 focus-visible:ring-forest-700/40 ${
