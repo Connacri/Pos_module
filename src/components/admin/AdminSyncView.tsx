@@ -763,6 +763,8 @@ export const AdminSyncView: React.FC = () => {
               {/* Ping / Test status badge */}
               {testResult && (
                 <div
+                  role="status"
+                  aria-live="polite"
                   className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 ${
                     testResult.success
                       ? 'bg-[#eaf2e8] text-[#234931] border border-[#cbe0cb]'
@@ -1683,7 +1685,11 @@ export const AdminSyncView: React.FC = () => {
               </div>
 
               {benchmarkResult && (
-                <div className="p-3 bg-[#eaf2e8] border border-[#cbe0cb] rounded-xl text-xs text-[#234931] font-bold flex items-center justify-between">
+                <div
+                  role="status"
+                  aria-live="polite"
+                  className="p-3 bg-[#eaf2e8] border border-[#cbe0cb] rounded-xl text-xs text-[#234931] font-bold flex items-center justify-between"
+                >
                   <span>
                     ✓ {benchmarkResult.count.toLocaleString('fr-FR')} articles ajoutés et indexés
                   </span>
@@ -1723,7 +1729,11 @@ export const AdminSyncView: React.FC = () => {
             <span className="text-[10px] text-[#87a08b] font-semibold">Temps Réel</span>
           </div>
 
-          <div className="h-64 overflow-y-auto space-y-1.5 pr-2">
+          <div
+            aria-live="polite"
+            aria-atomic="false"
+            className="h-64 overflow-y-auto space-y-1.5 pr-2"
+          >
             {logs.length === 0 ? (
               <div className="text-[#87a08b] py-6 text-center">Aucun événement enregistré.</div>
             ) : (

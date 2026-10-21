@@ -151,7 +151,11 @@ export const CartPanel: React.FC = () => {
 
       {/* Undo Banner if cart was just cleared */}
       {canUndoClearCart && (
-        <div className="p-2.5 bg-[#fef4ea] border-b border-[#f5cf9e] text-xs font-semibold text-[#8f521b] flex items-center justify-between animate-in slide-in-from-top-1 duration-200">
+        <div
+          role="status"
+          aria-live="polite"
+          className="p-2.5 bg-[#fef4ea] border-b border-[#f5cf9e] text-xs font-semibold text-[#8f521b] flex items-center justify-between animate-in slide-in-from-top-1 duration-200"
+        >
           <span>Panier réinitialisé.</span>
           <button
             type="button"

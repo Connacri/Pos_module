@@ -261,7 +261,11 @@ export const PosRegisterView: React.FC = () => {
   return (
     <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px] relative">
       {/* FLOATING OVERLAY NOTIFICATIONS (Scan & Stock Warnings) - Does NOT push or jump product grid */}
-      <div className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none">
+      <div
+        className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         {scanFeedback && (
           <div
             role="status"

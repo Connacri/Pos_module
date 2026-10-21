@@ -686,7 +686,7 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const map = new Map<string, { revenue: number; cost: number; orders: number; unitsSold: number }>();
     const now = new Date();
 
-    for (let i = 13; i >= 0; i--) {
+    for (let i = 29; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
