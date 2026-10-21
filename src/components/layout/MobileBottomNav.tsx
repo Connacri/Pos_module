@@ -66,7 +66,7 @@ export const MobileBottomNav: React.FC = () => {
         }`}
       >
         <Cloud className="w-5 h-5" />
-        <span className="text-[10px]">Sync</span>
+        <span className="text-[10px]">Cloud</span>
       </button>
 
       <button

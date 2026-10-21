@@ -17,6 +17,7 @@ import {
   X,
   Truck,
   Camera,
+  Sparkles,
 } from 'lucide-react';
 import { CameraBarcodeScannerModal } from './CameraBarcodeScannerModal';
 
@@ -118,15 +119,19 @@ export const ProductCatalogView: React.FC = () => {
   }, [products]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sherwood-panel">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <Package className="w-6 h-6 text-indigo-600" />
-            Catalogue des Produits
+          <div className="sherwood-badge-forest mb-2">
+            <Package className="w-3.5 h-3.5 text-[#234931]" />
+            <span>Uppgifter • Inventaire & Tarification</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
+            <span>🍃</span>
+            <span>Catalogue des Produits</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-[#605547] mt-1 font-medium">
             Gérez vos références, suivez les stocks en temps réel et alimentez le panier POS
           </p>
         </div>
@@ -135,55 +140,55 @@ export const ProductCatalogView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsCameraScannerOpen(true)}
-            className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer"
+            className="touch-btn inline-flex items-center gap-2 px-3.5 py-2 sherwood-btn-outline text-xs font-bold shadow-2xs"
             title="Ouvrir le scanner caméra pour scanner un code-barres"
           >
-            <Camera className="w-4 h-4 text-indigo-600" />
+            <Camera className="w-4 h-4 text-[#234931]" />
             <span>Scanner Caméra</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsCreatingNew(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+            className="touch-btn inline-flex items-center gap-2 px-4 py-2 sherwood-btn-forest text-xs font-bold"
           >
             <Plus className="w-4 h-4" />
-            Nouveau Produit
+            <span>Nouveau Produit</span>
           </button>
 
           {cart.length > 0 && (
             <button
               type="button"
               onClick={() => setActiveView('pos')}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="touch-btn inline-flex items-center gap-2 px-4 py-2 sherwood-btn-wood text-xs font-bold"
             >
-              <ShoppingCart className="w-4 h-4 text-emerald-400" />
-              Voir Panier ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+              <ShoppingCart className="w-4 h-4 text-[#fcdbb6]" />
+              <span>Voir Panier ({cart.reduce((sum, item) => sum + item.quantity, 0)})</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+      <div className="sherwood-panel p-4 space-y-4">
         {/* Row 1: Search + Sort + Stock Filter */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search Input with inline camera scanner trigger */}
           <div className="relative flex-1 flex items-center gap-2">
             <div className="relative flex-1">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <Search className="w-4 h-4 text-[#877a6b] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher par nom, SKU (ex: REF-0001) ou code-barres..."
-                className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
+                className="w-full pl-10 pr-9 py-2.5 sherwood-input text-xs sm:text-sm font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#877a6b] hover:text-[#2c241c] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -193,7 +198,7 @@ export const ProductCatalogView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCameraScannerOpen(true)}
-              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
+              className="touch-btn px-3.5 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5 shrink-0"
               title="Scanner une étiquette physique avec la caméra"
             >
               <Camera className="w-4 h-4" />
@@ -202,14 +207,14 @@ export const ProductCatalogView: React.FC = () => {
           </div>
 
           {/* Stock status filter pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs font-medium">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 text-xs font-bold">
             <button
               type="button"
               onClick={() => setStockFilter('ALL')}
-              className={`px-3 py-1.5 rounded-lg border transition-all ${
+              className={`touch-btn px-3 py-1.5 rounded-xl transition-all whitespace-nowrap cursor-pointer ${
                 stockFilter === 'ALL'
-                  ? 'bg-slate-900 text-white border-slate-900'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                  : 'sherwood-btn-outline'
               }`}
             >
               Tous ({stockCounts.total})
@@ -217,48 +222,48 @@ export const ProductCatalogView: React.FC = () => {
             <button
               type="button"
               onClick={() => setStockFilter('IN_STOCK')}
-              className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'IN_STOCK'
-                  ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                  : 'sherwood-btn-outline text-[#234931]'
               }`}
             >
-              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-              En stock ({stockCounts.inStock})
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+              <span>En stock ({stockCounts.inStock})</span>
             </button>
             <button
               type="button"
               onClick={() => setStockFilter('LOW_STOCK')}
-              className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'LOW_STOCK'
-                  ? 'bg-amber-600 text-white border-amber-600'
-                  : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'
+                  ? 'bg-[#b45309] text-white shadow-xs'
+                  : 'sherwood-btn-outline text-[#b45309]'
               }`}
             >
-              <AlertTriangle className="w-3 h-3 text-amber-500" />
-              Alerte stock ({stockCounts.lowStock})
+              <AlertTriangle className="w-3.5 h-3.5 text-[#d97706]" />
+              <span>Alerte stock ({stockCounts.lowStock})</span>
             </button>
             <button
               type="button"
               onClick={() => setStockFilter('OUT_OF_STOCK')}
-              className={`px-3 py-1.5 rounded-lg border transition-all flex items-center gap-1.5 ${
+              className={`touch-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 stockFilter === 'OUT_OF_STOCK'
-                  ? 'bg-rose-600 text-white border-rose-600'
-                  : 'bg-white text-rose-700 border-rose-200 hover:bg-rose-50'
+                  ? 'bg-[#dc2626] text-white shadow-xs'
+                  : 'sherwood-btn-outline text-[#dc2626]'
               }`}
             >
-              <XCircle className="w-3 h-3 text-rose-500" />
-              Rupture ({stockCounts.outOfStock})
+              <XCircle className="w-3.5 h-3.5 text-[#ef4444]" />
+              <span>Rupture ({stockCounts.outOfStock})</span>
             </button>
           </div>
 
           {/* Sort Selector */}
           <div className="flex items-center gap-2 self-end lg:self-auto min-w-[170px]">
-            <ArrowUpDown className="w-4 h-4 text-slate-400 shrink-0" />
+            <ArrowUpDown className="w-4 h-4 text-[#877a6b] shrink-0" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+              className="w-full sherwood-input px-2.5 py-2 text-xs font-bold"
             >
               <option value="name">Nom (A → Z)</option>
               <option value="price-asc">Prix (Croissant)</option>
@@ -269,18 +274,18 @@ export const ProductCatalogView: React.FC = () => {
         </div>
 
         {/* Row 2: Category Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 border-t border-slate-100">
-          <span className="text-xs text-slate-400 font-medium shrink-0 flex items-center gap-1 mr-1">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-1 border-t border-[#e7ddca]">
+          <span className="text-xs text-[#877a6b] font-bold shrink-0 flex items-center gap-1 mr-1">
             <Filter className="w-3.5 h-3.5" />
-            Rayon:
+            Rayon :
           </span>
           <button
             type="button"
             onClick={() => setSelectedCategoryId('ALL')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors ${
+            className={`touch-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer ${
               selectedCategoryId === 'ALL'
-                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold'
-                : 'text-slate-600 hover:bg-slate-100'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                : 'sherwood-btn-outline'
             }`}
           >
             Toutes les catégories
@@ -293,16 +298,16 @@ export const ProductCatalogView: React.FC = () => {
                 key={cat.id}
                 type="button"
                 onClick={() => setSelectedCategoryId(cat.id)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                className={`touch-btn px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer ${
                   isSelected
-                    ? 'bg-indigo-600 text-white font-semibold shadow-xs'
-                    : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200/60'
+                    ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                    : 'sherwood-btn-outline'
                 }`}
               >
                 <span>{cat.name}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    isSelected ? 'bg-indigo-700 text-white' : 'bg-slate-200 text-slate-700'
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isSelected ? 'bg-[#1b3825] text-white' : 'bg-[#e2d7c2] text-[#483d31]'
                   }`}
                 >
                   {count}
@@ -315,21 +320,21 @@ export const ProductCatalogView: React.FC = () => {
 
       {/* Reorder Needs Visual Indicator Banner */}
       {(stockCounts.lowStock > 0 || stockCounts.outOfStock > 0) && (
-        <div className="bg-gradient-to-r from-amber-50 via-amber-50/80 to-rose-50 border border-amber-300/80 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+        <div className="bg-gradient-to-r from-[#fef3c7] via-[#fffbeb] to-[#faeee2] border-2 border-[#fde68a] rounded-3xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
+            <div className="w-10 h-10 rounded-2xl bg-[#d97706] text-white flex items-center justify-center shrink-0 shadow-sm animate-pulse">
               <AlertTriangle className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h3 className="font-extrabold text-sm text-slate-900">
+                <h3 className="font-serif-title font-black text-sm text-[#78350f]">
                   Surveillance des Réapprovisionnements
                 </h3>
-                <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full">
+                <span className="bg-[#fef3c7] text-[#92400e] border border-[#fde68a] text-[10px] font-black px-2 py-0.5 rounded-full font-mono">
                   {stockCounts.lowStock + stockCounts.outOfStock} référence(s) sous le seuil
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-0.5">
+              <p className="text-xs text-[#92400e] mt-0.5 font-medium">
                 Certains articles ont atteint ou dépassé leur seuil minimal de sécurité. Les cartes en surbrillance ambrée/rouge indiquent le besoin de réapprovisionnement.
               </p>
             </div>
@@ -338,10 +343,10 @@ export const ProductCatalogView: React.FC = () => {
             <button
               type="button"
               onClick={() => setStockFilter(stockFilter === 'LOW_STOCK' ? 'ALL' : 'LOW_STOCK')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
+              className={`touch-btn px-3.5 py-1.5 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs ${
                 stockFilter === 'LOW_STOCK'
-                  ? 'bg-amber-700 text-white shadow-amber-600/30'
-                  : 'bg-white hover:bg-amber-100 text-amber-900 border border-amber-300'
+                  ? 'bg-[#85522b] text-white'
+                  : 'bg-white hover:bg-[#faeee2] text-[#85522b] border border-[#f0d4ba]'
               }`}
             >
               <Truck className="w-3.5 h-3.5" />
@@ -353,14 +358,14 @@ export const ProductCatalogView: React.FC = () => {
 
       {/* Responsive Products Grid */}
       {filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200/80 shadow-xs">
-          <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+        <div className="sherwood-panel p-12 text-center">
+          <div className="w-16 h-16 mx-auto mb-4 bg-[#f7f2e7] rounded-full flex items-center justify-center text-[#c7baa3] border border-[#e2d7c2]">
             <Package className="w-8 h-8" />
           </div>
-          <h3 className="text-base font-bold text-slate-800 mb-1">
+          <h3 className="text-base font-bold text-[#2c241c] mb-1">
             Aucun article correspondant
           </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+          <p className="text-xs text-[#877a6b] max-w-sm mx-auto mb-4 font-medium">
             Modifiez votre recherche ou réinitialisez les filtres pour afficher des produits.
           </p>
           <button
@@ -370,7 +375,7 @@ export const ProductCatalogView: React.FC = () => {
               setSelectedCategoryId('ALL');
               setStockFilter('ALL');
             }}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            className="touch-btn px-4 py-2 sherwood-btn-outline text-xs font-bold"
           >
             Réinitialiser les filtres
           </button>
@@ -386,16 +391,16 @@ export const ProductCatalogView: React.FC = () => {
             return (
               <div
                 key={product.id}
-                className={`bg-white rounded-2xl shadow-xs hover:shadow-md transition-all flex flex-col overflow-hidden group relative ${
+                className={`sherwood-card transition-all flex flex-col overflow-hidden group relative ${
                   isOutOfStock
-                    ? 'border-2 border-rose-400 bg-rose-50/20 ring-1 ring-rose-300'
+                    ? 'border-2 border-[#dc2626] bg-[#fef2f2]/40 ring-1 ring-[#fca5a5]'
                     : isLowStock
-                    ? 'border-2 border-amber-400 bg-amber-50/30 ring-1 ring-amber-300 shadow-amber-500/10'
-                    : 'border border-slate-200/80 hover:border-indigo-200'
+                    ? 'border-2 border-[#d97706] bg-[#fffbeb]/40 ring-1 ring-[#fde68a]'
+                    : 'hover:border-[#234931]/60'
                 }`}
               >
                 {/* Product Image & Badges */}
-                <div className="relative aspect-4/3 bg-slate-100 overflow-hidden">
+                <div className="relative aspect-4/3 bg-[#f7f2e7] overflow-hidden border-b border-[#e7ddca]">
                   {product.imageUrl ? (
                     <img
                       src={product.imageUrl}
@@ -404,31 +409,31 @@ export const ProductCatalogView: React.FC = () => {
                       loading="lazy"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <div className="w-full h-full flex items-center justify-center text-[#c7baa3]">
                       <Package className="w-12 h-12" />
                     </div>
                   )}
 
-                  {/* Top Badges & Threshold Alert Indicator */}
+                  {/* Top Badges */}
                   <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[80%]">
                     {isOutOfStock ? (
-                      <span className="bg-rose-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+                      <span className="bg-[#dc2626] text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
                         <XCircle className="w-3 h-3" />
                         Rupture • Réappro requis
                       </span>
                     ) : isLowStock ? (
-                      <span className="bg-amber-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
+                      <span className="bg-[#d97706] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
                         <AlertTriangle className="w-3 h-3" />
                         Sous seuil min ({product.stock}/{product.lowStockThreshold})
                       </span>
                     ) : null}
 
                     <div className="flex items-center gap-1">
-                      <span className="bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded-md">
+                      <span className="bg-[#1f3d29]/90 text-white text-[10px] font-mono px-2 py-0.5 rounded-md font-bold">
                         {product.sku}
                       </span>
                       {category && (
-                        <span className="bg-white/90 backdrop-blur-xs text-slate-700 text-[10px] font-medium px-2 py-0.5 rounded-md shadow-xs truncate">
+                        <span className="bg-[#fdfbf7]/95 text-[#2c241c] text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs truncate border border-[#e2d7c2]">
                           {category.name}
                         </span>
                       )}
@@ -439,7 +444,7 @@ export const ProductCatalogView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setEditingProduct(product)}
-                    className="absolute top-2 right-2 w-7 h-7 bg-white/90 hover:bg-white text-slate-600 hover:text-indigo-600 rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
+                    className="absolute top-2 right-2 w-7 h-7 bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-full flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2]"
                     title="Modifier l'article et son seuil"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -447,7 +452,7 @@ export const ProductCatalogView: React.FC = () => {
 
                   {/* In Cart Indicator */}
                   {inCartQty > 0 && (
-                    <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 z-10">
+                    <div className="absolute bottom-2 left-2 bg-[#85522b] text-white text-[11px] font-black px-2 py-0.5 rounded-lg shadow-sm flex items-center gap-1 z-10 font-mono">
                       <Check className="w-3 h-3" />
                       {inCartQty} au panier
                     </div>
@@ -457,11 +462,11 @@ export const ProductCatalogView: React.FC = () => {
                 {/* Content */}
                 <div className="p-3.5 flex-1 flex flex-col justify-between">
                   <div>
-                    <h4 className="font-semibold text-sm text-slate-800 line-clamp-1 group-hover:text-indigo-600 transition-colors" title={product.name}>
+                    <h4 className="font-bold text-sm text-[#2c241c] line-clamp-1 group-hover:text-[#234931] transition-colors" title={product.name}>
                       {product.name}
                     </h4>
                     {product.description && (
-                      <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5" title={product.description}>
+                      <p className="text-[11px] text-[#877a6b] line-clamp-1 mt-0.5 font-medium" title={product.description}>
                         {product.description}
                       </p>
                     )}
@@ -469,23 +474,23 @@ export const ProductCatalogView: React.FC = () => {
                     {/* Stock Status Pill */}
                     <div className="mt-2.5 flex items-center justify-between text-xs">
                       {isOutOfStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#fef2f2] px-2 py-0.5 rounded-md border border-[#fecaca]">
                           <XCircle className="w-3 h-3" />
                           Rupture (0)
                         </span>
                       ) : isLowStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/90 px-2 py-0.5 rounded-md">
-                          <AlertTriangle className="w-3 h-3 text-amber-600" />
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400e] bg-[#fef3c7] px-2 py-0.5 rounded-md border border-[#fde68a]">
+                          <AlertTriangle className="w-3 h-3 text-[#d97706]" />
                           Stock {product.stock} (Seuil {product.lowStockThreshold})
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                          Stock: {product.stock}
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#234931] bg-[#eaf2e8] px-2 py-0.5 rounded-md border border-[#cbe0cb]">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                          Stock : {product.stock}
                         </span>
                       )}
 
-                      <span className="text-[10px] text-slate-400 font-mono flex items-center gap-1">
+                      <span className="text-[10px] text-[#877a6b] font-mono flex items-center gap-1">
                         <Barcode className="w-3 h-3" />
                         {product.barcode.slice(-4)}
                       </span>
@@ -495,21 +500,21 @@ export const ProductCatalogView: React.FC = () => {
                     {(isLowStock || isOutOfStock) && (
                       <div className={`mt-2.5 p-2 rounded-xl text-[10px] border ${
                         isOutOfStock
-                          ? 'bg-rose-50/90 border-rose-200 text-rose-900'
-                          : 'bg-amber-50/90 border-amber-200 text-amber-900'
+                          ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
+                          : 'bg-[#fef3c7] border-[#fde68a] text-[#78350f]'
                       }`}>
                         <div className="flex items-center justify-between font-bold">
                           <span className="flex items-center gap-1">
-                            <Truck className="w-3 h-3 text-amber-600" />
+                            <Truck className="w-3 h-3 text-[#d97706]" />
                             Réappro requis :
                           </span>
                           <span className="font-mono font-black">
                             {product.stock} / {product.lowStockThreshold} min
                           </span>
                         </div>
-                        <div className="w-full bg-slate-200 rounded-full h-1.5 mt-1.5 overflow-hidden">
+                        <div className="w-full bg-[#e2d7c2] rounded-full h-1.5 mt-1.5 overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all duration-300 ${isOutOfStock ? 'bg-rose-500 w-0' : 'bg-amber-500'}`}
+                            className={`h-full rounded-full transition-all duration-300 ${isOutOfStock ? 'bg-[#dc2626] w-0' : 'bg-[#d97706]'}`}
                             style={{ width: `${Math.min(100, Math.round((product.stock / Math.max(1, product.lowStockThreshold)) * 100))}%` }}
                           />
                         </div>
@@ -520,7 +525,7 @@ export const ProductCatalogView: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => updateProduct({ ...product, stock: product.stock + 10 })}
-                            className="px-1.5 py-0.5 bg-white hover:bg-slate-50 text-indigo-700 font-bold rounded border border-slate-200 shadow-2xs hover:border-indigo-300 transition-colors cursor-pointer"
+                            className="px-2 py-0.5 bg-white text-[#234931] font-bold rounded border border-[#d8cdba] hover:bg-[#f7f2e7] transition-colors cursor-pointer"
                             title="Ajouter 10 unités pour réapprovisionner"
                           >
                             +10 Réappro
@@ -531,34 +536,34 @@ export const ProductCatalogView: React.FC = () => {
                   </div>
 
                   {/* Price & Action Section */}
-                  <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <div className="mt-4 pt-3 border-t border-[#e7ddca] flex items-center justify-between gap-2">
                     <div>
-                      <div className="text-base font-extrabold text-slate-900 leading-tight">
+                      <div className="text-base font-black text-[#234931] font-mono leading-tight">
                         {formatMoney(product.price)}
                       </div>
-                      <div className="text-[10px] text-slate-400">
+                      <div className="text-[10px] text-[#877a6b] font-medium">
                         {product.taxRate > 0 ? `TVA ${Math.round(product.taxRate * 100)}% incluse` : 'Exonéré TVA'}
                       </div>
                     </div>
 
                     {/* Cart Controls */}
                     {inCartQty > 0 ? (
-                      <div className="inline-flex items-center bg-indigo-50 border border-indigo-200 rounded-xl overflow-hidden p-0.5">
+                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-xl overflow-hidden p-0.5">
                         <button
                           type="button"
                           onClick={() => decrementQuantity(product.id)}
-                          className="w-7 h-7 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] rounded-lg font-bold text-xs transition-colors cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="w-7 text-center font-bold text-xs text-indigo-900">
+                        <span className="w-7 text-center font-black text-xs text-[#482611] font-mono">
                           {inCartQty}
                         </span>
                         <button
                           type="button"
                           onClick={() => incrementQuantity(product.id)}
                           disabled={inCartQty >= product.stock}
-                          className="w-7 h-7 flex items-center justify-center text-indigo-700 hover:bg-indigo-100 disabled:opacity-40 disabled:hover:bg-transparent rounded-lg font-bold text-xs transition-colors cursor-pointer"
+                          className="w-7 h-7 flex items-center justify-center text-[#85522b] hover:bg-[#f0d4ba] disabled:opacity-40 disabled:hover:bg-transparent rounded-lg font-bold text-xs transition-colors cursor-pointer"
                         >
                           +
                         </button>
@@ -568,14 +573,14 @@ export const ProductCatalogView: React.FC = () => {
                         type="button"
                         onClick={() => addToCart(product, 1)}
                         disabled={isOutOfStock}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                        className={`touch-btn inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           isOutOfStock
-                            ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                            : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs active:scale-95'
+                            ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
+                            : 'sherwood-btn-forest'
                         }`}
                       >
                         <ShoppingCart className="w-3.5 h-3.5" />
-                        Ajouter
+                        <span>Ajouter</span>
                       </button>
                     )}
                   </div>
@@ -675,17 +680,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
-        <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Package className="w-4 h-4 text-indigo-400" />
-            {product ? 'Modifier le Produit' : 'Ajouter un Nouveau Produit'}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+      <div className="sherwood-panel w-full max-w-lg p-0 overflow-hidden shadow-2xl my-8">
+        <div className="px-6 py-4 bg-[#1f3d29] text-white flex items-center justify-between">
+          <h3 className="font-serif-title font-black text-sm flex items-center gap-2">
+            <Package className="w-4 h-4 text-emerald-300" />
+            <span>{product ? 'Modifier le Produit' : 'Ajouter un Nouveau Produit'}</span>
           </h3>
           <button
             type="button"
             onClick={onClose}
-            className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="text-[#c7dac7] hover:text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -693,7 +698,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-[#483d31] mb-1">
               Nom du produit *
             </label>
             <input
@@ -702,13 +707,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Ex: Coca-Cola 33cl"
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              className="w-full px-3 py-2 sherwood-input text-sm"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Référence SKU
               </label>
               <input
@@ -716,17 +721,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 required
                 value={sku}
                 onChange={(e) => setSku(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-mono uppercase"
+                className="w-full px-3 py-2 sherwood-input text-sm font-mono uppercase"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Catégorie / Rayon
               </label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white"
+                className="w-full px-3 py-2 sherwood-input text-sm font-bold"
               >
                 {categories.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -739,7 +744,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Prix Vente (DA) *
               </label>
               <input
@@ -749,11 +754,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 required
                 value={price}
                 onChange={(e) => setPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-semibold text-indigo-600"
+                className="w-full px-3 py-2 sherwood-input text-sm font-black text-[#234931] font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Coût Achat (DA)
               </label>
               <input
@@ -762,17 +767,17 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 step="any"
                 value={costPrice}
                 onChange={(e) => setCostPrice(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                className="w-full px-3 py-2 sherwood-input text-sm font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Taux TVA
               </label>
               <select
                 value={taxRate}
                 onChange={(e) => setTaxRate(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white"
+                className="w-full px-3 py-2 sherwood-input text-sm font-bold"
               >
                 <option value={0.19}>19% (Standard)</option>
                 <option value={0.09}>9% (Réduit)</option>
@@ -783,7 +788,7 @@ const ProductModal: React.FC<ProductModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Quantité en Stock
               </label>
               <input
@@ -792,11 +797,11 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 required
                 value={stock}
                 onChange={(e) => setStock(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-semibold"
+                className="w-full px-3 py-2 sherwood-input text-sm font-bold font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Seuil Alerte Stock
               </label>
               <input
@@ -804,25 +809,25 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 min="0"
                 value={lowStockThreshold}
                 onChange={(e) => setLowStockThreshold(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                className="w-full px-3 py-2 sherwood-input text-sm font-mono"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 Code-barres EAN
               </label>
               <input
                 type="text"
                 value={barcode}
                 onChange={(e) => setBarcode(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-mono"
+                className="w-full px-3 py-2 sherwood-input text-sm font-mono"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-[#483d31] mb-1">
                 URL Image (optionnel)
               </label>
               <input
@@ -830,13 +835,13 @@ const ProductModal: React.FC<ProductModalProps> = ({
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://..."
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                className="w-full px-3 py-2 sherwood-input text-sm"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-bold text-[#483d31] mb-1">
               Description / Notes
             </label>
             <textarea
@@ -844,21 +849,21 @@ const ProductModal: React.FC<ProductModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Spécifications, contenance, saveur..."
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+              className="w-full px-3 py-2 sherwood-input text-sm"
             />
           </div>
 
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <div className="pt-4 border-t border-[#e7ddca] flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
+              className="touch-btn px-4 py-2 sherwood-btn-outline text-xs font-bold"
             >
               Annuler
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer"
+              className="touch-btn px-5 py-2 sherwood-btn-forest text-xs font-bold shadow-xs"
             >
               {product ? 'Enregistrer les modifications' : 'Créer le produit'}
             </button>

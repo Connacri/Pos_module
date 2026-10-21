@@ -15,6 +15,7 @@ import {
   ArrowRight,
   TrendingUp,
   Printer,
+  Sparkles,
 } from 'lucide-react';
 
 export const SalesHistoryView: React.FC = () => {
@@ -51,23 +52,27 @@ export const SalesHistoryView: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="sherwood-panel flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-            <Receipt className="w-6 h-6 text-indigo-600" />
-            Journal des Ventes & Factures
+          <div className="sherwood-badge-forest mb-2">
+            <Receipt className="w-3.5 h-3.5 text-[#234931]" />
+            <span>Samlingar • Registre des Transactions</span>
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
+            <span>🍃</span>
+            <span>Journal des Ventes & Factures</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Historique complet des transactions, tickets de caisse et factures émises
+          <p className="text-xs sm:text-sm text-[#605547] mt-1 font-medium">
+            Historique complet des transactions, tickets de caisse et factures émises sur Sherwood POS
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="bg-slate-50 border border-slate-200/80 rounded-2xl px-3.5 py-2 text-right">
-            <div className="text-[10px] text-slate-400 font-semibold uppercase">Total Facturé</div>
-            <div className="text-base font-black text-slate-900">
+          <div className="sherwood-panel-subtle px-4 py-2 text-right">
+            <div className="text-[10px] text-[#877a6b] font-bold uppercase tracking-wider">Total Facturé</div>
+            <div className="text-lg font-black text-[#234931] font-mono">
               {formatMoney(sales.reduce((sum, s) => sum + s.totalTTC, 0))}
             </div>
           </div>
@@ -75,27 +80,27 @@ export const SalesHistoryView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-4 border border-white shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="sherwood-panel p-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#877a6b] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par N° ticket (INV-...), ou nom du client..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+            className="w-full pl-10 pr-4 py-2.5 sherwood-input text-xs sm:text-sm font-medium"
           />
         </div>
 
         {/* Payment filter pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-bold">
           <button
             type="button"
             onClick={() => setPaymentFilter('ALL')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+            className={`touch-btn px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap ${
               paymentFilter === 'ALL'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                : 'sherwood-btn-outline'
             }`}
           >
             Tous
@@ -103,74 +108,74 @@ export const SalesHistoryView: React.FC = () => {
           <button
             type="button"
             onClick={() => setPaymentFilter('CASH')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
               paymentFilter === 'CASH'
-                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                : 'bg-white text-emerald-700 border-emerald-200 hover:bg-emerald-50'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                : 'sherwood-btn-outline text-[#234931]'
             }`}
           >
             <Banknote className="w-3.5 h-3.5" />
-            Espèces
+            <span>Espèces</span>
           </button>
           <button
             type="button"
             onClick={() => setPaymentFilter('CARD')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
               paymentFilter === 'CARD'
-                ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
-                : 'bg-white text-blue-700 border-blue-200 hover:bg-blue-50'
+                ? 'bg-[#85522b] text-white shadow-xs'
+                : 'sherwood-btn-outline text-[#85522b]'
             }`}
           >
             <CreditCard className="w-3.5 h-3.5" />
-            Carte
+            <span>Carte</span>
           </button>
           <button
             type="button"
             onClick={() => setPaymentFilter('CHEQUE')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3.5 py-1.5 rounded-xl transition-all cursor-pointer whitespace-nowrap flex items-center gap-1.5 ${
               paymentFilter === 'CHEQUE'
-                ? 'bg-amber-600 text-white border-amber-600 shadow-2xs'
-                : 'bg-white text-amber-700 border-amber-200 hover:bg-amber-50'
+                ? 'bg-[#b45309] text-white shadow-xs'
+                : 'sherwood-btn-outline text-[#b45309]'
             }`}
           >
             <FileText className="w-3.5 h-3.5" />
-            Chèque
+            <span>Chèque / Autre</span>
           </button>
         </div>
       </div>
 
       {/* Sales Table / Cards */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl border border-white shadow-xs overflow-hidden">
+      <div className="sherwood-panel p-0 overflow-hidden">
         {filteredSales.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <Receipt className="w-12 h-12 mx-auto mb-2 text-slate-300" />
-            <p className="font-semibold text-sm">Aucune vente ne correspond aux critères.</p>
+          <div className="p-12 text-center text-[#877a6b]">
+            <Receipt className="w-12 h-12 mx-auto mb-2 text-[#c7baa3]" />
+            <p className="font-bold text-sm text-[#483d31]">Aucune vente ne correspond aux critères.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/60 text-slate-500 text-[11px] uppercase tracking-wider font-semibold">
+                <tr className="border-b border-[#e7ddca] bg-[#f7f2e7] text-[#605547] text-[11px] uppercase tracking-wider font-bold">
                   <th className="py-3 px-4">N° Facture</th>
                   <th className="py-3 px-4">Date / Heure</th>
                   <th className="py-3 px-4">Client</th>
-                  <th className="py-3 px-4">Nb Articles</th>
+                  <th className="py-3 px-4">Articles</th>
                   <th className="py-3 px-4">Paiement</th>
                   <th className="py-3 px-4 text-right">Montant TTC</th>
                   <th className="py-3 px-4 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-[#e7ddca]">
                 {filteredSales.map((sale) => (
                   <tr
                     key={sale.id}
                     onClick={() => setSelectedInvoice(sale)}
-                    className="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                    className="hover:bg-[#f7f2e7]/80 transition-colors cursor-pointer group"
                   >
-                    <td className="py-3.5 px-4 font-mono font-bold text-indigo-600 group-hover:underline">
+                    <td className="py-3.5 px-4 font-mono font-bold text-[#234931] group-hover:underline">
                       {sale.saleNumber}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
+                    <td className="py-3.5 px-4 text-[#605547] whitespace-nowrap font-medium">
                       {new Date(sale.createdAt).toLocaleDateString('fr-FR', {
                         day: '2-digit',
                         month: 'short',
@@ -179,14 +184,14 @@ export const SalesHistoryView: React.FC = () => {
                         minute: '2-digit',
                       })}
                     </td>
-                    <td className="py-3.5 px-4 font-medium text-slate-800">
+                    <td className="py-3.5 px-4 font-bold text-[#2c241c]">
                       {sale.customerName || 'Client Comptoir'}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-3.5 px-4 text-[#605547] font-medium">
                       {sale.items.reduce((sum, it) => sum + it.quantity, 0)} unités ({sale.items.length} réf.)
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-100 text-slate-700">
+                      <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-bold bg-[#faeee2] text-[#85522b] border border-[#f0d4ba]">
                         {sale.paymentMethod === 'CASH'
                           ? 'Espèces'
                           : sale.paymentMethod === 'CARD'
@@ -194,7 +199,7 @@ export const SalesHistoryView: React.FC = () => {
                           : 'Chèque / Virement'}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 font-extrabold text-slate-900 text-right whitespace-nowrap">
+                    <td className="py-3.5 px-4 font-black text-[#234931] font-mono text-right whitespace-nowrap text-sm">
                       {formatMoney(sale.totalTTC)}
                     </td>
                     <td className="py-3.5 px-4 text-center">
@@ -205,9 +210,9 @@ export const SalesHistoryView: React.FC = () => {
                             e.stopPropagation();
                             setSelectedInvoice(sale);
                           }}
-                          className="touch-btn px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-[11px] font-semibold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                          className="touch-btn px-2.5 py-1 sherwood-btn-outline text-[11px] font-bold inline-flex items-center gap-1"
                         >
-                          <Eye className="w-3.5 h-3.5 text-indigo-600" />
+                          <Eye className="w-3.5 h-3.5 text-[#234931]" />
                           <span>Détails</span>
                         </button>
                         <button
@@ -216,7 +221,7 @@ export const SalesHistoryView: React.FC = () => {
                             e.stopPropagation();
                             setReceiptToPrint(sale);
                           }}
-                          className="touch-btn px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-xl text-[11px] font-semibold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                          className="touch-btn px-2.5 py-1 sherwood-btn-forest text-[11px] font-bold inline-flex items-center gap-1"
                           title="Imprimer le ticket de caisse"
                         >
                           <Printer className="w-3.5 h-3.5" />

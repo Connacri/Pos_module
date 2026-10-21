@@ -20,7 +20,7 @@ export const SherwoodSidebar: React.FC = () => {
     { id: 'catalog', swedishLabel: 'Uppgifter', label: 'Catalogue', icon: Package },
     { id: 'sales', swedishLabel: 'Samlingar', label: 'Factures & Ventes', icon: Receipt },
     { id: 'customers', swedishLabel: 'Invånare', label: 'Clients', icon: Users },
-    { id: 'admin', swedishLabel: 'Design & Sync', label: 'Admin & Sync', icon: Cloud },
+    { id: 'admin', swedishLabel: 'Moln & Synk', label: 'Cloud Supabase & Synk', icon: Cloud },
   ];
 
   return (
