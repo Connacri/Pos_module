@@ -30,6 +30,17 @@ const MainContent: React.FC = () => {
 export const AppLayout: React.FC = () => {
   const { isMobileMenuOpen, setIsMobileMenuOpen, globalToast, dismissToast } = usePos();
 
+  // Handle escape key to close mobile drawer (WCAG accessibility)
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen, setIsMobileMenuOpen]);
+
   return (
     <div className="min-h-screen bg-[#f4efe4] text-[#2c241c] flex flex-row antialiased">
       {/* Desktop Sherwood Forest Sidebar */}
@@ -39,21 +50,21 @@ export const AppLayout: React.FC = () => {
 
       {/* Mobile Slide-out Drawer */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden flex">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menu principal de navigation"
+          className="fixed inset-0 z-50 lg:hidden flex"
+        >
+          {/* Backdrop with dark blur and tactile dismissal */}
           <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/70 backdrop-blur-xs transition-opacity animate-in fade-in duration-200 cursor-pointer"
             onClick={() => setIsMobileMenuOpen(false)}
+            aria-hidden="true"
           />
-          <div className="relative z-10 w-72 max-w-[85vw] h-full shadow-2xl flex flex-col">
-            <button
-              type="button"
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="absolute top-3 right-3 p-2 text-[#c7dac7] hover:text-white z-20"
-              aria-label="Fermer le menu"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <SherwoodSidebar />
+          {/* Slide-out Drawer Container */}
+          <div className="relative z-10 w-80 max-w-[85vw] h-full shadow-2xl flex flex-col bg-[#1f3d29] border-r border-[#16311f] animate-in slide-in-from-left duration-250">
+            <SherwoodSidebar isMobile onClose={() => setIsMobileMenuOpen(false)} />
           </div>
         </div>
       )}
