@@ -1,141 +1,172 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { usePos } from '../../context/PosContext';
 import { D3RevenueTrendChart } from './D3RevenueTrendChart';
 import { DailyRevenueChart } from './DailyRevenueChart';
 import { InventoryAlertWidget } from './InventoryAlertWidget';
-import {
-  TrendingUp,
-  CreditCard,
-  ShoppingBag,
-  Package,
-  AlertTriangle,
-  ArrowRight,
-  Wifi,
-  Receipt,
-  Store,
-  Layers,
-  Sparkles,
-  Star,
-  Users,
-  Calendar,
-  CheckCircle2,
-  Gift,
-  HelpCircle,
-} from 'lucide-react';
-import { SHERWOOD_ASSETS } from '../../assets/images';
+import { TrendingUp, Layers, Store, Package, AlertTriangle } from 'lucide-react';
+import type { PaymentMethod } from '../../types';
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
+  CASH: 'Espèces',
+  CARD: 'Carte',
+  TRANSFER: 'Virement',
+  CHEQUE: 'Chèque',
+};
+
+const formatMoney = (val: number) =>
+  new Intl.NumberFormat('fr-DZ', { maximumFractionDigits: 0 }).format(val) + ' DA';
+
+const formatSaleDate = (iso: string) =>
+  new Date(iso).toLocaleString('fr-FR', {
+    day: 'numeric',
+    month: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+
+const Kpi: React.FC<{
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: 'default' | 'warning';
+  onClick?: () => void;
+}> = ({ label, value, hint, tone = 'default', onClick }) => {
+  const body = (
+    <>
+      <span className="text-xs font-semibold text-ink-600 block">{label}</span>
+      <span
+        className={`block mt-1 text-2xl font-black font-serif-title ${
+          tone === 'warning' ? 'text-wood-600' : 'text-forest-900'
+        }`}
+      >
+        {value}
+      </span>
+      {hint && <span className="text-xs text-ink-600 block mt-0.5">{hint}</span>}
+    </>
+  );
+  const cls = 'sherwood-card p-4 text-left w-full';
+  return onClick ? (
+    <button type="button" onClick={onClick} className={`${cls} hover:bg-sand-100 transition-colors cursor-pointer`}>
+      {body}
+    </button>
+  ) : (
+    <div className={cls}>{body}</div>
+  );
+};
+
+const CardTitle: React.FC<{ title: string; hint?: string; action?: { label: string; onClick: () => void } }> = ({
+  title,
+  hint,
+  action,
+}) => (
+  <div className="flex items-start justify-between gap-3 pb-2 border-b border-sand-200">
+    <div>
+      <h3 className="font-bold text-sm text-forest-900 font-serif-title">{title}</h3>
+      {hint && <p className="text-xs text-ink-600 mt-0.5">{hint}</p>}
+    </div>
+    {action && (
+      <button
+        type="button"
+        onClick={action.onClick}
+        className="touch-btn text-xs font-bold text-forest-800 hover:underline cursor-pointer shrink-0"
+      >
+        {action.label}
+      </button>
+    )}
+  </div>
+);
+
+const EmptyState: React.FC<{ text: string }> = ({ text }) => (
+  <p className="py-6 text-center text-xs text-ink-600">{text}</p>
+);
 
 export const DashboardView: React.FC = () => {
   const { todayStats, sales, products, categories, setActiveView } = usePos();
   const [chartTab, setChartTab] = useState<'d3-trend' | 'bar-breakdown'>('d3-trend');
 
-  const formatMoney = (val: number) => {
-    return new Intl.NumberFormat('fr-DZ', {
-      maximumFractionDigits: 0,
-    }).format(val) + ' DA';
-  };
+  // Ventes valides, de la plus récente à la plus ancienne (ne dépend pas de l'ordre de stockage)
+  const validSales = useMemo(
+    () =>
+      sales
+        .filter((s) => s.status !== 'CANCELLED')
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    [sales]
+  );
 
-  // Compute category sales distribution
   const categoryStats = useMemo(() => {
-    const map = new Map<number, { count: number; revenue: number }>();
-    categories.forEach((c) => map.set(c.id, { count: 0, revenue: 0 }));
-
-    sales.slice(0, 50).forEach((sale) => {
+    const productCategory = new Map(products.map((p) => [p.id, p.categoryId]));
+    const revenueByCat = new Map<number, number>();
+    validSales.slice(0, 50).forEach((sale) =>
       sale.items.forEach((item) => {
-        const prod = products.find((p) => p.id === item.productId);
-        if (prod && map.has(prod.categoryId)) {
-          const entry = map.get(prod.categoryId)!;
-          entry.count += item.quantity;
-          entry.revenue += item.totalTTC;
+        const catId = productCategory.get(item.productId);
+        if (catId !== undefined) {
+          revenueByCat.set(catId, (revenueByCat.get(catId) ?? 0) + item.totalTTC);
         }
-      });
-    });
+      })
+    );
+    const total = Array.from(revenueByCat.values()).reduce((a, b) => a + b, 0);
+    return categories
+      .map((cat) => {
+        const revenue = revenueByCat.get(cat.id) ?? 0;
+        return { id: cat.id, name: cat.name, revenue, percentage: total > 0 ? Math.round((revenue / total) * 100) : 0 };
+      })
+      .filter((c) => c.revenue > 0)
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [categories, products, validSales]);
 
-    const totalCatRevenue = Array.from(map.values()).reduce((sum, v) => sum + v.revenue, 0) || 1;
-
-    return categories.map((cat) => {
-      const data = map.get(cat.id) || { count: 0, revenue: 0 };
-      const percentage = Math.round((data.revenue / totalCatRevenue) * 100);
-      return {
-        ...cat,
-        soldUnits: data.count,
-        revenue: data.revenue,
-        percentage,
-      };
-    }).sort((a, b) => b.revenue - a.revenue);
-  }, [categories, products, sales]);
-
-  // Top selling products
   const topProducts = useMemo(() => {
     const map = new Map<number, { name: string; sku: string; units: number; revenue: number }>();
-
-    sales.forEach((s) => {
+    validSales.forEach((s) =>
       s.items.forEach((it) => {
-        if (!map.has(it.productId)) {
-          map.set(it.productId, { name: it.productName, sku: it.sku, units: 0, revenue: 0 });
-        }
-        const cur = map.get(it.productId)!;
+        const cur = map.get(it.productId) ?? { name: it.productName, sku: it.sku, units: 0, revenue: 0 };
         cur.units += it.quantity;
         cur.revenue += it.totalTTC;
-      });
-    });
-
-    return Array.from(map.values())
+        map.set(it.productId, cur);
+      })
+    );
+    return Array.from(map.entries())
+      .map(([id, v]) => ({ id, ...v }))
       .sort((a, b) => b.units - a.units)
       .slice(0, 5);
-  }, [sales]);
+  }, [validSales]);
 
-  // Recent 5 sales
-  const recentSales = sales.slice(0, 5);
+  const topCustomers = useMemo(() => {
+    const map = new Map<string, { name: string; tickets: number; revenue: number }>();
+    validSales.forEach((s) => {
+      if (s.customerId === undefined || !s.customerName) return;
+      const key = String(s.customerId);
+      const cur = map.get(key) ?? { name: s.customerName, tickets: 0, revenue: 0 };
+      cur.tickets += 1;
+      cur.revenue += s.totalTTC;
+      map.set(key, cur);
+    });
+    return Array.from(map.entries())
+      .map(([id, v]) => ({ id, ...v }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 5);
+  }, [validSales]);
 
-  // Villagers / VIP customers matching the Sherwood theme
-  const villagers = [
-    { name: 'Beau', emoji: '🦌', badge: 'Client VIP', points: '1 450' },
-    { name: 'Fauna', emoji: '🦌', badge: 'Passionnée', points: '2 100' },
-    { name: 'Merengue', emoji: '🦏', badge: 'Gourmande', points: '890' },
-    { name: 'Marshal', emoji: '🐿️', badge: 'Platinum', points: '3 400' },
-    { name: 'Filbert', emoji: '🐿️', badge: 'Fidèle', points: '420' },
-    { name: 'Zucker', emoji: '🐙', badge: 'En-cas', points: '760' },
-    { name: 'Erik', emoji: '🦌', badge: 'Régulier', points: '1 850' },
-    { name: 'Bunnie', emoji: '🐰', badge: 'Rayonnante', points: '980' },
-  ];
+  const recentSales = validSales.slice(0, 5);
 
   return (
     <div className="space-y-6">
-      {/* Sherwood Hero Banner with HD Forest Landscape Background */}
-      <div className="bg-[#1f3d29] text-[#fcfbf7] rounded-3xl p-5 sm:p-6 shadow-lg border border-[#16311f] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        {/* HD Background Landscape Image */}
-        <div
-          className="absolute inset-0 pointer-events-none opacity-30 bg-cover bg-center"
-          style={{ backgroundImage: `url(${SHERWOOD_ASSETS.headerBg})` }}
-        />
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#173020]/95 via-[#1b3825]/90 to-[#1f3d29]/75" />
-
-        <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2a5438]/90 text-[#c7e5c7] text-xs font-bold mb-2 border border-[#3b6f4c]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Session de Caisse Ouverte • Boutique Sherwood
-          </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-[#fff5ea] font-serif-title flex items-center gap-2">
-            Tableau de Bord & Activité de l'Île
-          </h2>
-          <p className="text-xs text-[#c5ddc5] mt-1 max-w-xl">
-            Suivez vos ventes en temps réel, l'évolution du chiffre d'affaires, les objectifs quotidiens et les stocks.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3 relative z-10">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-forest-900 font-serif-title">
+          Tableau de bord
+        </h2>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setActiveView('pos')}
-            className="px-4 py-2.5 bg-[#8d5732] hover:bg-[#784624] text-[#fff6ec] font-bold text-xs rounded-2xl shadow-md transition-all flex items-center gap-2 cursor-pointer active:scale-95 border border-[#6d3e1d]"
+            className="touch-btn px-4 bg-forest-700 hover:bg-forest-800 text-sand-50 font-bold text-sm rounded-2xl shadow-md flex items-center gap-2 cursor-pointer"
           >
-            <Store className="w-4 h-4 text-[#fcdbb6]" />
-            Ouvrir la Caisse POS
+            <Store className="w-4 h-4" />
+            Ouvrir la caisse
           </button>
           <button
             type="button"
             onClick={() => setActiveView('catalog')}
-            className="px-4 py-2.5 bg-[#2a5036] hover:bg-[#346042] text-[#e3eee3] font-semibold text-xs rounded-2xl border border-[#3e6f4d] transition-all flex items-center gap-2 cursor-pointer"
+            className="touch-btn px-4 bg-sand-50 hover:bg-sand-100 text-ink-900 font-semibold text-sm rounded-2xl border border-sand-300 flex items-center gap-2 cursor-pointer"
           >
             <Package className="w-4 h-4" />
             Catalogue
@@ -143,541 +174,160 @@ export const DashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* TOP ROW: 3 Primary Cards matching the Sherwood reference image */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Card 1: Översikt (Overview & Rating & Mini Calendar) */}
-        <div className="sherwood-card p-5 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-              <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title">
-                <span>🍃</span> Översikt
-              </div>
-              <span className="text-[11px] font-bold text-[#8d5732] bg-[#fbf4e8] px-2 py-0.5 rounded-full border border-[#eddabb]">
-                DA-1234-9101
-              </span>
-            </div>
-
-            {/* Island Rating & Score */}
-            <div className="mt-3 bg-[#f7f2e7] p-3 rounded-2xl border border-[#e5dcce] flex items-center justify-between">
-              <div>
-                <span className="text-[10px] uppercase font-bold text-[#6e6354] tracking-wider block">
-                  Ö-betyg (Note Magasin)
-                </span>
-                <div className="flex items-center gap-1 text-amber-500 mt-0.5">
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
-                  <Star className="w-4 h-4 text-amber-400" />
-                  <span className="text-xs font-black text-[#233d2a] ml-1">4.8 / 5</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-bold text-[#6e6354] tracking-wider block">
-                  Caissiers
-                </span>
-                <span className="text-xs font-black text-[#234931]">2 / 2 en poste</span>
-              </div>
-            </div>
-
-            {/* Mini Monthly Calendar */}
-            <div className="mt-3 p-3 bg-[#fdfbf7] rounded-2xl border border-[#ece3d3]">
-              <div className="flex items-center justify-between text-xs font-bold text-[#233d2a] mb-2 px-1">
-                <span>Octobre 2026</span>
-                <span className="text-[10px] text-[#6e6354]">Semaine 43</span>
-              </div>
-              {/* Day headers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-semibold text-[#8a7f72] mb-1">
-                <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
-              </div>
-              {/* Day numbers */}
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-[#483d31]">
-                <span className="text-slate-300">28</span>
-                <span className="text-slate-300">29</span>
-                <span className="text-slate-300">30</span>
-                <span>1</span>
-                <span>2</span>
-                <span>3</span>
-                <span>4</span>
-                <span>5</span>
-                <span>6</span>
-                <span>7</span>
-                <span>8</span>
-                <span>9</span>
-                <span>10</span>
-                <span>11</span>
-                <span>12</span>
-                <span>13</span>
-                <span>14</span>
-                <span>15</span>
-                <span>16</span>
-                <span>17</span>
-                <span>18</span>
-                <span>19</span>
-                {/* Active Day Circled in Forest Green */}
-                <span className="w-6 h-6 rounded-full bg-[#234931] text-[#fff6ec] font-bold mx-auto flex items-center justify-center shadow-xs">
-                  20
-                </span>
-                <span>21</span>
-                <span>22</span>
-                <span>23</span>
-                <span>24</span>
-                <span>25</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Daily Special Event Card */}
-          <div className="bg-[#f5ece0] p-2.5 rounded-2xl border border-[#e5d5c0] flex items-center gap-2 text-xs text-[#523e2d]">
-            <span className="text-base">🎸</span>
-            <div>
-              <span className="font-bold">K.K. Slider anime la boutique</span>
-              <p className="text-[10px] text-[#735c48]">Ambiance guitare acoustique ce soir à 18h00 !</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Uppgifter (Daily Goals & Tasks) */}
-        <div className="sherwood-card p-5 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-              <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title">
-                <span>🍃</span> Uppgifter (Objectifs)
-              </div>
-              <button
-                type="button"
-                onClick={() => setActiveView('sales')}
-                className="text-[11px] font-bold text-[#234931] hover:underline"
-              >
-                Visa alla
-              </button>
-            </div>
-
-            <div className="space-y-3 mt-3">
-              {/* Task 1 */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#3a3024] flex items-center gap-1.5">
-                    <span>⭐</span> Atteindre 5 étoiles de service
-                  </span>
-                  <span className="font-bold text-[#234931] text-[11px]">4 / 5</span>
-                </div>
-                <div className="w-full bg-[#ece2d1] rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-[#2d563a] h-full rounded-full" style={{ width: '80%' }}></div>
-                </div>
-              </div>
-
-              {/* Task 2 */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#3a3024] flex items-center gap-1.5">
-                    <span>💰</span> CA Objectif (100 000 DA)
-                  </span>
-                  <span className="font-bold text-[#234931] text-[11px]">
-                    {Math.min(100, Math.round((todayStats.revenue / 100000) * 100))}%
-                  </span>
-                </div>
-                <div className="w-full bg-[#ece2d1] rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-[#2d563a] h-full rounded-full"
-                    style={{ width: `${Math.min(100, (todayStats.revenue / 100000) * 100)}%` }}
-                  ></div>
-                </div>
-                <div className="text-[10px] text-[#6e6354] text-right font-mono">
-                  {formatMoney(todayStats.revenue)} / 100 000 DA
-                </div>
-              </div>
-
-              {/* Task 3 */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#3a3024] flex items-center gap-1.5">
-                    <span>📦</span> Encaisser 100 articles
-                  </span>
-                  <span className="font-bold text-[#234931] text-[11px]">
-                    {todayStats.itemsSold} / 100
-                  </span>
-                </div>
-                <div className="w-full bg-[#ece2d1] rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-[#2d563a] h-full rounded-full"
-                    style={{ width: `${Math.min(100, (todayStats.itemsSold / 100) * 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-
-              {/* Task 4 */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#3a3024] flex items-center gap-1.5">
-                    <span>👥</span> Servir 10 clients avec fidélité
-                  </span>
-                  <span className="font-bold text-[#234931] text-[11px]">8 / 10</span>
-                </div>
-                <div className="w-full bg-[#ece2d1] rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-[#2d563a] h-full rounded-full" style={{ width: '80%' }}></div>
-                </div>
-              </div>
-
-              {/* Task 5 */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-[#3a3024] flex items-center gap-1.5">
-                    <span>⚠️</span> Alertes stock traitées
-                  </span>
-                  <span className="font-bold text-[#8d5732] text-[11px]">
-                    {todayStats.lowStockCount} restant(s)
-                  </span>
-                </div>
-                <div className="w-full bg-[#ece2d1] rounded-full h-1.5 overflow-hidden">
-                  <div className="bg-[#8d5732] h-full rounded-full" style={{ width: '65%' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-2 border-t border-[#ece2d1] flex items-center justify-between text-[11px] text-[#6e6354]">
-            <span>Progression globale du jour</span>
-            <span className="font-bold text-[#234931]">76% complété</span>
-          </div>
-        </div>
-
-        {/* Card 3: Senaste trenden (D3 Revenue Trend Preview) */}
-        <div className="sherwood-card p-5 space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-              <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title">
-                <span>🍃</span> Senaste trenden (Ventes 7J)
-              </div>
-              <button
-                type="button"
-                onClick={() => setChartTab('d3-trend')}
-                className="text-[11px] font-bold text-[#234931] hover:underline"
-              >
-                Graphique D3
-              </button>
-            </div>
-
-            {/* Quick KPI stats */}
-            <div className="grid grid-cols-2 gap-2 mt-3">
-              <div className="bg-[#f7f2e7] p-2.5 rounded-2xl border border-[#e5dcce]">
-                <span className="text-[10px] font-bold text-[#6e6354] uppercase tracking-wider block">
-                  Revenu Aujourd'hui
-                </span>
-                <span className="text-base font-black text-[#233d2a]">
-                  {formatMoney(todayStats.revenue)}
-                </span>
-                <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
-                  +12.4% vs hebdo
-                </span>
-              </div>
-
-              <div className="bg-[#f7f2e7] p-2.5 rounded-2xl border border-[#e5dcce]">
-                <span className="text-[10px] font-bold text-[#6e6354] uppercase tracking-wider block">
-                  Panier Moyen
-                </span>
-                <span className="text-base font-black text-[#233d2a]">
-                  {formatMoney(todayStats.averageBasket)}
-                </span>
-                <span className="text-[10px] text-[#6e6354] block mt-0.5">
-                  {todayStats.salesCount} tickets
-                </span>
-              </div>
-            </div>
-
-            {/* Visual preview card with gentle organic curve / mini illustration */}
-            <div className="mt-3 p-3 bg-gradient-to-b from-[#edf5ed] to-[#e4efe4] rounded-2xl border border-[#cbe0cb] text-center space-y-1">
-              <div className="text-2xl">🌲 ⛺ 🛶</div>
-              <div className="text-xs font-bold text-[#234931]">
-                Boutique du Sherwood Forest
-              </div>
-              <p className="text-[11px] text-[#557855]">
-                Le graphique haute fidélité D3.js ci-dessous analyse les tendances de vente journalières en temps réel.
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setActiveView('pos')}
-            className="w-full py-2 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] text-xs font-bold rounded-xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-          >
-            <Store className="w-3.5 h-3.5" />
-            Encaisser une vente immédiate
-          </button>
-        </div>
+      {/* Chiffres du jour : uniquement des données réelles */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Kpi label="Chiffre d'affaires du jour" value={formatMoney(todayStats.revenue)} onClick={() => setActiveView('sales')} />
+        <Kpi
+          label="Tickets"
+          value={String(todayStats.salesCount)}
+          hint={`${todayStats.itemsSold} article${todayStats.itemsSold > 1 ? 's' : ''} vendu${todayStats.itemsSold > 1 ? 's' : ''}`}
+          onClick={() => setActiveView('sales')}
+        />
+        <Kpi label="Panier moyen" value={formatMoney(todayStats.averageBasket)} />
+        <Kpi
+          label="Stock à surveiller"
+          value={String(todayStats.lowStockCount)}
+          hint={todayStats.lowStockCount > 0 ? 'Produits sous le seuil d’alerte' : 'Aucune alerte'}
+          tone={todayStats.lowStockCount > 0 ? 'warning' : 'default'}
+          onClick={() => setActiveView('catalog')}
+        />
       </div>
 
-      {/* D3 REVENUE TREND CHART (Vectorial D3 7-day Line Chart) */}
+      {todayStats.lowStockCount > 0 && <InventoryAlertWidget />}
+
       <div className="space-y-3">
-        <div className="flex items-center justify-between flex-wrap gap-2 px-1">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-[#6e6354] uppercase tracking-wider">
-              Analyse Visuelle de la Boutique :
-            </span>
-            <div className="inline-flex p-1 bg-[#ede4d4] rounded-2xl text-xs font-semibold">
-              <button
-                type="button"
-                onClick={() => setChartTab('d3-trend')}
-                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                  chartTab === 'd3-trend'
-                    ? 'bg-[#234931] text-[#fdfbf7] shadow-xs font-bold'
-                    : 'text-[#5d5244] hover:text-[#233d2a]'
-                }`}
-              >
-                <TrendingUp className="w-3.5 h-3.5" />
-                <span>Courbe Tendance D3 (7 Jours)</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setChartTab('bar-breakdown')}
-                className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
-                  chartTab === 'bar-breakdown'
-                    ? 'bg-[#234931] text-[#fdfbf7] shadow-xs font-bold'
-                    : 'text-[#5d5244] hover:text-[#233d2a]'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Histogramme Détaillé</span>
-              </button>
-            </div>
-          </div>
-          <span className="text-[11px] text-[#6e6354] font-medium hidden sm:inline">
-            Données synchronisées en direct avec la caisse POS
-          </span>
-        </div>
-
-        {chartTab === 'd3-trend' ? (
-          <D3RevenueTrendChart days={7} />
-        ) : (
-          <DailyRevenueChart />
-        )}
-      </div>
-
-      {/* MIDDLE ROW: Samlingar (Collections) + Invånare (Villagers / VIP Customers) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Samlingar (Rayons & Collections) */}
-        <div className="sherwood-card p-5 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-            <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title">
-              <span>🍃</span> Samlingar (Rayons de la boutique)
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveView('catalog')}
-              className="text-[11px] font-bold text-[#234931] hover:underline"
-            >
-              Visa alla
-            </button>
-          </div>
-
-          {/* Cute Collection Stamps matching the reference */}
-          <div className="grid grid-cols-5 gap-2 text-center">
-            <div className="p-2.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce]">
-              <div className="text-xl">🐟</div>
-              <div className="text-[10px] font-bold text-[#44382b] mt-1">Frais</div>
-              <div className="text-[9px] text-[#786b5c] font-mono">43 / 80</div>
-            </div>
-            <div className="p-2.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce]">
-              <div className="text-xl">🦋</div>
-              <div className="text-[10px] font-bold text-[#44382b] mt-1">Épicerie</div>
-              <div className="text-[9px] text-[#786b5c] font-mono">38 / 80</div>
-            </div>
-            <div className="p-2.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce]">
-              <div className="text-xl">🐚</div>
-              <div className="text-[10px] font-bold text-[#44382b] mt-1">Maison</div>
-              <div className="text-[9px] text-[#786b5c] font-mono">24 / 40</div>
-            </div>
-            <div className="p-2.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce]">
-              <div className="text-xl">🖼️</div>
-              <div className="text-[10px] font-bold text-[#44382b] mt-1">Déco</div>
-              <div className="text-[9px] text-[#786b5c] font-mono">12 / 43</div>
-            </div>
-            <div className="p-2.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce]">
-              <div className="text-xl">🔨</div>
-              <div className="text-[10px] font-bold text-[#44382b] mt-1">Bricolage</div>
-              <div className="text-[9px] text-[#786b5c] font-mono">210 / 602</div>
-            </div>
-          </div>
-
-          {/* Goal banner */}
-          <div className="p-3 bg-[#edf5ed] rounded-2xl border border-[#cde3cd] flex items-center gap-3">
-            <span className="text-xl">🐟</span>
-            <div className="flex-1">
-              <div className="flex items-center justify-between text-xs font-bold text-[#234931]">
-                <span>Mål : Rayon Frais & Boissons en vedette</span>
-                <span>43 / 80</span>
-              </div>
-              <div className="w-full bg-[#cbe0cb] rounded-full h-1.5 mt-1 overflow-hidden">
-                <div className="bg-[#2d563a] h-full rounded-full" style={{ width: '54%' }}></div>
-              </div>
-              <div className="text-[10px] text-[#567a56] mt-0.5">Vous êtes à mi-chemin de l'objectif !</div>
-            </div>
-          </div>
-
-          {/* Top Selling Products List */}
-          <div className="divide-y divide-[#ece2d1] pt-1">
-            {topProducts.map((p, idx) => (
-              <div key={p.sku} className="py-2 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-[#f2e9db] text-[#5a4c3d] font-bold text-[10px] flex items-center justify-center">
-                    {idx + 1}
-                  </span>
-                  <div>
-                    <span className="font-bold text-[#233d2a]">{p.name}</span>
-                    <span className="text-[10px] text-[#8a7e71] font-mono ml-2">{p.sku}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="font-bold text-[#234931]">{p.units} vendus</span>
-                  <span className="text-[10px] text-[#6e6354] block">{formatMoney(p.revenue)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Invånare (Clients VIP & Équipe du Magasin) */}
-        <div className="sherwood-card p-5 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-            <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title">
-              <span>🍃</span> Invånare (Clients Fidèles & Équipe)
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveView('customers')}
-              className="text-[11px] font-bold text-[#234931] hover:underline"
-            >
-              Visa alla
-            </button>
-          </div>
-
-          {/* Villagers grid with circular avatars matching the reference */}
-          <div className="grid grid-cols-4 gap-3 text-center">
-            {/* VIP Figurine 1: Robin Hood Cashier */}
-            <div
-              className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
-              onClick={() => setActiveView('customers')}
-            >
-              <div className="w-12 h-12 rounded-full bg-[#f4ebe0] border-2 border-[#547f54] flex items-center justify-center overflow-hidden mx-auto shadow-xs group-hover:scale-105 transition-transform">
-                <img src={SHERWOOD_ASSETS.cashierVillager} alt="Robin" className="w-full h-full object-cover" />
-              </div>
-              <div className="text-xs font-bold text-[#233d2a] mt-1.5">Robin</div>
-              <div className="text-[10px] text-[#234931] font-bold">Chef Caisse</div>
-              <div className="text-[10px] text-[#706456] font-mono">4 200 pts</div>
-            </div>
-
-            {/* VIP Figurine 2: Tanuki Shopkeeper */}
-            <div
-              className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
-              onClick={() => setActiveView('customers')}
-            >
-              <div className="w-12 h-12 rounded-full bg-[#f4ebe0] border-2 border-[#a66a3d] flex items-center justify-center overflow-hidden mx-auto shadow-xs group-hover:scale-105 transition-transform">
-                <img src={SHERWOOD_ASSETS.shopkeeper} alt="Tanuki" className="w-full h-full object-cover" />
-              </div>
-              <div className="text-xs font-bold text-[#233d2a] mt-1.5">Tanuki</div>
-              <div className="text-[10px] text-[#8d5732] font-bold">Gérant Île</div>
-              <div className="text-[10px] text-[#706456] font-mono">9 999 pts</div>
-            </div>
-
-            {villagers.slice(0, 6).map((v) => (
-              <div
-                key={v.name}
-                className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
-                onClick={() => setActiveView('customers')}
-              >
-                <div className="w-12 h-12 rounded-full bg-[#f4ebe0] border-2 border-[#8d5732] flex items-center justify-center text-2xl mx-auto shadow-xs group-hover:scale-105 transition-transform">
-                  {v.emoji}
-                </div>
-                <div className="text-xs font-bold text-[#233d2a] mt-1.5">{v.name}</div>
-                <div className="text-[10px] text-[#8d5732] font-semibold">{v.badge}</div>
-                <div className="text-[10px] text-[#706456] font-mono">{v.points} pts</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Invite More Villagers / Add Customer Button */}
+        <div className="inline-flex p-1 bg-sand-200 rounded-2xl text-sm font-semibold" role="tablist" aria-label="Type de graphique">
           <button
             type="button"
-            onClick={() => setActiveView('customers')}
-            className="w-full py-2.5 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] text-xs font-bold rounded-2xl transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs border border-[#21402b]"
+            role="tab"
+            aria-selected={chartTab === 'd3-trend'}
+            onClick={() => setChartTab('d3-trend')}
+            className={`touch-btn px-4 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              chartTab === 'd3-trend' ? 'bg-forest-800 text-sand-50 font-bold shadow-xs' : 'text-ink-700 hover:text-forest-900'
+            }`}
           >
-            <span>🍃</span>
-            <span>Bjud in fler invånare (Nouveau Client)</span>
+            <TrendingUp className="w-4 h-4" />
+            Tendance 7 jours
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={chartTab === 'bar-breakdown'}
+            onClick={() => setChartTab('bar-breakdown')}
+            className={`touch-btn px-4 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+              chartTab === 'bar-breakdown' ? 'bg-forest-800 text-sand-50 font-bold shadow-xs' : 'text-ink-700 hover:text-forest-900'
+            }`}
+          >
+            <Layers className="w-4 h-4" />
+            Détail par jour
           </button>
         </div>
+        {chartTab === 'd3-trend' ? <D3RevenueTrendChart days={7} /> : <DailyRevenueChart />}
       </div>
 
-      {/* MIN Ö - CARTE HD DE L'ÎLE SHERWOOD (Directement inspirée de la photo de référence) */}
-      <div className="sherwood-card p-5 space-y-3">
-        <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
-          <div className="flex items-center gap-2 font-bold text-sm text-[#233d2a] font-serif-title">
-            <span>🍃</span>
-            <span>Min ö • Carte & Lieux de Sherwood Island</span>
-          </div>
-          <span className="text-xs text-[#8d5732] font-bold flex items-center gap-1 font-mono">
-            DA-1234-5678-9101
-          </span>
-        </div>
-
-        <div className="relative rounded-2xl overflow-hidden border-2 border-[#e5dcce] shadow-sm max-h-[360px] group">
-          <img
-            src={SHERWOOD_ASSETS.islandMap}
-            alt="Sherwood Island HD Map"
-            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
-          />
-          <div className="absolute bottom-3 right-3 bg-[#fdfbf7]/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#e5dcce] text-xs font-bold text-[#234931] shadow-md flex items-center gap-1.5">
-            <span>🌲</span>
-            <span>Sherwood Island • 5 Étoiles</span>
-          </div>
-        </div>
-      </div>
-
-      {/* INVENTORY SURVEILLANCE & REORDER THRESHOLD WIDGET */}
-      <InventoryAlertWidget />
-
-      {/* BOTTOM ROW: Anteckningar (Cozy Sticky Notes matching reference) */}
-      <div className="sherwood-card p-5 space-y-3">
-        <div className="flex items-center gap-1.5 font-bold text-sm text-[#233d2a] font-serif-title pb-2 border-b border-[#ece2d1]">
-          <span>🍃</span> Anteckningar & Idéer (Notes de la boutique Sherwood)
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Note 1: Idéer */}
-          <div className="bg-[#fef8ed] p-3.5 rounded-2xl border border-[#f5dfb8] space-y-1 relative">
-            <div className="flex items-center justify-between text-xs font-bold text-[#7a4e1d]">
-              <span>💡 Idéer</span>
-              <span>🌿</span>
-            </div>
-            <ul className="text-xs text-[#5c3e1e] space-y-1 pt-1 list-disc list-inside">
-              <li>Créer un comptoir dégustation de produits locaux.</li>
-              <li>Mettre en avant le nouveau lot d'huiles artisanales.</li>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <section className="sherwood-card p-5 space-y-3">
+          <CardTitle title="Dernières ventes" action={{ label: 'Tout voir', onClick: () => setActiveView('sales') }} />
+          {recentSales.length === 0 ? (
+            <EmptyState text="Aucune vente pour le moment. Ouvrez la caisse pour encaisser la première." />
+          ) : (
+            <ul className="divide-y divide-sand-200">
+              {recentSales.map((s) => (
+                <li key={s.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <div className="font-bold text-forest-900 truncate">{s.saleNumber}</div>
+                    <div className="text-xs text-ink-600 truncate">
+                      {s.customerName || 'Client comptoir'} · {PAYMENT_LABELS[s.paymentMethod]} · {formatSaleDate(s.createdAt)}
+                    </div>
+                  </div>
+                  <div className="font-bold text-forest-900 shrink-0 font-mono">{formatMoney(s.totalTTC)}</div>
+                </li>
+              ))}
             </ul>
-          </div>
+          )}
+        </section>
 
-          {/* Note 2: Ranka upp Nook's Cranny */}
-          <div className="bg-[#fef8ed] p-3.5 rounded-2xl border border-[#f5dfb8] space-y-1 relative">
-            <div className="flex items-center justify-between text-xs font-bold text-[#7a4e1d]">
-              <span>💰 Ranka upp butiken</span>
-              <span>🔔</span>
-            </div>
-            <p className="text-xs text-[#5c3e1e] pt-1">
-              Atteindre 150 000 DA de ventes ce week-end pour débloquer l'agrandissement de la boutique !
-            </p>
-          </div>
+        <section className="sherwood-card p-5 space-y-3">
+          <CardTitle title="Produits les plus vendus" action={{ label: 'Catalogue', onClick: () => setActiveView('catalog') }} />
+          {topProducts.length === 0 ? (
+            <EmptyState text="Les produits les plus vendus apparaîtront après les premières ventes." />
+          ) : (
+            <ol className="divide-y divide-sand-200">
+              {topProducts.map((p, idx) => (
+                <li key={p.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-sand-200 text-ink-700 font-bold text-xs flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="font-bold text-forest-900 truncate">{p.name}</div>
+                      <div className="text-xs text-ink-600 font-mono">{p.sku}</div>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-forest-900">{p.units} vendu{p.units > 1 ? 's' : ''}</div>
+                    <div className="text-xs text-ink-600 font-mono">{formatMoney(p.revenue)}</div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
 
-          {/* Note 3: Dröm om... */}
-          <div className="bg-[#fef8ed] p-3.5 rounded-2xl border border-[#f5dfb8] space-y-1 relative">
-            <div className="flex items-center justify-between text-xs font-bold text-[#7a4e1d]">
-              <span>🎨 Dröm om...</span>
-              <span>🪶</span>
-            </div>
-            <p className="text-xs text-[#5c3e1e] pt-1">
-              Une boutique chaleureuse au cœur de la forêt avec le meilleur accueil et un encaissement ultra fluide.
-            </p>
-          </div>
-        </div>
+        <section className="sherwood-card p-5 space-y-3">
+          <CardTitle title="Ventes par rayon" hint="Sur les 50 dernières ventes" />
+          {categoryStats.length === 0 ? (
+            <EmptyState text="La répartition par rayon s'affichera après les premières ventes." />
+          ) : (
+            <ul className="space-y-3 pt-1">
+              {categoryStats.map((c) => (
+                <li key={c.id} className="text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-forest-900">{c.name}</span>
+                    <span className="text-ink-700 font-mono text-xs">
+                      {formatMoney(c.revenue)} · {c.percentage} %
+                    </span>
+                  </div>
+                  <div className="mt-1 h-2 rounded-full bg-sand-200 overflow-hidden" role="presentation">
+                    <div className="h-full rounded-full bg-forest-700" style={{ width: `${c.percentage}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        <section className="sherwood-card p-5 space-y-3">
+          <CardTitle title="Meilleurs clients" action={{ label: 'Clients', onClick: () => setActiveView('customers') }} />
+          {topCustomers.length === 0 ? (
+            <EmptyState text="Associez un client à une vente pour le voir apparaître ici." />
+          ) : (
+            <ol className="divide-y divide-sand-200">
+              {topCustomers.map((c, idx) => (
+                <li key={c.id} className="py-2.5 flex items-center justify-between gap-3 text-sm">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="w-6 h-6 rounded-full bg-sand-200 text-ink-700 font-bold text-xs flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </span>
+                    <span className="font-bold text-forest-900 truncate">{c.name}</span>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="font-bold text-forest-900 font-mono">{formatMoney(c.revenue)}</div>
+                    <div className="text-xs text-ink-600">{c.tickets} ticket{c.tickets > 1 ? 's' : ''}</div>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          )}
+        </section>
       </div>
+
+      {todayStats.lowStockCount === 0 && (
+        <p className="flex items-center gap-2 text-xs text-ink-600">
+          <AlertTriangle className="w-3.5 h-3.5" aria-hidden="true" />
+          Aucune alerte de stock : tous les produits sont au-dessus de leur seuil.
+        </p>
+      )}
     </div>
   );
 };

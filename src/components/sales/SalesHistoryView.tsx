@@ -58,7 +58,7 @@ export const SalesHistoryView: React.FC = () => {
         <div>
           <div className="sherwood-badge-forest mb-2">
             <Receipt className="w-3.5 h-3.5 text-[#234931]" />
-            <span>Samlingar • Registre des Transactions</span>
+            <span>Registre des Transactions</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
             <span>🍃</span>

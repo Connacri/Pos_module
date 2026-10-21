@@ -161,7 +161,7 @@ export const CustomersView: React.FC = () => {
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
             <span>🍃</span>
-            <span>Invånare • Clients & Fidélité de l'Île</span>
+            <span>Clients & fidélité</span>
           </h2>
           <p className="text-xs sm:text-sm text-[#605547] mt-1 max-w-xl font-medium">
             Suivi des comptes clients particuliers et professionnels, clochettes de fidélité et remises automatiques.

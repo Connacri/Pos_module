@@ -1,5 +1,21 @@
 @import "tailwindcss";
 
+/* Design tokens (Sherwood) : une seule source pour les couleurs de l'UI caisse */
+@theme {
+  --color-forest-900: #1f3d29;
+  --color-forest-800: #234931;
+  --color-forest-700: #2d563a;
+  --color-forest-600: #3b6f4c;
+  --color-sand-50: #fdfbf7;
+  --color-sand-100: #f7f2e7;
+  --color-sand-200: #e5dcce;
+  --color-sand-300: #d8cdba;
+  --color-ink-900: #2c241c;
+  --color-ink-700: #5d5244;
+  --color-ink-600: #6e6354; /* >= 5:1 sur sand-100 : texte secondaire lisible */
+  --color-wood-600: #8d5732;
+}
+
 @layer base {
   :root {
     --color-sherwood-bg: #f4efe4;
@@ -25,6 +41,14 @@
     @apply antialiased text-[#2c241c] bg-[#f4efe4] min-h-screen selection:bg-[#234931] selection:text-[#fdfbf7];
     font-family: 'Quicksand', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Anneau de focus clavier visible sur tous les boutons et liens */
+  button:focus-visible,
+  a:focus-visible,
+  [role="button"]:focus-visible {
+    outline: 2px solid var(--color-forest-700);
+    outline-offset: 2px;
   }
 
   h1, h2, h3, .font-serif-title {

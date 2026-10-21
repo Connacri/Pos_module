@@ -689,20 +689,23 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     for (let i = 13; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const key = d.toISOString().split('T')[0];
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       map.set(key, { revenue: 0, cost: 0, orders: 0, unitsSold: 0 });
     }
 
-    sales.forEach((s) => {
-      const key = s.createdAt.split('T')[0];
-      if (map.has(key)) {
-        const cur = map.get(key)!;
-        cur.revenue += s.totalTTC;
-        cur.orders += 1;
-        cur.unitsSold += s.items.reduce((sum, it) => sum + it.quantity, 0);
-        cur.cost += s.totalTTC * 0.65;
-      }
-    });
+    sales
+      .filter((s) => s.status !== 'CANCELLED')
+      .forEach((s) => {
+        const d = new Date(s.createdAt);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        if (map.has(key)) {
+          const cur = map.get(key)!;
+          cur.revenue += s.totalTTC;
+          cur.orders += 1;
+          cur.unitsSold += s.items.reduce((sum, it) => sum + it.quantity, 0);
+          cur.cost += s.totalTTC * 0.65;
+        }
+      });
 
     const result: DailyRevenueStat[] = [];
     const keys = Array.from(map.keys()).sort();
@@ -727,10 +730,22 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return result;
   }, [sales]);
 
-  // Today KPI
+  // Today KPI (Local date boundary and cancelled sales exclusion)
   const todayStats = useMemo(() => {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const todaySales = sales.filter((s) => s.createdAt.startsWith(todayStr));
+    const now = new Date();
+    const todayYear = now.getFullYear();
+    const todayMonth = now.getMonth();
+    const todayDate = now.getDate();
+
+    const todaySales = sales.filter((s) => {
+      if (s.status === 'CANCELLED') return false;
+      const d = new Date(s.createdAt);
+      return (
+        d.getFullYear() === todayYear &&
+        d.getMonth() === todayMonth &&
+        d.getDate() === todayDate
+      );
+    });
 
     const revenue = todaySales.reduce((sum, s) => sum + s.totalTTC, 0);
     const salesCount = todaySales.length;

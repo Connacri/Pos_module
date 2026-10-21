@@ -9,6 +9,7 @@ import { ProductCatalogView } from './components/catalog/ProductCatalogView';
 import { SalesHistoryView } from './components/sales/SalesHistoryView';
 import { CustomersView } from './components/customers/CustomersView';
 import { AdminSyncView } from './components/admin/AdminSyncView';
+import { CartDrawer } from './components/pos/CartDrawer';
 import { X } from 'lucide-react';
 
 const MainContent: React.FC = () => {
@@ -65,6 +66,9 @@ export const AppLayout: React.FC = () => {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* Tiroir panier mobile : disponible depuis toutes les vues */}
+      <CartDrawer />
     </div>
   );
 };

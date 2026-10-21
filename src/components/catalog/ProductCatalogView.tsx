@@ -125,7 +125,7 @@ export const ProductCatalogView: React.FC = () => {
         <div>
           <div className="sherwood-badge-forest mb-2">
             <Package className="w-3.5 h-3.5 text-[#234931]" />
-            <span>Uppgifter • Inventaire & Tarification</span>
+            <span>Inventaire & Tarification</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
             <span>🍃</span>
