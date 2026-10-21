@@ -47,13 +47,14 @@ jobs:
           java-version: '21'
           cache: 'gradle'
 
-      - name: Configuration du SDK Android
-        uses: android-actions/setup-android@v3
-
-      - name: Installation du SDK Android requis
+      # Le runner ubuntu-latest fournit déjà ANDROID_HOME, platform 36 et build-tools 36.
+      # (android-actions/setup-android@v3 échoue sur les cmdline-tools récents.)
+      - name: Vérifier le SDK Android disponible
         run: |
-          yes | sdkmanager "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1 \
-            || yes | sdkmanager "platforms;android-36" "build-tools;35.0.0" >/dev/null
+          set -euo pipefail
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          test -d "$ANDROID_HOME/platforms/android-36"
+          test -d "$ANDROID_HOME/build-tools/36.0.0"
 
       - name: Installation des dépendances
         run: npm ci --no-audit --no-fund
