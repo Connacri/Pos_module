@@ -86,25 +86,25 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden my-4 flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
+      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden my-4 flex flex-col max-h-[94vh]">
         {/* Modal Top Bar (Hidden during print) */}
-        <div className="no-print px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div className="no-print px-5 py-3.5 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-indigo-600 rounded-lg">
-              <Eye className="w-4 h-4 text-white" />
+            <div className="p-1.5 bg-[#8d5732] rounded-lg text-[#fcdbb6]">
+              <Eye className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm">Aperçu Avant Encaissement (Print Preview)</h3>
-              <p className="text-[11px] text-slate-400">
-                Format Rouleau Thermique 80mm • ESC/POS Standard
+              <h3 className="font-bold text-sm font-serif-title">🍃 Aperçu Ticket Thermique 80mm</h3>
+              <p className="text-[11px] text-[#c5ddc5]">
+                Format Rouleau Thermique 80mm • Boutique Sherwood
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="touch-btn p-1 text-slate-400 hover:text-white transition-colors cursor-pointer"
+            className="touch-btn p-1 text-[#c5ddc5] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#284f35]"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />
@@ -112,46 +112,46 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
         </div>
 
         {/* 80mm Format Notice Banner (Hidden during print) */}
-        <div className="no-print bg-amber-50 px-5 py-2.5 border-b border-amber-200/80 flex items-center justify-between text-xs text-amber-900">
+        <div className="no-print bg-[#fbf4e8] px-5 py-2.5 border-b border-[#eddabb] flex items-center justify-between text-xs text-[#70481f]">
           <div className="flex items-center gap-2 font-medium">
-            <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-[#8d5732] shrink-0" />
             <span>
-              <strong>Gabarit 80mm calibré :</strong> Largeur d'impression 72-80 mm (576 dots). Vérifiez les montants avant encaissement.
+              <strong>Gabarit 80mm calibré :</strong> Largeur d'impression 72-80 mm. Ticket de la boutique Sherwood.
             </span>
           </div>
-          <span className="hidden sm:inline-block font-mono text-[10px] bg-amber-200/80 px-2 py-0.5 rounded-md font-bold">
+          <span className="hidden sm:inline-block font-mono text-[10px] bg-[#eddabb] text-[#5c3713] px-2 py-0.5 rounded-md font-bold">
             80mm Roll
           </span>
         </div>
 
         {/* Scrollable Receipt Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-100 flex justify-center">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#ede6d8] flex justify-center">
           {/* Authentic 80mm Thermal Slip Container */}
           <div
             id="thermal-preview-receipt"
-            className="w-full max-w-[340px] bg-white p-5 rounded-xl shadow-md border border-slate-300 font-mono text-xs text-slate-800 space-y-3.5 relative"
+            className="w-full max-w-[340px] bg-white p-5 rounded-xl shadow-md border border-[#d6cbba] font-mono text-xs text-slate-800 space-y-3.5 relative"
             style={{ width: '80mm' }}
           >
             {/* Specimen watermark pill */}
             <div className="text-center pb-2 border-b border-dashed border-slate-300">
-              <span className="inline-block bg-amber-100 text-amber-900 text-[10px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full border border-amber-300">
-                ••• PROFORMA / APERÇU AVANT ENCAISSEMENT •••
+              <span className="inline-block bg-[#fbf4e8] text-[#70481f] text-[10px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full border border-[#eddabb]">
+                ••• PROFORMA / SHERWOOD POS •••
               </span>
             </div>
 
             {/* Store Information Header */}
             <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-1">
-              <div className="font-black text-base text-slate-900 tracking-wider">
-                POS MODULE PRO
+              <div className="font-black text-base text-slate-900 tracking-wider font-serif-title">
+                BOUTIQUE SHERWOOD
               </div>
               <div className="text-[11px] text-slate-600 font-medium">
-                Supermarché & Commerce Général
+                Commerce Artisanal & Produits de l'Île
               </div>
               <div className="text-[10px] text-slate-500">
-                14 Boulevard Zighout Youcef, 16000 Alger
+                Place du Village, Sherwood Island
               </div>
               <div className="text-[10px] text-slate-500">
-                Tél : +213 (0) 21 73 45 67 • contact@posmodule.dz
+                Tél : +213 (0) 21 73 45 67 • DA-1234-9101
               </div>
               <div className="text-[9px] text-slate-400 pt-0.5">
                 NIF: 001916010042879 • RC: 16/00-098234B19
@@ -326,11 +326,11 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
         </div>
 
         {/* Modal Action Buttons Footer (Hidden during print) */}
-        <div className="no-print p-4 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="no-print p-4 bg-[#fdfbf7] border-t border-[#e5dcce] flex flex-wrap items-center justify-between gap-3 shrink-0">
           <button
             type="button"
             onClick={onClose}
-            className="touch-btn px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            className="touch-btn px-4 py-2 border border-[#e2d6c1] bg-[#f7f2e7] hover:bg-[#ede4d4] text-[#5d5244] rounded-xl text-xs font-bold transition-colors cursor-pointer"
           >
             Retour / Modifier
           </button>
@@ -339,20 +339,20 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
             <button
               type="button"
               onClick={handlePrint}
-              className="touch-btn px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+              className="touch-btn px-4 py-2.5 bg-[#8d5732] hover:bg-[#784624] text-[#fff6ec] border border-[#6d3e1d] rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
               title="Tester l'impression sur imprimante thermique"
             >
-              <Printer className="w-4 h-4 text-slate-600" />
+              <Printer className="w-4 h-4 text-[#fcdbb6]" />
               <span>Imprimer Ticket Test (80mm)</span>
             </button>
 
             <button
               type="button"
               onClick={onConfirmPayment}
-              className="touch-btn px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer"
+              className="touch-btn px-5 py-2.5 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer border border-[#21402b]"
             >
-              <CheckCircle2 className="w-4 h-4" />
-              <span>Confirmer & Encaisser</span>
+              <CheckCircle2 className="w-4 h-4 text-[#a8d3a8]" />
+              <span>Confirmer & Encaisser 🍃</span>
             </button>
           </div>
         </div>

@@ -86,30 +86,30 @@ export const InventoryAlertWidget: React.FC = () => {
   }, 0);
 
   return (
-    <div className="bg-white/90 backdrop-blur-xl rounded-3xl p-5 sm:p-6 border border-white shadow-xs space-y-5">
+    <div className="sherwood-card p-5 sm:p-6 space-y-5">
       {/* Widget Header with Status and Config Toggle */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e8dfce]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#fbf3e5] text-[#8d5732] flex items-center justify-center font-bold shrink-0 border border-[#edd7b6]">
             <AlertTriangle className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                Surveillance de l'Inventaire & Alertes Seuil
+              <h3 className="font-extrabold text-base sm:text-lg text-[#233d2a] font-serif-title">
+                🍃 Surveillance des Stocks & Alertes Réappro
               </h3>
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800">
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-[#fbf3e5] text-[#8d5732] border border-[#ecd9be]">
                 {flaggedProducts.length} sous le seuil
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Articles dont le niveau de stock requiert un réapprovisionnement
+            <p className="text-xs text-[#6e6354] mt-0.5">
+              Articles dont le niveau de stock requiert un réapprovisionnement pour la boutique
             </p>
           </div>
         </div>
 
         {/* Configurable Minimum Stock Threshold Controller */}
-        <div className="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex flex-wrap items-center gap-3">
+        <div className="bg-[#f7f2e7] p-2.5 rounded-2xl border border-[#e5dcce] flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <Sliders className="w-3.5 h-3.5 text-slate-500" />
             <span className="text-xs font-semibold text-slate-700">Seuil Minimal :</span>

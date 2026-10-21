@@ -139,28 +139,28 @@ export const CustomersView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header & Loyalty Overview Banner */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-6 border border-white shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="sherwood-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-200/80 text-amber-800 text-xs font-bold mb-2">
-            <Gift className="w-3.5 h-3.5 text-amber-600" />
-            <span>Programme de Fidélité Actif (1 Pt / 100 DA)</span>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbf4e8] border border-[#eddabb] text-[#70481f] text-xs font-bold mb-2">
+            <Gift className="w-3.5 h-3.5 text-[#8d5732]" />
+            <span>🍃 Programme de Fidélité Sherwood (1 Clochette / 100 DA)</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Users className="w-6 h-6 text-indigo-600" />
-            Clients & Programme de Fidélité
+          <h2 className="text-xl sm:text-2xl font-black text-[#233d2a] font-serif-title tracking-tight flex items-center gap-2">
+            <span>🍃</span>
+            <span>Invånare • Clients & Fidélité de l'Île</span>
           </h2>
-          <p className="text-xs text-slate-500 mt-1 max-w-xl">
-            Suivi des points fidélité, paliers de réduction automatique et comptes clients professionnels.
+          <p className="text-xs text-[#6e6354] mt-1 max-w-xl">
+            Suivi des comptes villageois et professionnels, clochettes de fidélité et remises automatiques.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 text-right">
-            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+          <div className="bg-[#f7f2e7] border border-[#e5dcce] rounded-2xl p-3 text-right">
+            <div className="text-[10px] text-[#6e6354] font-bold uppercase tracking-wider">
               Total Points Distribués
             </div>
-            <div className="text-lg font-black text-amber-600 flex items-center justify-end gap-1">
-              <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+            <div className="text-lg font-black text-[#8d5732] flex items-center justify-end gap-1">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
               <span>{totalLoyaltyPoints.toLocaleString('fr-FR')} pts</span>
             </div>
           </div>
@@ -168,16 +168,16 @@ export const CustomersView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAddingCustomer(true)}
-            className="touch-btn px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+            className="touch-btn px-4 py-2.5 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer border border-[#21402b]"
           >
             <Plus className="w-4 h-4" />
-            <span>Nouveau Client</span>
+            <span>Nouveau Client 🍃</span>
           </button>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-3.5 border border-white shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="sherwood-card p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input

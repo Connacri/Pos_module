@@ -95,7 +95,7 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
       .attr('class', 'grid')
       .call(yAxisGrid)
       .selectAll('line')
-      .attr('stroke', '#f1f5f9')
+      .attr('stroke', '#ede4d4')
       .attr('stroke-dasharray', '3 3');
 
     g.select('.grid .domain').remove();
@@ -113,14 +113,15 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
       .attr('x2', '0%')
       .attr('y2', '100%');
 
-    const primaryColor = activeMetric === 'revenue' ? '#6366f1' : '#10b981';
-    const secondaryColor = activeMetric === 'revenue' ? '#4f46e5' : '#059669';
+    // Sherwood Palette: Forest Green for revenue (#275336), Warm Gold for profit (#c78628)
+    const primaryColor = activeMetric === 'revenue' ? '#275336' : '#c78628';
+    const secondaryColor = activeMetric === 'revenue' ? '#1c3e27' : '#9e6212';
 
     areaGradient
       .append('stop')
       .attr('offset', '0%')
       .attr('stop-color', primaryColor)
-      .attr('stop-opacity', 0.38);
+      .attr('stop-opacity', 0.32);
 
     areaGradient
       .append('stop')
@@ -130,7 +131,7 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
 
     // Glow Filter
     const filter = defs.append('filter').attr('id', 'glow').attr('x', '-20%').attr('y', '-20%').attr('width', '140%').attr('height', '140%');
-    filter.append('feDropShadow').attr('dx', '0').attr('dy', '4').attr('stdDeviation', '4').attr('flood-color', primaryColor).attr('flood-opacity', '0.25');
+    filter.append('feDropShadow').attr('dx', '0').attr('dy', '3').attr('stdDeviation', '3').attr('flood-color', primaryColor).attr('flood-opacity', '0.22');
 
     // Area Generator
     const area = d3
@@ -266,19 +267,19 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
   }, [data]);
 
   return (
-    <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs space-y-5">
+    <div className="sherwood-card p-5 sm:p-6 space-y-5">
       {/* Chart Top Header & Metric Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-[#e8dfce]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0">
+          <div className="w-10 h-10 rounded-2xl bg-[#edf5ed] text-[#234931] flex items-center justify-center font-bold shrink-0 border border-[#cde2cd]">
             <Activity className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                Tendance du Chiffre d'Affaires (D3.js)
+              <h3 className="font-extrabold text-base sm:text-lg text-[#233d2a] font-serif-title">
+                🍃 Tendance du Chiffre d'Affaires (D3.js)
               </h3>
-              <span className="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-indigo-200">
+              <span className="bg-[#eaf3e8] text-[#234931] text-[10px] font-bold px-2 py-0.5 rounded-full border border-[#cde2cd]">
                 7 Derniers Jours
               </span>
             </div>
@@ -289,7 +290,8 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
         </div>
 
         {/* Metric Selector Tabs */}
-        <div className="flex items-center gap-1.5 self-start md:self-auto bg-slate-100 p-1 rounded-2xl text-xs font-semibold">
+        {/* Metric Selector Tabs */}
+        <div className="flex items-center gap-1.5 self-start md:self-auto bg-[#efe8da] p-1 rounded-2xl text-xs font-semibold">
           <button
             type="button"
             onClick={() => {
@@ -298,8 +300,8 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
             }}
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
               activeMetric === 'revenue'
-                ? 'bg-white text-indigo-600 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-xs font-bold'
+                : 'text-[#5d5244] hover:text-[#233d2a]'
             }`}
           >
             Chiffre d'Affaires
@@ -312,8 +314,8 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
             }}
             className={`px-3 py-1.5 rounded-xl transition-all cursor-pointer ${
               activeMetric === 'profit'
-                ? 'bg-white text-emerald-600 shadow-2xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-[#c78628] text-[#fdfbf7] shadow-xs font-bold'
+                : 'text-[#5d5244] hover:text-[#233d2a]'
             }`}
           >
             Marge Brute
@@ -324,63 +326,64 @@ export const D3RevenueTrendChart: React.FC<D3RevenueTrendChartProps> = ({ days =
       {/* 7-Day Performance Insight KPI Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {/* Total 7 Days */}
-        <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500">
+        <div className="p-3.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce] space-y-1">
+          <span className="text-[11px] font-semibold text-[#6e6354]">
             Total {days} Jours
           </span>
-          <div className="text-base sm:text-lg font-black text-slate-900">
+          <div className="text-base sm:text-lg font-black text-[#233d2a]">
             {formatMoney(summary.total)}
           </div>
-          <div className="text-[10px] text-slate-400">
-            Période courante
+          <div className="text-[10px] text-[#2e5d3c] font-medium flex items-center gap-0.5">
+            <DollarSign className="w-3 h-3 text-[#2e5d3c]" />
+            Volume cumulé
           </div>
         </div>
 
         {/* Daily Average */}
-        <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500">
+        <div className="p-3.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce] space-y-1">
+          <span className="text-[11px] font-semibold text-[#6e6354]">
             Moyenne Quotidienne
           </span>
-          <div className="text-base sm:text-lg font-black text-indigo-600">
+          <div className="text-base sm:text-lg font-black text-[#234931]">
             {formatMoney(summary.average)}
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#6e6354]">
             Par jour sur 7 jours
           </div>
         </div>
 
         {/* Growth Velocity */}
-        <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500">
+        <div className="p-3.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce] space-y-1">
+          <span className="text-[11px] font-semibold text-[#6e6354]">
             Progression 7J
           </span>
           <div
             className={`text-base sm:text-lg font-black flex items-center gap-1 ${
-              summary.growthPercent >= 0 ? 'text-emerald-600' : 'text-rose-600'
+              summary.growthPercent >= 0 ? 'text-[#234931]' : 'text-[#a23b2b]'
             }`}
           >
             {summary.growthPercent >= 0 ? (
-              <ArrowUpRight className="w-4 h-4" />
+              <ArrowUpRight className="w-4 h-4 text-[#234931]" />
             ) : (
-              <ArrowDownRight className="w-4 h-4" />
+              <ArrowDownRight className="w-4 h-4 text-[#a23b2b]" />
             )}
             <span>{summary.growthPercent > 0 ? `+${summary.growthPercent}%` : `${summary.growthPercent}%`}</span>
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#6e6354]">
             J-7 vs Aujourd'hui
           </div>
         </div>
 
         {/* Peak Day */}
-        <div className="p-3.5 bg-slate-50/80 rounded-2xl border border-slate-200/70 space-y-1">
-          <span className="text-[11px] font-semibold text-slate-500">
+        <div className="p-3.5 bg-[#f7f2e7] rounded-2xl border border-[#e5dcce] space-y-1">
+          <span className="text-[11px] font-semibold text-[#6e6354]">
             Pic de Vente
           </span>
-          <div className="text-base sm:text-lg font-black text-slate-900 truncate">
-            {summary.peak ? summary.peak.formattedDate : '—'}
+          <div className="text-base sm:text-lg font-black text-[#8d5732]">
+            {summary.peak ? formatMoney(activeMetric === 'revenue' ? summary.peak.revenue : summary.peak.profit) : '0 DA'}
           </div>
-          <div className="text-[10px] text-emerald-600 font-semibold truncate">
-            {summary.peak ? formatMoney(activeMetric === 'revenue' ? summary.peak.revenue : summary.peak.profit) : ''}
+          <div className="text-[10px] text-[#6e6354] truncate">
+            {summary.peak?.formattedDate || 'Aujourd’hui'}
           </div>
         </div>
       </div>

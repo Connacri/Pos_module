@@ -189,19 +189,19 @@ export const CameraBarcodeScannerModal: React.FC<CameraBarcodeScannerModalProps>
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden flex flex-col max-h-[94vh]">
         {/* Top Header */}
-        <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
+        <div className="px-5 py-4 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-indigo-600 rounded-xl shadow-xs">
-              <Camera className="w-5 h-5 text-white" />
+            <div className="p-2 bg-[#8d5732] rounded-xl shadow-xs text-[#fcdbb6]">
+              <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base">
-                Scanner Caméra & Recherche Code-barres
+              <h3 className="font-bold text-sm sm:text-base font-serif-title text-[#fff6ec]">
+                🍃 Scanner Caméra & Recherche Code-barres
               </h3>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[#c5ddc5]">
                 Pointez la caméra vers l'étiquette physique EAN-13 / UPC de l'article
               </p>
             </div>
@@ -209,7 +209,7 @@ export const CameraBarcodeScannerModal: React.FC<CameraBarcodeScannerModalProps>
           <button
             type="button"
             onClick={onClose}
-            className="touch-btn p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-xl hover:bg-slate-800"
+            className="touch-btn p-1.5 text-[#c5ddc5] hover:text-white transition-colors cursor-pointer rounded-xl hover:bg-[#284f35]"
             aria-label="Fermer"
           >
             <X className="w-5 h-5" />

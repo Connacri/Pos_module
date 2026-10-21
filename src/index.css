@@ -2,14 +2,35 @@
 
 @layer base {
   body {
-    @apply antialiased text-[#2c241c] bg-[#f4efe6] min-h-screen selection:bg-[#2e5438] selection:text-white;
+    @apply antialiased text-[#2c241c] bg-[#f4efe4] min-h-screen selection:bg-[#234931] selection:text-[#fdfbf7];
     font-family: 'Quicksand', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
 
-  h1, h2, h3, .font-cozy-title {
+  h1, h2, h3, .font-serif-title {
     font-family: 'Fraunces', 'Plus Jakarta Sans', serif;
   }
+}
+
+/* Sherwood Island Theme Utilities */
+.sherwood-wood-board {
+  background: linear-gradient(180deg, #9f673c 0%, #85522b 45%, #6e3e1c 100%);
+  border: 3px solid #482611;
+  box-shadow: 0 4px 10px rgba(45, 23, 10, 0.35), inset 0 2px 2px rgba(255, 255, 255, 0.25), inset 0 -2px 3px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.sherwood-card {
+  background-color: #fdfbf7;
+  border: 1.5px solid #e7ddca;
+  border-radius: 1.5rem;
+  box-shadow: 0 2px 8px -2px rgba(78, 60, 42, 0.06);
+}
+
+.sherwood-card-subtle {
+  background-color: #f7f2e7;
+  border: 1px solid #e2d7c2;
+  border-radius: 1.25rem;
 }
 
 /* Custom subtle warm scrollbars for cozy POS panels */
@@ -23,7 +44,7 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dcd3c3;
+  background: #d8cdba;
   border-radius: 9999px;
 }
 

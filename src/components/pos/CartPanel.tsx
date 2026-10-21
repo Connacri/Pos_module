@@ -92,16 +92,16 @@ export const CartPanel: React.FC<{
   const changeToReturn = Math.max(0, tenderedAmount - cartSummary.totalTTC);
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col h-full overflow-hidden">
+    <div className="sherwood-card flex flex-col h-full overflow-hidden">
       {/* Cart Top Bar */}
-      <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+      <div className="p-4 bg-[#1f3d29] text-[#fcfbf7] border-b border-[#16311f] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-indigo-600 rounded-xl">
-            <ShoppingCart className="w-4 h-4 text-white" />
+          <div className="p-2 bg-[#8d5732] rounded-xl text-[#fcdbb6] shadow-xs">
+            <ShoppingCart className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-bold text-sm">Panier de Vente</h3>
-            <p className="text-[11px] text-slate-400">
+            <h3 className="font-bold text-sm text-[#fff5ea] font-serif-title">🍃 Panier de Vente</h3>
+            <p className="text-[11px] text-[#c5ddc5]">
               {cartSummary.totalItems} articles ({cartSummary.uniqueCount} réf.)
             </p>
           </div>
@@ -111,7 +111,7 @@ export const CartPanel: React.FC<{
           <button
             type="button"
             onClick={clearCart}
-            className="text-xs text-rose-400 hover:text-rose-300 flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+            className="text-xs text-[#f1a8a2] hover:text-[#fff2f0] flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#284f35] transition-colors cursor-pointer"
             title="Vider le panier"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -121,13 +121,13 @@ export const CartPanel: React.FC<{
       </div>
 
       {/* Customer Selector & Quick Options */}
-      <div className="p-3 bg-slate-50 border-b border-slate-200/70 space-y-2">
+      <div className="p-3 bg-[#f7f2e7] border-b border-[#e5dcce] space-y-2">
         <div className="flex items-center gap-2">
-          <User className="w-4 h-4 text-slate-400 shrink-0" />
+          <User className="w-4 h-4 text-[#8a7f72] shrink-0" />
           <select
             value={selectedCustomerId}
             onChange={(e) => setSelectedCustomerId(Number(e.target.value))}
-            className="flex-1 bg-white border border-slate-200 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+            className="flex-1 bg-[#fdfbf7] border border-[#e2d6c1] rounded-xl px-2.5 py-1.5 text-xs font-semibold text-[#233d2a] focus:outline-hidden focus:ring-2 focus:ring-[#234931]/20"
           >
             {customers.map((c) => (
               <option key={c.id} value={c.id}>
@@ -140,8 +140,8 @@ export const CartPanel: React.FC<{
         {/* Global Discount toggle */}
         <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-1.5">
-            <Tag className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-slate-600 font-medium">Remise globale:</span>
+            <Tag className="w-3.5 h-3.5 text-[#8a7f72]" />
+            <span className="text-[#5d5244] font-medium">Remise globale:</span>
           </div>
           <div className="flex items-center gap-1">
             {[0, 5, 10, 15].map((pct) => (
@@ -151,8 +151,8 @@ export const CartPanel: React.FC<{
                 onClick={() => setGlobalDiscountPercent(pct)}
                 className={`px-2 py-0.5 rounded-md text-[11px] font-semibold transition-colors cursor-pointer ${
                   globalDiscountPercent === pct
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
+                    ? 'bg-[#234931] text-[#fdfbf7]'
+                    : 'bg-[#fdfbf7] border border-[#e2d6c1] text-[#5d5244] hover:bg-[#efe8d8]'
                 }`}
               >
                 {pct}%
@@ -335,12 +335,12 @@ export const CartPanel: React.FC<{
             onClick={handleOpenPrintPreview}
             className={`py-3 px-3.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0 ${
               cart.length === 0
-                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300 hover:border-slate-400 shadow-2xs'
+                ? 'bg-[#f7f2e7] text-[#9c9182] border-[#e5dcce] cursor-not-allowed'
+                : 'bg-[#fdfbf7] hover:bg-[#f7f2e7] text-[#5d5244] border-[#e2d6c1] shadow-2xs'
             }`}
             title="Aperçu Ticket thermique 80mm avant encaissement"
           >
-            <Printer className="w-4 h-4 text-indigo-600" />
+            <Printer className="w-4 h-4 text-[#8d5732]" />
             <span className="hidden sm:inline">Aperçu 80mm</span>
           </button>
 
@@ -350,13 +350,13 @@ export const CartPanel: React.FC<{
             onClick={handleStartCheckout}
             className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer ${
               cart.length === 0
-                ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                : 'bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white shadow-emerald-500/20'
+                ? 'bg-[#ece2d1] text-[#9c9182] cursor-not-allowed shadow-none'
+                : 'bg-[#2d563a] hover:bg-[#23442e] active:scale-98 text-[#fdfbf7] shadow-[#2d563a]/20 border border-[#21402b]'
             }`}
           >
-            <Receipt className="w-4 h-4" />
+            <Receipt className="w-4 h-4 text-[#c5ddc5]" />
             <span>Encaisser {cart.length > 0 && `• ${formatMoney(cartSummary.totalTTC)}`}</span>
-            <kbd className="hidden sm:inline-block bg-emerald-800/60 text-emerald-200 text-[10px] px-1.5 py-0.5 rounded-md font-mono">
+            <kbd className="hidden sm:inline-block bg-[#1f3d29] text-[#e8f1e8] text-[10px] px-1.5 py-0.5 rounded-md font-mono">
               F2
             </kbd>
           </button>
@@ -365,17 +365,17 @@ export const CartPanel: React.FC<{
 
       {/* Checkout Modal */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Receipt className="w-4 h-4 text-emerald-400" />
-                Règlement de la Vente
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-[#fdfbf7] w-full max-w-md rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-5 py-4 bg-[#1f3d29] text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
+              <h3 className="font-bold text-sm flex items-center gap-2 font-serif-title">
+                <Receipt className="w-4 h-4 text-[#a8d3a8]" />
+                🍃 Règlement de la Vente Sherwood
               </h3>
               <button
                 type="button"
                 onClick={() => setIsCheckoutOpen(false)}
-                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className="text-[#c5ddc5] hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -383,15 +383,15 @@ export const CartPanel: React.FC<{
 
             <div className="p-6 space-y-5">
               {/* Amount to pay banner */}
-              <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 text-center">
-                <div className="text-xs font-semibold text-indigo-600 uppercase tracking-wider">
+              <div className="bg-[#f7f2e7] border border-[#e5dcce] rounded-2xl p-4 text-center">
+                <div className="text-xs font-semibold text-[#8d5732] uppercase tracking-wider">
                   Montant Total à Payer
                 </div>
-                <div className="text-3xl font-black text-indigo-950 mt-1">
+                <div className="text-3xl font-black text-[#233d2a] mt-1 font-serif-title">
                   {formatMoney(cartSummary.totalTTC)}
                 </div>
-                <div className="text-xs text-indigo-700 mt-1">
-                  Client : <span className="font-semibold">{currentCustomer?.name}</span>
+                <div className="text-xs text-[#5d5244] mt-1">
+                  Client : <span className="font-semibold text-[#233d2a]">{currentCustomer?.name}</span>
                 </div>
               </div>
 
