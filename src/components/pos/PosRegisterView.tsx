@@ -60,6 +60,8 @@ export const PosRegisterView: React.FC = () => {
   const [isDesktop, setIsDesktop] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
   );
+  // Dedicated mobile/tablet tab switch so users can directly see the cart and item list
+  const [mobilePosTab, setMobilePosTab] = useState<'products' | 'cart'>('products');
 
   useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 1024);
@@ -341,8 +343,51 @@ export const PosRegisterView: React.FC = () => {
         )}
       </div>
 
+      {/* Mobile/Tablet View Switcher (lg:hidden): lets users switch between Product Grid and Cart Items */}
+      <div className="lg:hidden flex items-center p-1 bg-[#e7ddca] rounded-2xl gap-1 shrink-0 w-full mb-1">
+        <button
+          type="button"
+          onClick={() => setMobilePosTab('products')}
+          className={`touch-btn min-h-[44px] flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            mobilePosTab === 'products'
+              ? 'bg-[#1f3d29] text-white shadow-xs'
+              : 'text-[#483d31] hover:text-[#1f3d29]'
+          }`}
+        >
+          <Package className="w-4 h-4 shrink-0" />
+          <span>Rayons & Articles ({filteredProducts.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobilePosTab('cart')}
+          className={`touch-btn min-h-[44px] flex-1 py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            mobilePosTab === 'cart'
+              ? 'bg-[#85522b] text-white shadow-xs'
+              : 'text-[#483d31] hover:text-[#85522b]'
+          }`}
+        >
+          <ShoppingCart className="w-4 h-4 shrink-0" />
+          <span>Panier de vente</span>
+          <span
+            className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-black ${
+              mobilePosTab === 'cart' ? 'bg-white/20 text-white' : 'bg-[#faeee2] text-[#85522b]'
+            }`}
+          >
+            {cartSummary.totalItems}
+          </span>
+        </button>
+      </div>
+
+      {/* Mobile-only Full Page Cart View when 'cart' tab is selected */}
+      {!isDesktop && mobilePosTab === 'cart' && (
+        <div className="flex-1 lg:hidden flex flex-col sherwood-card overflow-hidden">
+          <CartPanel />
+        </div>
+      )}
+
       {/* Left Column: Product Selection & Barcode scanner */}
-      <div className="flex-1 flex flex-col sherwood-card p-4 sm:p-5 overflow-hidden">
+      <div className={`flex-1 flex-col sherwood-card p-4 sm:p-5 overflow-hidden ${!isDesktop && mobilePosTab === 'cart' ? 'hidden' : 'flex'}`}>
         {/* Top Header & Barcode scanner tool */}
         <div className="space-y-3 pb-3 border-b border-sand-100">
           {/* Barcode scanner form with latency indicator */}
@@ -660,7 +705,7 @@ export const PosRegisterView: React.FC = () => {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setIsCartDrawerOpen(true)}
+                  onClick={() => setMobilePosTab('cart')}
                   className="touch-btn min-h-[44px] px-3.5 sm:px-4 py-2 bg-[#fdfbf7] text-[#1f3d29] hover:bg-white rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                 >
                   <span>Voir Panier</span>
