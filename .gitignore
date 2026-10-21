@@ -1,15 +1,46 @@
-# Dart / Flutter
-.dart_tool/
-.packages
-build/
-.flutter-plugins
-.flutter-plugins-dependencies
+# Dépendances
+node_modules/
+.pnp/
+.pnp.js
 
-# Génération
-*.g.dart
-*.freezed.dart
-objectbox-model.json
-objectbox.g.dart
+# Build / artefacts
+dist/
+dist-ssr/
+build/
+*.local
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# Capacitor / Android
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/
+android/local.properties
+android/key.properties
+android/app/*.jks
+android/app/*.keystore
+*.apk
+*.aab
+
+# Secrets / environnement
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.p12
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+
+# Tests / couverture
+coverage/
+.nyc_output/
 
 # IDE
 .idea/
@@ -19,16 +50,4 @@ objectbox.g.dart
 # OS
 .DS_Store
 Thumbs.db
-
-# Secrets / environnement
-.env
-.env.local
-keystore_base64.txt
-upload-keystore.jks
-key.properties
-
-# Couverture
-coverage/
-
-# Divers
-*.log
+desktop.ini

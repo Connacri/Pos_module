@@ -27,15 +27,11 @@ jobs:
       - name: Configuration Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+          cache: 'npm'
 
       - name: Installation des dépendances
-        run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install
-          else
-            npm install
-          fi
+        run: npm ci --no-audit --no-fund
 
       - name: Build de production Vite
         run: npm run build

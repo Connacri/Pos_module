@@ -1,12 +1,19 @@
 name: Release
 
+# Publie une release versionnée à chaque push sur master/main :
+#   - APK Android signé (release, pas debug)
+#   - AAB signé (Google Play)
+#   - Archive Web/PWA
+#   - Sommes de contrôle SHA-256
+# Le tag (vX.Y.Z) n'est créé qu'après un build réussi : aucun tag orphelin.
+
 on:
   push:
     branches: [master, main]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version (ex: 1.0.1). Laisser vide pour incrémenter automatiquement.'
+        description: 'Version semver (ex: 1.2.3). Vide = incrément automatique du patch.'
         required: false
         default: ''
 
@@ -19,7 +26,7 @@ permissions:
 
 jobs:
   release:
-    name: Créer la release Web, PWA & Android (APK)
+    name: Build signé + Release GitHub
     runs-on: ubuntu-latest
     steps:
       - name: Checkout du code
@@ -30,23 +37,26 @@ jobs:
       - name: Configuration de Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
-      - name: Configuration de Java JDK 17
+      - name: Configuration de Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
           cache: 'gradle'
 
-      - name: Installation des dépendances
+      - name: Configuration du SDK Android
+        uses: android-actions/setup-android@v3
+
+      - name: Installation du SDK Android requis
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install
-          else
-            npm install
-          fi
+          yes | sdkmanager "platforms;android-36" "build-tools;36.0.0" >/dev/null 2>&1 \
+            || yes | sdkmanager "platforms;android-36" "build-tools;35.0.0" >/dev/null
+
+      - name: Installation des dépendances
+        run: npm ci --no-audit --no-fund
 
       - name: Vérification des types
         run: npm run lint
@@ -58,91 +68,155 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION="${{ github.event.inputs.version }}"
-          if [ -z "$VERSION" ]; then
-            PKG_VER=$(node -p "require('./package.json').version || '1.0.0'")
-            COMMITS_COUNT=$(git rev-list --count HEAD 2>/dev/null || echo "1")
-            VERSION="${PKG_VER}.${COMMITS_COUNT}"
+          set -euo pipefail
+          INPUT="${{ github.event.inputs.version }}"
+
+          if [ -n "${INPUT:-}" ]; then
+            VERSION="$INPUT"
+          elif EXISTING="$(git tag --points-at HEAD --list 'v*' | sort -V | tail -n1)" && [ -n "$EXISTING" ]; then
+            # Re-run sur un commit déjà releasé : on réutilise la même version.
+            VERSION="${EXISTING#v}"
+          else
+            LATEST="$(git tag --list 'v*' --sort=-v:refname | head -n1)"
+            if [ -z "$LATEST" ]; then
+              VERSION="1.0.0"
+            else
+              IFS=. read -r MA MI PA <<< "${LATEST#v}"
+              VERSION="$MA.$MI.$((PA + 1))"
+            fi
           fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Créer l'archive zip Web pour déploiement
-        shell: bash
-        run: |
-          cd dist && zip -r ../pos-module-web-${{ steps.version.outputs.version }}.zip . && cd ..
-
-      - name: Synchroniser les assets avec le projet Android Capacitor
-        run: |
-          if [ ! -d "android" ]; then
-            echo "Création initiale de la plateforme Android Capacitor..."
-            npx cap add android
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version invalide '$VERSION' (format attendu MAJOR.MINOR.PATCH)"
+            exit 1
           fi
-          npx cap sync android
 
-      - name: Rendre gradlew exécutable
+          IFS=. read -r MA MI PA <<< "$VERSION"
+          CODE=$(( MA * 10000 + MI * 100 + PA ))
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "code=$CODE" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Version $VERSION (versionCode $CODE)"
+
+      - name: Synchroniser les assets Web avec Capacitor
+        run: npx cap sync android
+
+      - name: Restaurer le keystore de production
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          chmod +x android/gradlew
+          set -euo pipefail
+          if [ -z "${KEYSTORE_B64:-}" ]; then
+            echo "::error::Secret ANDROID_KEYSTORE_BASE64 manquant — la release exige un APK signé pour la production."
+            echo "::error::Configurez ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS et ANDROID_KEY_PASSWORD."
+            exit 1
+          fi
+          echo "$KEYSTORE_B64" | base64 -d > android/app/release.keystore
+          {
+            echo "storeFile=app/release.keystore"
+            echo "storePassword=${KEYSTORE_PASSWORD}"
+            echo "keyAlias=${KEY_ALIAS}"
+            echo "keyPassword=${KEY_PASSWORD}"
+          } > android/key.properties
+          chmod 600 android/key.properties android/app/release.keystore
 
-      - name: Compiler les packages Android APK (Debug universel & Release)
+      - name: Build APK + AAB signés
         working-directory: android
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.version }}
+          VERSION_CODE: ${{ steps.version.outputs.code }}
         run: |
-          ./gradlew assembleDebug --no-daemon
-          ./gradlew assembleRelease --no-daemon || echo "Note: Build release nécessite signature personnalisée"
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease bundleRelease \
+            -PversionName="$VERSION_NAME" \
+            -PversionCode="$VERSION_CODE"
 
-      - name: Organiser et nommer les livrables APK et Web
-        shell: bash
+      - name: Vérifier la signature de l'APK
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          VER="${{ steps.version.outputs.version }}"
+          set -euo pipefail
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n1)"
+          "$APKSIGNER" verify --verbose --print-certs \
+            "android/app/build/outputs/apk/release/app-release.apk" | tee apksigner-report.txt
+          if grep -q "CN=Android Debug" apksigner-report.txt; then
+            echo "::error::L'APK est signé avec la clé debug — publication refusée."
+            exit 1
+          fi
+          if ! grep -q "CN=Android Debug\|Signer #1 certificate DN" apksigner-report.txt; then
+            echo "::error::Aucun certificat de signature détecté dans l'APK."
+            exit 1
+          fi
+
+      - name: Préparer les livrables
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
           mkdir -p release-artifacts
-
-          # Copier et nommer l'APK universel installable directement sur tout appareil Android
-          if [ -f android/app/build/outputs/apk/debug/app-debug.apk ]; then
-            cp android/app/build/outputs/apk/debug/app-debug.apk release-artifacts/pos-module-pro-v${VER}.apk
-            cp android/app/build/outputs/apk/debug/app-debug.apk release-artifacts/pos-module-pro-v${VER}-debug.apk
-          fi
-
-          # Copier l'APK Release
-          if [ -f android/app/build/outputs/apk/release/app-release.apk ]; then
-            cp android/app/build/outputs/apk/release/app-release.apk release-artifacts/pos-module-pro-v${VER}-release.apk
-          elif [ -f android/app/build/outputs/apk/release/app-release-unsigned.apk ]; then
-            cp android/app/build/outputs/apk/release/app-release-unsigned.apk release-artifacts/pos-module-pro-v${VER}-release-unsigned.apk
-          fi
-
-          # Déplacer l'archive Web
-          cp pos-module-web-${VER}.zip release-artifacts/
-
-          echo "Livrables préparés :"
+          cp android/app/build/outputs/apk/release/app-release.apk \
+             "release-artifacts/pos-module-pro-${VERSION}.apk"
+          cp android/app/build/outputs/bundle/release/app-release.aab \
+             "release-artifacts/pos-module-pro-${VERSION}.aab"
+          (cd dist && zip -qr "../release-artifacts/pos-module-web-${VERSION}.zip" .)
+          (cd release-artifacts && sha256sum ./* > SHA256SUMS.txt)
           ls -lh release-artifacts/
 
-      - name: Uploader les artefacts APK vers GitHub Actions
-        uses: actions/upload-artifact@v4
-        with:
-          name: pos-module-pro-android-apk-${{ steps.version.outputs.version }}
-          path: release-artifacts/*.apk
-          retention-days: 30
+      - name: Rédiger les notes de release
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          PREV="$(git describe --tags --abbrev=0 "${GITHUB_SHA}^" 2>/dev/null || true)"
+          if [ -n "$PREV" ]; then RANGE="$PREV..HEAD"; else RANGE="HEAD"; fi
+          git log "$RANGE" --no-merges --pretty=format:'- %s (`%h`)' | head -40 > changelog.md || true
 
-      - name: Publier la Release GitHub avec les fichiers APK et Web
+          {
+            echo "## 🍃 POS Module Pro v${VERSION}"
+            echo
+            echo "### 📱 Android"
+            echo "- **pos-module-pro-${VERSION}.apk** — APK signé, installable directement (Android 7.0+)"
+            echo "- **pos-module-pro-${VERSION}.aab** — App Bundle signé pour Google Play"
+            echo
+            echo "### 🌐 Web / PWA"
+            echo "- **pos-module-web-${VERSION}.zip** — build statique prêt à héberger"
+            echo
+            echo "### 🆕 Nouveautés"
+            cat changelog.md
+            echo
+            echo "### 🔐 Intégrité"
+            echo '```'
+            cat release-artifacts/SHA256SUMS.txt
+            echo '```'
+          } > release-notes.md
+
+      - name: Publier la release GitHub
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           name: POS Module Pro v${{ steps.version.outputs.version }}
-          body: |
-            ## 🍃 POS Module Pro — Version ${{ steps.version.outputs.version }}
-
-            ### 📱 Application Android (APK)
-            - **[pos-module-pro-v${{ steps.version.outputs.version }}.apk](https://github.com/${{ github.repository }}/releases/download/${{ steps.version.outputs.tag }}/pos-module-pro-v${{ steps.version.outputs.version }}.apk)** : APK installable directement sur smartphones, tablettes et terminaux POS Android de caisse.
-            - **pos-module-pro-v${{ steps.version.outputs.version }}-release.apk** : Version release optimisée.
-
-            ### 🌐 Application Web & PWA
-            - **pos-module-web-${{ steps.version.outputs.version }}.zip** : Fichiers statiques prêts pour hébergement Cloud ou serveur local (Apache / Nginx).
-
-            ### ⚡ Caractéristiques
-            - Moteur hors-ligne IndexedDB O(1)
-            - Impression thermique 80 mm ESC/POS
-            - Scanner caméra & lecteurs code-barres USB/Bluetooth
-            - Réplication décentralisée PostgreSQL / Supabase
-          files: |
-            release-artifacts/*
+          body_path: release-notes.md
+          files: release-artifacts/*
+          fail_on_unmatched_files: true
+          draft: false
+          prerelease: false
+          generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Archiver les livrables dans le run
+        uses: actions/upload-artifact@v4
+        with:
+          name: pos-module-pro-${{ steps.version.outputs.version }}
+          path: release-artifacts/
+          retention-days: 30
+
+      - name: Nettoyer les secrets temporaires
+        if: always()
+        run: |
+          rm -f android/key.properties android/app/release.keystore apksigner-report.txt

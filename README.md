@@ -1,88 +1,147 @@
-# 🍃 POS Module Pro — Caisse Enregistreuse & Facturation Sherwood
+# POS Module Pro — Caisse, Stock & Facturation
 
-Système de Point de Vente (POS), gestion des stocks, facturation et synchronisation cloud multi-postes conçu pour une utilisation intensive en magasin ou restaurant.
+Application de point de vente (POS) **web et Android**, conçue pour un usage intensif en magasin, restaurant ou commerce de détail : encaissement rapide, gestion de stock, facturation, impression thermique et synchronisation Supabase.
 
----
+<p>
 
-## 🛠 Stack Technique Réelle
+🌐 **[Live Web](https://connacri.github.io/Pos_module/)** ·
+⬇️ **[Télécharger l'APK](https://github.com/Connacri/Pos_module/releases/latest)** ·
+📦 **[Toutes les releases](https://github.com/Connacri/Pos_module/releases)**
 
-- **Frontend** : React 19, TypeScript 5.7, Vite 6
-- **Styling** : Tailwind CSS v4 avec tokens de design dédiés (Thème Sherwood artisan / bois & vert forêt)
-- **Base locale & Moteur hors-ligne** : IndexedDB (avec indexation mémoire sub-milliseconde O(1) pour les lecteurs code-barres USB/Bluetooth et support de charges massives)
-- **Visualisations & Graphiques** : D3.js (courbes vectorielles des tendances 7 jours) et Recharts (analyse des recettes)
-- **Impression** : Ticket thermique 80 mm ESC/POS & facturation A4 via CSS `@media print`
-- **Cloud & Synchronisation** : Supabase PostgreSQL (file d'attente d'émissions hors-ligne avec résolution de conflits bidirectionnelle)
-- **Langue** : Interface en français
+</p>
 
 ---
 
-## ✨ Fonctionnalités Clés
+## Stack technique
 
-### 1. Caisse Enregistreuse (POS)
-- **Scan code-barres ultra-rapide** : Prise en charge des lecteurs code-barres USB, Bluetooth HID et caméras embarquées, avec affichage de la latence de traitement (sub-milliseconde).
-- **Raccourcis clavier caisse** :
-  - `F1` : Focus immédiat sur la recherche d'articles
-  - `F2` : Déclenchement de la fenêtre d'encaissement
-  - `Échap` : Fermeture sécurisée des modales et fenêtres (ne vide jamais le panier par accident)
-- **Vidage panier sécurisé** : Procédure en 2 temps (bouton "Confirmer ?" pendant 4 s) avec bannière d'annulation immédiate (*Undo*).
-- **Suggestions de billets réelles** : Montant exact, 500 DA, 1 000 DA, 2 000 DA arrondis au supérieur (adapté aux billets en circulation en Algérie).
-- **Gestion des seuils de stock** : Alerte immédiate dès l'ajout au panier si un produit passe sous son seuil d'alerte.
-
-### 2. Tableau de Bord (Dashboard)
-- **Chiffres réels et traçables** : 100 % des statistiques (Chiffre d'affaires du jour, nombre de tickets, panier moyen, alertes de stock) sont calculées à partir des ventes effectives et du stock actuel.
-- **Top 5 produits** et **Top 5 clients** calculés dynamiquement sans données fictives.
-- **Répartition des ventes par rayon** sur les 50 dernières transactions.
-- **Courbe D3.js** de l'évolution sur 7 jours.
-
-### 3. Catalogue Produits & Gestion de Stock
-- Fiches articles complètes (nom, SKU, code-barres EAN-13, catégorie, prix HT, TVA, prix TTC, seuil d'alerte).
-- Scanner code-barres caméra via webcam / smartphone (`html5-qrcode`).
-- Outil de benchmark intégré pour tester l'écriture de 1 000 à 10 000 articles dans IndexedDB.
-
-### 4. Factures & Historique des Ventes
-- Registre complet des ventes avec statut (`COMPLETED`, `CANCELLED`).
-- Réimpression immédiate au format ticket 80 mm thermique ou facture grand format.
-
-### 5. Administration & Synchronisation Supabase
-- Configuration du endpoint cloud Supabase et de la clé anonyme.
-- File d'attente hors-ligne automatique (stockage local avec vidage dès rétablissement de la connectivité).
-- Script SQL complet fourni (`supabase/schema.sql`) pour instancier les tables PostgreSQL et les règles de sécurité RLS.
+| Couche | Technologie |
+| --- | --- |
+| UI | React 19, TypeScript 5.7, Tailwind CSS 4 (`@theme`) |
+| Build | Vite 6 |
+| Android | Capacitor 8 (WebView + assets embarqués) |
+| Données locales | IndexedDB (moteur hors-ligne) |
+| Cloud | Supabase (PostgreSQL + RLS) |
+| Graphiques | D3.js, Recharts |
+| Scan | `html5-qrcode` (caméra) + lecteurs USB/Bluetooth HID |
+| Langue | Français |
 
 ---
 
-## 🚀 Démarrage Rapide
+## Fonctionnalités
 
-### Prérequis
-- Node.js 20+ ou 22
-- npm
+### Caisse
+- Recherche et scan code-barres (lecteur USB/Bluetooth, caméra), avec latence de traitement affichée.
+- Raccourcis clavier : `F1` recherche, `F2` encaissement, `Échap` fermeture sécurisée.
+- Panier, remises, quantités, alertes de stock dès l'ajout.
+- Paiements multiples, rendu de monnaie avec suggestions de billets (DA).
+- Vidage de panier en deux temps (confirmation + annulation immédiate).
 
-### Installation & Lancement
+### Catalogue & stock
+- Fiches produits (SKU, code-barres EAN-13, catégorie, prix HT/TVA/TTC, seuil d'alerte).
+- Scanner caméra pour associer un code-barres.
+- Suivi des seuils et alertes de stock.
+
+### Ventes, factures, clients
+- Historique des ventes avec statuts.
+- Réimpression ticket thermique 80 mm ou facture A4.
+- Fiches clients et historique d'achats.
+
+### Tableau de bord
+- KPI calculés à partir des ventes et du stock réels (CA du jour, tickets, panier moyen, alertes).
+- Tendances et répartitions via D3.js / Recharts.
+
+### Administration & synchronisation
+- Configuration du endpoint Supabase et de la clé anonyme.
+- File d'attente hors-ligne et résolution de conflits.
+- Script SQL fourni dans `supabase/schema.sql`.
+
+---
+
+## Démarrage rapide
+
+Prérequis : Node.js 20+ (22 recommandé) et npm.
 
 ```bash
-# Installation des dépendances
-npm install
-
-# Démarrage du serveur de développement (Port 3000)
-npm run dev
-
-# Vérification des types et linting
-npm run lint
-
-# Build de production
-npm run build
+npm ci          # installation reproductible (package-lock.json)
+npm run dev     # serveur de développement — http://localhost:3000
+npm run lint    # vérification TypeScript
+npm run build   # build de production dans dist/
 ```
 
 ---
 
-## ♿ Accessibilité (a11y) & Ergonomie
+## Android
 
-- Tailles de cible tactile d'au moins **44 × 44 px** (`.touch-btn`) pour les actions fréquentes (quantités `+`/`-`, corbeille, remises, catégories).
-- Textes et contrastes vérifiés (minimum 12 px sur l'ensemble de l'interface de caisse).
-- Annonces dynamiques via `role="status"`, `aria-live="polite"` et `role="alert"` pour les retours de scan et avertissements de stock.
-- Focus visible et navigable au clavier (`:focus-visible` vert forêt avec anneau d'accent).
-- Prise en charge des zones sûres mobiles (`viewport-fit=cover` et `env(safe-area-inset-bottom)`).
+Le projet Android est généré/maintenu via Capacitor (`android/`).
+
+```bash
+npm run build
+npx cap sync android
+cd android && ./gradlew assembleDebug   # APK de développement local
+```
+
+> ⚠️ **Aucune release de production n'est signée localement.**
+> Les APK/AAB publiés sont construits et signés exclusivement par GitHub Actions.
 
 ---
 
-## 📄 Licence
-Ce projet est distribué sous licence MIT.
+## CI/CD et releases
+
+| Workflow | Déclencheur | Rôle |
+| --- | --- | --- |
+| `CI` | push / pull request | `tsc`, build Vite, et build Android **debug** de validation sur les PR |
+| `Release` | push sur `master` / `main`, ou manuel | APK **release signé**, AAB signé, archive Web, sommes SHA-256, release GitHub |
+| `Deploy to GitHub Pages` | push sur `master` / `main` | Déploiement du build Web |
+| `CodeQL` | push / PR / hebdomadaire | Analyse de sécurité |
+
+### Versionnement
+
+- Format strict `MAJOR.MINOR.PATCH`, tag Git `vX.Y.Z`.
+- Incrément automatique du patch à chaque release (ex. `v1.0.0` → `v1.0.1`).
+- Version manuelle : `Actions → Release → Run workflow` avec le champ `version`.
+- `versionCode` Android = `MAJOR × 10000 + MINOR × 100 + PATCH`.
+- Le tag n'est créé **qu'après** un build réussi : pas de tag orphelin en cas d'échec.
+
+### Secrets requis pour signer l'APK
+
+À configurer dans `Settings → Secrets and variables → Actions` :
+
+| Secret | Description |
+| --- | --- |
+| `ANDROID_KEYSTORE_BASE64` | Keystore `.jks` encodé en base64 |
+| `ANDROID_KEYSTORE_PASSWORD` | Mot de passe du keystore |
+| `ANDROID_KEY_ALIAS` | Alias de la clé |
+| `ANDROID_KEY_PASSWORD` | Mot de passe de la clé |
+
+Sans ces secrets, le workflow `Release` échoue volontairement : aucun APK signé en debug n'est publié.
+
+Génération d'un keystore (à conserver hors du dépôt) :
+
+```bash
+keytool -genkeypair -v -keystore release.keystore -alias posmodule \
+  -keyalg RSA -keysize 2048 -validity 10000
+base64 -w 0 release.keystore   # → ANDROID_KEYSTORE_BASE64
+```
+
+---
+
+## Structure
+
+```
+src/
+  components/     # caisse, catalogue, clients, ventes, dashboard, layout, reçus
+  context/        # PosContext (état métier, panier, statistiques)
+  services/       # IndexedDB, synchronisation Supabase, sons
+  hooks/          # hooks partagés (useMediaQuery…)
+  data/           # données de démarrage
+  types/          # types TypeScript
+android/          # projet Capacitor natif
+supabase/         # schéma SQL et politiques RLS
+.github/workflows # CI, release signée, Pages, CodeQL
+```
+
+---
+
+## Licence
+
+MIT.
