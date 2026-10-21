@@ -18,36 +18,40 @@ import {
   Clock,
   ArrowUpRight,
   Tag,
+  ShoppingBag,
 } from 'lucide-react';
 import type { PaymentMethod } from '../../types';
 
 export type TimePeriod = 'today' | 'week' | 'month';
 
-const PAYMENT_LABELS: Record<PaymentMethod, { label: string; badgeCls: string }> = {
-  CASH: { label: 'Espèces', badgeCls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  CARD: { label: 'Carte CIB', badgeCls: 'bg-blue-100 text-blue-800 border-blue-200' },
-  TRANSFER: { label: 'Virement', badgeCls: 'bg-purple-100 text-purple-800 border-purple-200' },
-  CHEQUE: { label: 'Chèque', badgeCls: 'bg-amber-100 text-amber-800 border-amber-200' },
+const PAYMENT_LABELS: Record<PaymentMethod, { label: string; textCls: string }> = {
+  CASH: { label: 'Espèces', textCls: 'text-forest-800' },
+  CARD: { label: 'Carte CIB', textCls: 'text-sky-800' },
+  TRANSFER: { label: 'Virement', textCls: 'text-purple-800' },
+  CHEQUE: { label: 'Chèque', textCls: 'text-amber-800' },
 };
 
 const PERIOD_CONFIG: Record<
   TimePeriod,
-  { label: string; rangeLabel: string; hint: string }
+  { label: string; rangeLabel: string; hint: string; chartDays: number }
 > = {
   today: {
     label: "Aujourd'hui",
     rangeLabel: "Aujourd'hui",
     hint: 'Journée en cours (00h–24h)',
+    chartDays: 7,
   },
   week: {
     label: '7 jours',
     rangeLabel: '7 derniers jours',
     hint: 'Semaine glissante',
+    chartDays: 7,
   },
   month: {
     label: '30 jours',
     rangeLabel: '30 derniers jours',
     hint: 'Mois glissant complet',
+    chartDays: 30,
   },
 };
 
@@ -65,11 +69,9 @@ const formatSaleDate = (iso: string) =>
 interface KpiCardProps {
   label: string;
   value: string;
-  periodBadge: string;
+  periodLabel: string;
   hint: string;
   icon: React.FC<{ className?: string }>;
-  iconBg: string;
-  iconColor: string;
   tone?: 'default' | 'warning' | 'success';
   onClick?: () => void;
 }
@@ -77,76 +79,87 @@ interface KpiCardProps {
 const KpiCard: React.FC<KpiCardProps> = ({
   label,
   value,
-  periodBadge,
+  periodLabel,
   hint,
   icon: Icon,
-  iconBg,
-  iconColor,
   tone = 'default',
   onClick,
 }) => {
-  const content = (
-    <div className="flex flex-col h-full justify-between gap-3">
-      {/* Top Header of Card: Icon + Period Chip */}
-      <div className="flex items-center justify-between gap-2">
+  const isWarning = tone === 'warning';
+  const isSuccess = tone === 'success';
+
+  const cardContent = (
+    <div className="flex flex-col justify-between h-full space-y-4">
+      {/* Top row: Label & Icon */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="text-xs font-semibold uppercase tracking-wider text-ink-600 truncate">
+            {label}
+          </div>
+          <div
+            className={`text-2xl sm:text-3xl font-extrabold font-serif-title font-mono tabular-nums tracking-tight leading-tight mt-1.5 truncate ${
+              isWarning
+                ? 'text-amber-900'
+                : isSuccess
+                ? 'text-forest-800'
+                : 'text-forest-900'
+            }`}
+            title={value}
+          >
+            {value}
+          </div>
+        </div>
+
         <div
-          className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-2xs ${iconBg} ${iconColor}`}
+          className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+            isWarning
+              ? 'bg-amber-100 text-amber-800'
+              : isSuccess
+              ? 'bg-emerald-100 text-emerald-800'
+              : 'bg-sand-100 text-forest-800 group-hover:bg-sand-200'
+          }`}
           aria-hidden="true"
         >
           <Icon className="w-5 h-5" />
         </div>
-        <span className="text-[11px] font-bold tracking-tight text-ink-700 bg-sand-200/90 border border-sand-300 px-2.5 py-0.5 rounded-full shrink-0">
-          {periodBadge}
-        </span>
       </div>
 
-      {/* Middle: Title + Value */}
-      <div className="space-y-0.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-ink-600 block">
-          {label}
-        </span>
-        <div
-          className={`text-2xl sm:text-3xl font-black font-serif-title tracking-tight leading-tight truncate ${
-            tone === 'warning'
-              ? 'text-amber-800'
-              : tone === 'success'
-              ? 'text-forest-800'
-              : 'text-forest-900'
-          }`}
-          title={value}
-        >
-          {value}
+      {/* Bottom row: Clean unboxed metadata with separator */}
+      <div className="pt-3 border-t border-sand-200/80 flex items-center justify-between text-xs text-ink-600 font-medium">
+        <div className="flex items-center gap-1.5 truncate">
+          <span className="font-semibold text-ink-700">{periodLabel}</span>
+          <span aria-hidden="true" className="text-sand-300">·</span>
+          <span className="truncate">{hint}</span>
         </div>
-      </div>
-
-      {/* Bottom Hint */}
-      <div className="pt-2 border-t border-sand-200 flex items-center justify-between text-xs text-ink-600 font-medium">
-        <span className="truncate">{hint}</span>
         {onClick && (
-          <ArrowUpRight className="w-3.5 h-3.5 text-forest-700 shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+          <ArrowUpRight className="w-4 h-4 text-forest-700 shrink-0 opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
         )}
       </div>
     </div>
   );
 
-  const containerCls = `sherwood-card p-4 sm:p-5 text-left w-full transition-all duration-200 group ${
-    tone === 'warning'
+  const baseClasses = `sherwood-card p-5 text-left w-full transition-all duration-200 group relative ${
+    isWarning
       ? 'border-amber-300 bg-amber-50/40 hover:border-amber-400'
-      : 'hover:border-sand-300 hover:shadow-md'
+      : isSuccess
+      ? 'border-emerald-200 bg-emerald-50/20 hover:border-emerald-300'
+      : 'hover:border-sand-300 hover:shadow-xs'
   }`;
 
-  return onClick ? (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`${containerCls} cursor-pointer focus-visible:ring-4 focus-visible:ring-forest-700/40`}
-      aria-label={`${label} : ${value}, ${hint}`}
-    >
-      {content}
-    </button>
-  ) : (
-    <div className={containerCls}>{content}</div>
-  );
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${baseClasses} cursor-pointer focus-visible:ring-4 focus-visible:ring-forest-700/40`}
+        aria-label={`${label} : ${value}. Période : ${periodLabel}. ${hint}`}
+      >
+        {cardContent}
+      </button>
+    );
+  }
+
+  return <div className={baseClasses}>{cardContent}</div>;
 };
 
 const SectionHeader: React.FC<{
@@ -155,18 +168,20 @@ const SectionHeader: React.FC<{
   icon?: React.FC<{ className?: string }>;
   action?: { label: string; onClick: () => void };
 }> = ({ title, hint, icon: Icon, action }) => (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-sand-200">
-    <div className="flex items-center gap-2.5">
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3.5 border-b border-sand-200">
+    <div className="flex items-center gap-3 min-w-0">
       {Icon && (
-        <div className="w-7 h-7 rounded-lg bg-sand-200 text-forest-800 flex items-center justify-center shrink-0">
+        <div className="w-8 h-8 rounded-xl bg-sand-100 text-forest-800 flex items-center justify-center shrink-0 border border-sand-200/70">
           <Icon className="w-4 h-4" />
         </div>
       )}
-      <div>
-        <h3 className="font-bold text-sm text-forest-900 font-serif-title leading-tight">
+      <div className="min-w-0">
+        <h3 className="font-bold text-sm sm:text-base text-forest-900 font-serif-title leading-tight truncate">
           {title}
         </h3>
-        {hint && <p className="text-xs text-ink-600 mt-0.5 leading-snug">{hint}</p>}
+        {hint && (
+          <p className="text-xs text-ink-600 mt-0.5 leading-snug truncate">{hint}</p>
+        )}
       </div>
     </div>
     {action && (
@@ -183,11 +198,11 @@ const SectionHeader: React.FC<{
 );
 
 const EmptyState: React.FC<{ text: string }> = ({ text }) => (
-  <div className="py-8 text-center text-xs text-ink-600 flex flex-col items-center justify-center gap-2">
-    <div className="w-10 h-10 rounded-full bg-sand-100 flex items-center justify-center text-sand-300">
+  <div className="py-10 text-center text-xs text-ink-600 flex flex-col items-center justify-center gap-2.5">
+    <div className="w-10 h-10 rounded-full bg-sand-100 flex items-center justify-center text-sand-300 border border-sand-200/80">
       <Package className="w-5 h-5" />
     </div>
-    <p className="max-w-xs">{text}</p>
+    <p className="max-w-xs font-medium">{text}</p>
   </div>
 );
 
@@ -234,7 +249,7 @@ export const DashboardView: React.FC = () => {
     return validSales.filter((s) => new Date(s.createdAt) >= cutoff);
   }, [validSales, selectedPeriod]);
 
-  // 4 KPIs calculés en direct sur la période choisie
+  // 4 KPIs réels calculés en direct sur la période choisie
   const periodStats = useMemo(() => {
     const revenue = periodSales.reduce((sum, s) => sum + s.totalTTC, 0);
     const salesCount = periodSales.length;
@@ -243,7 +258,7 @@ export const DashboardView: React.FC = () => {
       (sum, s) => sum + s.items.reduce((iSum, it) => iSum + it.quantity, 0),
       0
     );
-    // Le stock d'alerte reste l'instantané de l'état actuel de l'inventaire
+    // Le stock d'alerte reste l'état actuel de l'inventaire
     const lowStockCount = products.filter((p) => p.stock <= p.lowStockThreshold).length;
 
     return {
@@ -337,32 +352,29 @@ export const DashboardView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* ============================================================
-          TOP HERO TOOLBAR: Title + Time Period Filter Options
-          Responsive Design: stacks gracefully on mobile, inline on desktop
+          TOP HERO TOOLBAR: Title & Dynamic Time Period Filter
           ============================================================ */}
       <div className="sherwood-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 border border-sand-200">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-forest-100 text-forest-800 text-xs font-bold border border-forest-200">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Données Réelles en Direct</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-forest-800">
+            <span>Performances de caisse</span>
+            <span aria-hidden="true" className="text-sand-300">·</span>
+            <span className="font-bold text-forest-900">{activePeriodConfig.rangeLabel}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-forest-900 font-serif-title">
+          <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-forest-900 font-serif-title">
             Tableau de bord
           </h2>
           <p className="text-xs text-ink-600 font-medium">
-            Performances de caisse calculées sur :{' '}
-            <strong className="text-forest-900 font-bold">
-              {activePeriodConfig.rangeLabel}
-            </strong>
+            Données de caisse et indicateurs consolidés en direct
           </p>
         </div>
 
-        {/* Filter Toolbar (Loi de Hick : 3 choix évidents, Loi de Fitts : cibles >= 44px) */}
+        {/* Time Period Filter: Segmented Control */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div
             role="radiogroup"
             aria-label="Période d'analyse des performances"
-            className="grid grid-cols-3 p-1 bg-sand-200 rounded-2xl border border-sand-300 shadow-2xs gap-1"
+            className="grid grid-cols-3 p-1 bg-sand-100 rounded-xl border border-sand-200/90 gap-1"
           >
             {(['today', 'week', 'month'] as TimePeriod[]).map((periodKey) => {
               const isSelected = selectedPeriod === periodKey;
@@ -375,12 +387,12 @@ export const DashboardView: React.FC = () => {
                   role="radio"
                   aria-checked={isSelected}
                   onClick={() => setSelectedPeriod(periodKey)}
-                  className={`touch-btn px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                  className={`touch-btn px-3 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                     isSelected
                       ? 'bg-forest-800 text-sand-50 shadow-xs'
-                      : 'text-ink-700 hover:text-forest-900 hover:bg-sand-100'
+                      : 'text-ink-700 hover:text-forest-900 hover:bg-sand-200/60'
                   }`}
-                  title={`Analyser pour : ${config.rangeLabel}`}
+                  title={`Filtrer les données pour : ${config.rangeLabel}`}
                 >
                   <Calendar className="w-3.5 h-3.5 shrink-0" />
                   <span className="whitespace-nowrap">{config.label}</span>
@@ -411,34 +423,30 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* ============================================================
-          THE 4 REAL KPI CARDS: Fully Responsive & Perfectly Aligned
-          Mobile: 1 column, Tablet: 2 columns, Desktop: 4 columns
+          THE 4 REAL KPI CARDS: Responsive & Perfectly Aligned
+          Mobile: 1 col, Tablet: 2 cols, Desktop: 4 cols
           ============================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-5">
         {/* KPI 1: Chiffre d'affaires */}
         <KpiCard
           label="Chiffre d'affaires"
           value={formatMoney(periodStats.revenue)}
-          periodBadge={activePeriodConfig.label}
+          periodLabel={activePeriodConfig.label}
           hint={activePeriodConfig.hint}
           icon={Banknote}
-          iconBg="bg-forest-100"
-          iconColor="text-forest-800"
           tone="default"
           onClick={() => setActiveView('sales')}
         />
 
-        {/* KPI 2: Tickets */}
+        {/* KPI 2: Tickets enregistrés */}
         <KpiCard
           label="Tickets enregistrés"
           value={String(periodStats.salesCount)}
-          periodBadge={activePeriodConfig.label}
+          periodLabel={activePeriodConfig.label}
           hint={`${periodStats.itemsSold} article${
             periodStats.itemsSold > 1 ? 's' : ''
           } vendu${periodStats.itemsSold > 1 ? 's' : ''}`}
           icon={Receipt}
-          iconBg="bg-sand-200"
-          iconColor="text-[#85522b]"
           tone="default"
           onClick={() => setActiveView('sales')}
         />
@@ -447,7 +455,7 @@ export const DashboardView: React.FC = () => {
         <KpiCard
           label="Panier moyen"
           value={formatMoney(periodStats.averageBasket)}
-          periodBadge={activePeriodConfig.label}
+          periodLabel={activePeriodConfig.label}
           hint={
             periodStats.salesCount > 0
               ? `Sur ${periodStats.salesCount} vente${
@@ -456,38 +464,34 @@ export const DashboardView: React.FC = () => {
               : 'Aucune transaction'
           }
           icon={TrendingUp}
-          iconBg="bg-sand-200"
-          iconColor="text-forest-800"
           tone="default"
         />
 
-        {/* KPI 4: Stock sous seuil */}
+        {/* KPI 4: Stock à surveiller */}
         <KpiCard
           label="Stock à surveiller"
           value={String(periodStats.lowStockCount)}
-          periodBadge="En direct"
+          periodLabel="Inventaire"
           hint={
             periodStats.lowStockCount > 0
               ? 'Articles sous seuil minimal'
               : 'Tous les stocks conformes'
           }
           icon={AlertTriangle}
-          iconBg={periodStats.lowStockCount > 0 ? 'bg-amber-100' : 'bg-emerald-100'}
-          iconColor={periodStats.lowStockCount > 0 ? 'text-amber-800' : 'text-emerald-800'}
           tone={periodStats.lowStockCount > 0 ? 'warning' : 'success'}
           onClick={() => setActiveView('catalog')}
         />
       </div>
 
-      {/* Alerte stock bien visible si des articles sont en rupture/seuil */}
+      {/* Alerte stock dynamique si des articles sont sous seuil */}
       {periodStats.lowStockCount > 0 && <InventoryAlertWidget />}
 
       {/* ============================================================
-          CHARTS SECTION: D3 Vector Trend (30d or 7d) & Daily Breakdown
+          CHARTS SECTION: D3 Vector Trend & Daily Breakdown
           ============================================================ */}
       <div className="space-y-3">
         <div
-          className="inline-flex p-1 bg-sand-200 rounded-2xl text-xs font-bold border border-sand-300"
+          className="inline-flex p-1 bg-sand-100 rounded-xl text-xs font-bold border border-sand-200"
           role="tablist"
           aria-label="Mode de visualisation graphique"
         >
@@ -496,7 +500,7 @@ export const DashboardView: React.FC = () => {
             role="tab"
             aria-selected={chartTab === 'd3-trend'}
             onClick={() => setChartTab('d3-trend')}
-            className={`touch-btn px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`touch-btn px-4 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
               chartTab === 'd3-trend'
                 ? 'bg-forest-800 text-sand-50 font-bold shadow-xs'
                 : 'text-ink-700 hover:text-forest-900'
@@ -504,7 +508,7 @@ export const DashboardView: React.FC = () => {
           >
             <TrendingUp className="w-4 h-4" />
             <span>
-              {selectedPeriod === 'month' ? 'Courbe D3 (30 Jours)' : 'Courbe D3 (7 Jours)'}
+              Courbe D3 ({activePeriodConfig.chartDays} jours)
             </span>
           </button>
           <button
@@ -512,7 +516,7 @@ export const DashboardView: React.FC = () => {
             role="tab"
             aria-selected={chartTab === 'bar-breakdown'}
             onClick={() => setChartTab('bar-breakdown')}
-            className={`touch-btn px-4 py-1.5 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`touch-btn px-4 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
               chartTab === 'bar-breakdown'
                 ? 'bg-forest-800 text-sand-50 font-bold shadow-xs'
                 : 'text-ink-700 hover:text-forest-900'
@@ -524,7 +528,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {chartTab === 'd3-trend' ? (
-          <D3RevenueTrendChart days={selectedPeriod === 'month' ? 30 : 7} />
+          <D3RevenueTrendChart days={activePeriodConfig.chartDays} />
         ) : (
           <DailyRevenueChart />
         )}
@@ -534,10 +538,10 @@ export const DashboardView: React.FC = () => {
           THE 4 ANALYTIC DATA CARDS: Flawless Typography & Spacing
           ============================================================ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
-        {/* Card 1: Dernières ventes */}
-        <section className="sherwood-card p-4 sm:p-5 space-y-3">
+        {/* Card 1: Dernières transactions */}
+        <section className="sherwood-card p-5 space-y-4">
           <SectionHeader
-            title={`Dernières ventes (${activePeriodConfig.label})`}
+            title={`Dernières transactions (${activePeriodConfig.label})`}
             hint={activePeriodConfig.rangeLabel}
             icon={Receipt}
             action={{ label: 'Toutes les factures', onClick: () => setActiveView('sales') }}
@@ -545,46 +549,47 @@ export const DashboardView: React.FC = () => {
 
           {recentSales.length === 0 ? (
             <EmptyState
-              text={`Aucune vente enregistrée sur cette période (${activePeriodConfig.rangeLabel.toLowerCase()}).`}
+              text={`Aucune transaction enregistrée sur cette période (${activePeriodConfig.rangeLabel.toLowerCase()}).`}
             />
           ) : (
-            <ul className="divide-y divide-sand-200">
+            <ul className="divide-y divide-sand-200/80">
               {recentSales.map((s) => {
                 const payInfo = PAYMENT_LABELS[s.paymentMethod];
+                const totalItems = s.items.reduce((sum, it) => sum + it.quantity, 0);
+
                 return (
                   <li
                     key={s.id}
-                    className="py-3 flex items-center justify-between gap-3 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
+                    className="py-3 flex items-center justify-between gap-4 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
                   >
                     <div className="min-w-0 space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-mono font-bold text-forest-900 text-xs">
                           {s.saleNumber}
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${payInfo.badgeCls}`}
-                        >
+                        <span aria-hidden="true" className="text-sand-300">·</span>
+                        <span className={`font-semibold ${payInfo.textCls}`}>
                           {payInfo.label}
                         </span>
                       </div>
-                      <div className="text-[11px] text-ink-600 flex items-center gap-1.5 truncate">
+                      <div className="text-xs text-ink-600 flex items-center gap-1.5 truncate">
                         <span className="font-semibold text-ink-900">
                           {s.customerName || 'Client comptoir'}
                         </span>
-                        <span>•</span>
+                        <span aria-hidden="true" className="text-sand-300">·</span>
                         <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3 text-sand-300" />
+                          <Clock className="w-3.5 h-3.5 text-sand-300 shrink-0" />
                           {formatSaleDate(s.createdAt)}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right shrink-0">
-                      <div className="font-black text-sm text-forest-900 font-mono">
+                      <div className="font-black text-sm text-forest-900 font-mono tabular-nums">
                         {formatMoney(s.totalTTC)}
                       </div>
-                      <div className="text-[10px] text-ink-600 font-medium">
-                        {s.items.reduce((sum, it) => sum + it.quantity, 0)} article(s)
+                      <div className="text-xs text-ink-600 font-medium">
+                        {totalItems} article{totalItems > 1 ? 's' : ''}
                       </div>
                     </div>
                   </li>
@@ -595,9 +600,9 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Card 2: Produits les plus vendus */}
-        <section className="sherwood-card p-4 sm:p-5 space-y-3">
+        <section className="sherwood-card p-5 space-y-4">
           <SectionHeader
-            title={`Produits les plus vendus (${activePeriodConfig.label})`}
+            title={`Articles les plus vendus (${activePeriodConfig.label})`}
             hint={`Classement par volume (${activePeriodConfig.rangeLabel.toLowerCase()})`}
             icon={Package}
             action={{ label: 'Catalogue', onClick: () => setActiveView('catalog') }}
@@ -608,35 +613,35 @@ export const DashboardView: React.FC = () => {
               text={`Aucun article vendu sur cette période (${activePeriodConfig.rangeLabel.toLowerCase()}).`}
             />
           ) : (
-            <ol className="divide-y divide-sand-200">
+            <ol className="divide-y divide-sand-200/80">
               {topProducts.map((p, idx) => (
                 <li
                   key={p.id}
-                  className="py-3 flex items-center justify-between gap-3 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
+                  className="py-3 flex items-center justify-between gap-4 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-7 h-7 rounded-xl bg-sand-200 text-forest-900 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs font-mono">
-                      {idx + 1}
+                    <span className="w-7 h-7 rounded-lg bg-sand-100 text-forest-900 font-bold text-xs flex items-center justify-center shrink-0 font-mono border border-sand-200">
+                      {String(idx + 1).padStart(2, '0')}
                     </span>
                     <div className="min-w-0 space-y-0.5">
-                      <div className="font-bold text-forest-900 text-xs truncate" title={p.name}>
+                      <div className="font-bold text-forest-900 text-xs sm:text-sm truncate" title={p.name}>
                         {p.name}
                       </div>
-                      <div className="text-[11px] text-ink-600 font-mono flex items-center gap-2">
-                        <span>{p.sku}</span>
-                        <span>•</span>
-                        <span className="font-bold text-forest-800 bg-forest-100 px-1.5 py-0.2 rounded">
-                          {p.units} unité{p.units > 1 ? 's' : ''}
+                      <div className="text-xs text-ink-600 flex items-center gap-1.5 truncate">
+                        <span className="font-mono text-ink-700">{p.sku}</span>
+                        <span aria-hidden="true" className="text-sand-300">·</span>
+                        <span className="font-semibold text-forest-800">
+                          {p.units} unité{p.units > 1 ? 's' : ''} vendue{p.units > 1 ? 's' : ''}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="font-black text-xs text-forest-900 font-mono">
+                    <div className="font-black text-xs sm:text-sm text-forest-900 font-mono tabular-nums">
                       {formatMoney(p.revenue)}
                     </div>
-                    <div className="text-[10px] text-ink-600">Total généré</div>
+                    <div className="text-[11px] text-ink-600 font-medium">Chiffre d'affaires</div>
                   </div>
                 </li>
               ))}
@@ -645,7 +650,7 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Card 3: Ventes par rayon */}
-        <section className="sherwood-card p-4 sm:p-5 space-y-3">
+        <section className="sherwood-card p-5 space-y-4">
           <SectionHeader
             title={`Ventes par rayon (${activePeriodConfig.label})`}
             hint={`Part de chiffre d'affaires (${activePeriodConfig.rangeLabel.toLowerCase()})`}
@@ -657,25 +662,25 @@ export const DashboardView: React.FC = () => {
               text={`Aucune vente par rayon disponible pour ${activePeriodConfig.rangeLabel.toLowerCase()}.`}
             />
           ) : (
-            <ul className="space-y-3.5 pt-1">
+            <ul className="space-y-4 pt-1">
               {categoryStats.map((c) => (
                 <li key={c.id} className="space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-forest-900">{c.name}</span>
-                    <div className="text-right font-mono flex items-center gap-2">
-                      <span className="font-bold text-forest-800">{formatMoney(c.revenue)}</span>
-                      <span className="text-[11px] font-bold text-ink-600 bg-sand-200 px-1.5 py-0.2 rounded-md">
-                        {c.percentage} %
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-forest-900 truncate">{c.name}</span>
+                    <div className="text-right font-mono flex items-center gap-2 shrink-0">
+                      <span className="font-bold text-forest-800 tabular-nums">{formatMoney(c.revenue)}</span>
+                      <span className="text-xs font-semibold text-ink-600 font-mono">
+                        ({c.percentage}%)
                       </span>
                     </div>
                   </div>
                   <div
-                    className="h-2.5 rounded-full bg-sand-200 overflow-hidden"
+                    className="h-2 rounded-full bg-sand-200 overflow-hidden"
                     role="progressbar"
                     aria-valuenow={c.percentage}
                     aria-valuemin={0}
                     aria-valuemax={100}
-                    aria-label={`Pourcentage de vente : ${c.name} (${c.percentage}%)`}
+                    aria-label={`Part de vente : ${c.name} (${c.percentage}%)`}
                   >
                     <div
                       className="h-full rounded-full bg-forest-700 transition-all duration-300"
@@ -689,46 +694,46 @@ export const DashboardView: React.FC = () => {
         </section>
 
         {/* Card 4: Meilleurs clients */}
-        <section className="sherwood-card p-4 sm:p-5 space-y-3">
+        <section className="sherwood-card p-5 space-y-4">
           <SectionHeader
-            title={`Meilleurs clients (${activePeriodConfig.label})`}
-            hint={`Fidélité et dépenses (${activePeriodConfig.rangeLabel.toLowerCase()})`}
+            title={`Fidélité & Meilleurs clients (${activePeriodConfig.label})`}
+            hint={`Dépenses cumulées (${activePeriodConfig.rangeLabel.toLowerCase()})`}
             icon={Users}
             action={{ label: 'Fichier clients', onClick: () => setActiveView('customers') }}
           />
 
           {topCustomers.length === 0 ? (
             <EmptyState
-              text={`Aucun client associé à une vente pour ${activePeriodConfig.rangeLabel.toLowerCase()}.`}
+              text={`Aucun client associé à une transaction pour ${activePeriodConfig.rangeLabel.toLowerCase()}.`}
             />
           ) : (
-            <ol className="divide-y divide-sand-200">
+            <ol className="divide-y divide-sand-200/80">
               {topCustomers.map((c, idx) => (
                 <li
                   key={c.id}
-                  className="py-3 flex items-center justify-between gap-3 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
+                  className="py-3 flex items-center justify-between gap-4 text-xs hover:bg-sand-50/80 rounded-xl px-2 transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-7 h-7 rounded-xl bg-sand-200 text-forest-900 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs font-mono">
-                      {idx + 1}
+                    <span className="w-7 h-7 rounded-lg bg-sand-100 text-forest-900 font-bold text-xs flex items-center justify-center shrink-0 font-mono border border-sand-200">
+                      {String(idx + 1).padStart(2, '0')}
                     </span>
                     <div className="min-w-0 space-y-0.5">
-                      <div className="font-bold text-forest-900 text-xs truncate" title={c.name}>
+                      <div className="font-bold text-forest-900 text-xs sm:text-sm truncate" title={c.name}>
                         {c.name}
                       </div>
-                      <div className="text-[11px] text-ink-600">
-                        <span className="bg-sand-200 text-ink-800 font-bold px-1.5 py-0.2 rounded-md">
-                          {c.tickets} ticket{c.tickets > 1 ? 's' : ''}
+                      <div className="text-xs text-ink-600">
+                        <span>
+                          {c.tickets} transaction{c.tickets > 1 ? 's' : ''}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <div className="font-black text-xs text-forest-900 font-mono">
+                    <div className="font-black text-xs sm:text-sm text-forest-900 font-mono tabular-nums">
                       {formatMoney(c.revenue)}
                     </div>
-                    <div className="text-[10px] text-ink-600">Total dépensé</div>
+                    <div className="text-[11px] text-ink-600 font-medium">Total dépensé</div>
                   </div>
                 </li>
               ))}
@@ -738,7 +743,7 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {periodStats.lowStockCount === 0 && (
-        <p className="flex items-center gap-2 text-xs text-ink-600 bg-sand-100/60 p-3 rounded-2xl border border-sand-200">
+        <p className="flex items-center gap-2 text-xs text-ink-600 bg-sand-100/60 p-3.5 rounded-xl border border-sand-200">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" aria-hidden="true" />
           <span>
             Tous les stocks de la boutique sont au-dessus de leur seuil minimal de sécurité.

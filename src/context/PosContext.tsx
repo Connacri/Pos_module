@@ -141,9 +141,10 @@ interface PosContextType {
   printerSettings: ThermalPrinterSettings;
   updatePrinterSettings: (settings: ThermalPrinterSettings) => void;
 
-  // Cart Undo & Safety
-  canUndoClearCart: boolean;
-  undoClearCart: () => void;
+  // Toast & Screen reader feedback
+  globalToast: { id: string; message: string; type: 'success' | 'info' | 'warning' | 'error' } | null;
+  showToast: (message: string, type?: 'success' | 'info' | 'warning' | 'error') => void;
+  dismissToast: () => void;
 
   resetDemoData: () => void;
 }
@@ -198,6 +199,32 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Global Toast & Screen Reader Feedback
+  const [globalToast, setGlobalToast] = useState<{
+    id: string;
+    message: string;
+    type: 'success' | 'info' | 'warning' | 'error';
+  } | null>(null);
+
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dismissToast = useCallback(() => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setGlobalToast(null);
+  }, []);
+
+  const showToast = useCallback(
+    (message: string, type: 'success' | 'info' | 'warning' | 'error' = 'info') => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      const id = Date.now().toString(36) + Math.random().toString(36).substring(2);
+      setGlobalToast({ id, message, type });
+      toastTimerRef.current = setTimeout(() => {
+        setGlobalToast(null);
+      }, 4000);
+    },
+    []
+  );
 
   const [pendingSyncCount, setPendingSyncCount] = useState<number>(0);
   const refreshPendingSyncCount = useCallback(async () => {
@@ -843,6 +870,9 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updatePrinterSettings,
         canUndoClearCart,
         undoClearCart,
+        globalToast,
+        showToast,
+        dismissToast,
         resetDemoData,
       }}
     >
