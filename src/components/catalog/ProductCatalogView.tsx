@@ -124,39 +124,39 @@ export const ProductCatalogView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Header & Quick Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sherwood-panel">
-        <div>
+      <div className="sherwood-panel flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden w-full min-w-0">
+        <div className="min-w-0">
           <div className="sherwood-badge-forest mb-2">
-            <Package className="w-3.5 h-3.5 text-[#234931]" />
+            <Package className="w-3.5 h-3.5 text-[#234931] shrink-0" />
             <span>Inventaire & Tarification</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2 truncate">
             <span>🍃</span>
             <span>Catalogue des Produits</span>
           </h2>
-          <p className="text-xs sm:text-sm text-[#605547] mt-1 font-medium">
+          <p className="text-xs sm:text-sm text-[#605547] mt-1 font-medium leading-relaxed">
             Gérez vos références, suivez les stocks en temps réel et alimentez le panier POS
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap w-full sm:w-auto">
+        <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap shrink-0 w-full md:w-auto">
           <button
             type="button"
             onClick={() => setIsCameraScannerOpen(true)}
-            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-outline text-xs font-bold shadow-2xs flex-1 sm:flex-initial"
+            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-outline text-xs font-bold shadow-2xs flex-1 md:flex-initial"
             title="Ouvrir le scanner caméra pour scanner un code-barres"
           >
-            <Camera className="w-4 h-4 text-[#234931]" />
-            <span>Scanner Caméra</span>
+            <Camera className="w-4 h-4 text-[#234931] shrink-0" />
+            <span className="whitespace-nowrap">Scanner Caméra</span>
           </button>
 
           <button
             type="button"
             onClick={() => setIsCreatingNew(true)}
-            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs flex-1 sm:flex-initial"
+            className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs flex-1 md:flex-initial"
           >
-            <Plus className="w-4 h-4" />
-            <span>Nouveau Produit</span>
+            <Plus className="w-4 h-4 shrink-0" />
+            <span className="whitespace-nowrap">Nouveau Produit</span>
           </button>
 
           {cart.length > 0 && (
@@ -165,33 +165,34 @@ export const ProductCatalogView: React.FC = () => {
               onClick={() => setIsCartDrawerOpen(true)}
               className="touch-btn min-h-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 sherwood-btn-wood text-xs font-bold shadow-xs w-full sm:w-auto"
             >
-              <ShoppingCart className="w-4 h-4 text-[#fcdbb6]" />
-              <span>Voir Panier ({cart.reduce((sum, item) => sum + item.quantity, 0)})</span>
+              <ShoppingCart className="w-4 h-4 text-[#fcdbb6] shrink-0" />
+              <span className="whitespace-nowrap">Voir Panier ({cart.reduce((sum, item) => sum + item.quantity, 0)})</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="sherwood-panel p-4 space-y-4">
-        {/* Row 1: Search + Sort + Stock Filter */}
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
+      {/* Filter and Search Bar: Adaptive 2-tier responsive architecture */}
+      <div className="sherwood-panel p-4 sm:p-5 space-y-4 w-full min-w-0 overflow-hidden">
+        {/* Tier 1: Search + Sort row (balanced 2-column on md+, stacked on mobile) */}
+        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full min-w-0">
           {/* Search Input with inline camera scanner trigger */}
-          <div className="relative flex-1 flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="w-4 h-4 text-[#877a6b] absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <div className="relative flex-1 flex items-center gap-2 min-w-0">
+            <div className="relative flex-1 min-w-0">
+              <Search className="w-4 h-4 text-[#877a6b] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher par nom, SKU (ex: REF-0001) ou code-barres..."
-                className="w-full pl-10 pr-9 py-2.5 sherwood-input text-xs sm:text-sm font-medium"
+                className="w-full pl-10 pr-9 py-2.5 min-h-[44px] sherwood-input text-xs sm:text-sm font-medium"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#877a6b] hover:text-[#2c241c] cursor-pointer"
+                  aria-label="Effacer la recherche"
+                  className="touch-btn absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#877a6b] hover:text-[#2c241c] cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -201,84 +202,22 @@ export const ProductCatalogView: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsCameraScannerOpen(true)}
-              className="touch-btn px-3.5 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5 shrink-0"
+              className="touch-btn min-h-[44px] px-3.5 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center justify-center gap-1.5 shrink-0"
               title="Scanner une étiquette physique avec la caméra"
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="w-4 h-4 shrink-0" />
               <span className="hidden sm:inline">Scanner</span>
             </button>
           </div>
 
-          {/* Stock status filter pills with min 44px touch targets */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setStockFilter('ALL')}
-              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
-                stockFilter === 'ALL'
-                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                  : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
-              }`}
-            >
-              <span>Tous</span>
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'}`}>
-                {stockCounts.total}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStockFilter('IN_STOCK')}
-              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                stockFilter === 'IN_STOCK'
-                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                  : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50'
-              }`}
-            >
-              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
-              <span>En stock</span>
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'IN_STOCK' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'}`}>
-                {stockCounts.inStock}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStockFilter('LOW_STOCK')}
-              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                stockFilter === 'LOW_STOCK'
-                  ? 'bg-[#b45309] text-white shadow-xs'
-                  : 'bg-white text-[#b45309] border border-amber-300 hover:bg-amber-50'
-              }`}
-            >
-              <AlertTriangle className="w-3.5 h-3.5 text-[#d97706]" />
-              <span>Alerte seuil</span>
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'LOW_STOCK' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'}`}>
-                {stockCounts.lowStock}
-              </span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setStockFilter('OUT_OF_STOCK')}
-              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
-                stockFilter === 'OUT_OF_STOCK'
-                  ? 'bg-[#dc2626] text-white shadow-xs'
-                  : 'bg-white text-[#dc2626] border border-rose-300 hover:bg-rose-50'
-              }`}
-            >
-              <XCircle className="w-3.5 h-3.5 text-[#ef4444]" />
-              <span>Rupture</span>
-              <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full ${stockFilter === 'OUT_OF_STOCK' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-900'}`}>
-                {stockCounts.outOfStock}
-              </span>
-            </button>
-          </div>
-
-          {/* Sort Selector */}
-          <div className="flex items-center gap-2 self-end lg:self-auto min-w-[170px]">
+          {/* Sort Selector: Fixed width on md+, full width on mobile */}
+          <div className="flex items-center gap-2 w-full md:w-64 shrink-0">
             <ArrowUpDown className="w-4 h-4 text-[#877a6b] shrink-0" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="w-full min-h-[44px] sherwood-input px-3 py-2 text-xs font-bold cursor-pointer"
+              aria-label="Trier les produits"
             >
               <option value="name">Nom (A → Z)</option>
               <option value="price-asc">Prix (Croissant)</option>
@@ -288,55 +227,127 @@ export const ProductCatalogView: React.FC = () => {
           </div>
         </div>
 
-        {/* Row 2: Category Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-2 border-t border-[#e7ddca]">
-          <span className="text-xs text-[#877a6b] font-bold shrink-0 flex items-center gap-1 mr-1">
-            <Filter className="w-3.5 h-3.5" />
-            Rayon :
-          </span>
-          <button
-            type="button"
-            onClick={() => setSelectedCategoryId('ALL')}
-            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-2 ${
-              selectedCategoryId === 'ALL'
-                ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
-            }`}
-          >
-            <span>Toutes les catégories</span>
-            <span
-              className={`text-[11px] px-2 py-0.5 rounded-full font-mono ${
-                selectedCategoryId === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
+        {/* Tier 2: Stock Status Filter Pills (segmented bar, never overflows parent) */}
+        <div className="pt-2 border-t border-[#e7ddca] w-full min-w-0">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full text-xs font-bold scrollbar-none">
+            <button
+              type="button"
+              onClick={() => setStockFilter('ALL')}
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 shrink-0 ${
+                stockFilter === 'ALL'
+                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                  : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
               }`}
             >
-              {products.length}
+              <span>Tous les articles</span>
+              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${stockFilter === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'}`}>
+                {stockCounts.total}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('IN_STOCK')}
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                stockFilter === 'IN_STOCK'
+                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                  : 'bg-white text-emerald-800 border border-emerald-300 hover:bg-emerald-50'
+              }`}
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0"></span>
+              <span>En stock</span>
+              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${stockFilter === 'IN_STOCK' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-900'}`}>
+                {stockCounts.inStock}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('LOW_STOCK')}
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                stockFilter === 'LOW_STOCK'
+                  ? 'bg-[#b45309] text-white shadow-xs'
+                  : 'bg-white text-[#b45309] border border-amber-300 hover:bg-amber-50'
+              }`}
+            >
+              <AlertTriangle className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+              <span>Alerte seuil</span>
+              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${stockFilter === 'LOW_STOCK' ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-900'}`}>
+                {stockCounts.lowStock}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setStockFilter('OUT_OF_STOCK')}
+              className={`touch-btn min-h-[44px] px-3.5 py-2 rounded-2xl transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                stockFilter === 'OUT_OF_STOCK'
+                  ? 'bg-[#dc2626] text-white shadow-xs'
+                  : 'bg-white text-[#dc2626] border border-rose-300 hover:bg-rose-50'
+              }`}
+            >
+              <XCircle className="w-3.5 h-3.5 text-[#ef4444] shrink-0" />
+              <span>Rupture</span>
+              <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full ${stockFilter === 'OUT_OF_STOCK' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-900'}`}>
+                {stockCounts.outOfStock}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Tier 3: Category Filter Tabs with smooth scroll and container containment */}
+        <div className="pt-2 border-t border-[#e7ddca] w-full min-w-0">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 max-w-full scrollbar-none">
+            <span className="text-xs text-[#877a6b] font-bold shrink-0 flex items-center gap-1 mr-1">
+              <Filter className="w-3.5 h-3.5" />
+              Rayons :
             </span>
-          </button>
-          {categories.map((cat) => {
-            const count = products.filter((p) => p.categoryId === cat.id).length;
-            const isSelected = selectedCategoryId === cat.id;
-            return (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategoryId(cat.id)}
-                className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer ${
-                  isSelected
-                    ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
-                    : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
+
+            <button
+              type="button"
+              onClick={() => setSelectedCategoryId('ALL')}
+              className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-2 shrink-0 ${
+                selectedCategoryId === 'ALL'
+                  ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                  : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
+              }`}
+            >
+              <span>Tous les rayons</span>
+              <span
+                className={`text-[11px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                  selectedCategoryId === 'ALL' ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
                 }`}
               >
-                <span>{cat.name}</span>
-                <span
-                  className={`text-[11px] px-2 py-0.5 rounded-full font-mono font-bold ${
-                    isSelected ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
+                {products.length}
+              </span>
+            </button>
+
+            {categories.map((cat) => {
+              const count = products.filter((p) => p.categoryId === cat.id).length;
+              const isSelected = selectedCategoryId === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategoryId(cat.id)}
+                  className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-colors flex items-center gap-2 cursor-pointer shrink-0 ${
+                    isSelected
+                      ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
+                      : 'bg-white text-ink-800 border border-sand-300 hover:bg-sand-100'
                   }`}
                 >
-                  {count}
-                </span>
-              </button>
-            );
-          })}
+                  <span>{cat.name}</span>
+                  <span
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                      isSelected ? 'bg-white/20 text-white' : 'bg-sand-200 text-ink-800'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -430,26 +441,26 @@ export const ProductCatalogView: React.FC = () => {
                     categoryName={category?.name}
                   />
 
-                  {/* Top Badges */}
-                  <div className="absolute top-2 left-2 flex flex-col gap-1 z-10 max-w-[75%]">
+                  {/* Top Badges: constrained within bounds so they never collide with edit button */}
+                  <div className="absolute top-2 left-2 right-14 flex flex-col gap-1 z-10 min-w-0 pointer-events-none">
                     {isOutOfStock ? (
-                      <span className="bg-[#dc2626] text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
-                        <XCircle className="w-3 h-3" />
-                        Rupture • Réappro requis
+                      <span className="bg-[#dc2626] text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 w-fit max-w-full truncate">
+                        <XCircle className="w-3 h-3 shrink-0" />
+                        <span className="truncate">Rupture • Réappro</span>
                       </span>
                     ) : isLowStock ? (
-                      <span className="bg-[#d97706] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse">
-                        <AlertTriangle className="w-3 h-3" />
-                        Sous seuil min ({product.stock}/{product.lowStockThreshold})
+                      <span className="bg-[#d97706] text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1 animate-pulse w-fit max-w-full truncate">
+                        <AlertTriangle className="w-3 h-3 shrink-0" />
+                        <span className="truncate">Sous seuil ({product.stock}/{product.lowStockThreshold})</span>
                       </span>
                     ) : null}
 
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <span className="bg-[#1f3d29]/90 text-white text-[10px] font-mono px-2 py-0.5 rounded-md font-bold">
+                    <div className="flex items-center gap-1 flex-wrap max-w-full">
+                      <span className="bg-[#1f3d29]/90 text-white text-[10px] font-mono px-2 py-0.5 rounded-md font-bold shrink-0">
                         {product.sku}
                       </span>
                       {category && (
-                        <span className="bg-[#fdfbf7]/95 text-[#2c241c] text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs truncate border border-[#e2d7c2]">
+                        <span className="bg-[#fdfbf7]/95 text-[#2c241c] text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs truncate border border-[#e2d7c2] max-w-[130px]">
                           {category.name}
                         </span>
                       )}
@@ -460,7 +471,7 @@ export const ProductCatalogView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setEditingProduct(product)}
-                    className="touch-btn absolute top-2 right-2 w-11 h-11 min-w-[44px] min-h-[44px] bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-2xl flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10 border border-[#e2d7c2] focus:outline-hidden focus:ring-2 focus:ring-[#234931]"
+                    className="touch-btn absolute top-2 right-2 w-11 h-11 min-w-[44px] min-h-[44px] bg-white/95 hover:bg-white text-[#605547] hover:text-[#234931] rounded-2xl flex items-center justify-center shadow-xs transition-colors cursor-pointer z-20 border border-[#e2d7c2] focus:outline-hidden focus:ring-2 focus:ring-[#234931]"
                     title="Modifier l'article et son seuil"
                     aria-label={`Modifier ${product.name}`}
                   >
@@ -477,55 +488,55 @@ export const ProductCatalogView: React.FC = () => {
                 </div>
 
                 {/* Content */}
-                <div className="p-4 flex-1 flex flex-col justify-between space-y-3">
-                  <div>
-                    <h4 className="font-bold text-sm text-[#2c241c] line-clamp-2 group-hover:text-[#234931] transition-colors leading-snug" title={product.name}>
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-3 min-w-0">
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-sm text-[#2c241c] line-clamp-2 group-hover:text-[#234931] transition-colors leading-snug break-words" title={product.name}>
                       {product.name}
                     </h4>
                     {product.description && (
-                      <p className="text-[11px] text-[#877a6b] line-clamp-1 mt-1 font-medium" title={product.description}>
+                      <p className="text-[11px] text-[#877a6b] line-clamp-1 mt-1 font-medium truncate" title={product.description}>
                         {product.description}
                       </p>
                     )}
 
-                    {/* Stock Status Pill */}
-                    <div className="mt-2.5 flex items-center justify-between text-xs">
+                    {/* Stock Status Pill: responsive flex wrapping */}
+                    <div className="mt-2.5 flex flex-wrap sm:flex-nowrap items-center justify-between gap-1.5 text-xs min-w-0">
                       {isOutOfStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#fef2f2] px-2.5 py-1 rounded-lg border border-[#fecaca]">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#dc2626] bg-[#fef2f2] px-2.5 py-1 rounded-lg border border-[#fecaca] shrink-0">
                           <XCircle className="w-3.5 h-3.5" />
                           Rupture (0)
                         </span>
                       ) : isLowStock ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400e] bg-[#fef3c7] px-2.5 py-1 rounded-lg border border-[#fde68a]">
-                          <AlertTriangle className="w-3.5 h-3.5 text-[#d97706]" />
-                          Stock {product.stock} (Min {product.lowStockThreshold})
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#92400e] bg-[#fef3c7] px-2.5 py-1 rounded-lg border border-[#fde68a] shrink-0 truncate">
+                          <AlertTriangle className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+                          <span>Stock {product.stock} (Min {product.lowStockThreshold})</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#234931] bg-[#eaf2e8] px-2.5 py-1 rounded-lg border border-[#cbe0cb]">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#234931] bg-[#eaf2e8] px-2.5 py-1 rounded-lg border border-[#cbe0cb] shrink-0">
                           <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
-                          Stock : {product.stock}
+                          <span>Stock : {product.stock}</span>
                         </span>
                       )}
 
-                      <span className="text-[11px] text-[#877a6b] font-mono flex items-center gap-1">
+                      <span className="text-[11px] text-[#877a6b] font-mono flex items-center gap-1 shrink-0 ml-auto sm:ml-0">
                         <Barcode className="w-3.5 h-3.5" />
                         {product.barcode.slice(-4)}
                       </span>
                     </div>
 
-                    {/* Reorder Needs Visual Indicator Panel with >=44px touch button */}
+                    {/* Reorder Needs Visual Indicator Panel */}
                     {(isLowStock || isOutOfStock) && (
-                      <div className={`mt-3 p-2.5 rounded-2xl text-[11px] border ${
+                      <div className={`mt-3 p-2.5 rounded-2xl text-[11px] border min-w-0 ${
                         isOutOfStock
                           ? 'bg-[#fef2f2] border-[#fecaca] text-[#991b1b]'
                           : 'bg-[#fef3c7] border-[#fde68a] text-[#78350f]'
                       }`}>
-                        <div className="flex items-center justify-between font-bold">
-                          <span className="flex items-center gap-1.5">
-                            <Truck className="w-3.5 h-3.5 text-[#d97706]" />
-                            Réappro requis :
+                        <div className="flex items-center justify-between font-bold gap-1">
+                          <span className="flex items-center gap-1.5 truncate">
+                            <Truck className="w-3.5 h-3.5 text-[#d97706] shrink-0" />
+                            <span>Réappro requis :</span>
                           </span>
-                          <span className="font-mono font-black">
+                          <span className="font-mono font-black shrink-0">
                             {product.stock} / {product.lowStockThreshold} min
                           </span>
                         </div>
@@ -535,14 +546,14 @@ export const ProductCatalogView: React.FC = () => {
                             style={{ width: `${Math.min(100, Math.round((product.stock / Math.max(1, product.lowStockThreshold)) * 100))}%` }}
                           />
                         </div>
-                        <div className="mt-2 flex items-center justify-between text-xs gap-2">
-                          <span className="text-[10px]">
+                        <div className="mt-2.5 flex flex-col sm:flex-row items-stretch sm:items-center justify-between text-xs gap-2 min-w-0">
+                          <span className="text-[10px] truncate">
                             Déficit : <strong className="font-bold">{Math.max(0, product.lowStockThreshold - product.stock)} unité(s)</strong>
                           </span>
                           <button
                             type="button"
                             onClick={() => updateProduct({ ...product, stock: product.stock + 10 })}
-                            className="touch-btn min-h-[44px] px-3.5 py-2 bg-white text-[#234931] font-bold rounded-xl border border-[#d8cdba] hover:bg-[#f7f2e7] transition-colors cursor-pointer flex items-center justify-center text-xs shadow-2xs"
+                            className="touch-btn min-h-[44px] px-3.5 py-1.5 bg-white text-[#234931] font-bold rounded-xl border border-[#d8cdba] hover:bg-[#f7f2e7] transition-colors cursor-pointer flex items-center justify-center text-xs shadow-2xs whitespace-nowrap shrink-0"
                             title="Ajouter 10 unités pour réapprovisionner"
                           >
                             +10 Réappro
@@ -553,19 +564,19 @@ export const ProductCatalogView: React.FC = () => {
                   </div>
 
                   {/* Price & Action Section with >= 44x44px touch targets (Fitts's Law) */}
-                  <div className="pt-3 border-t border-[#e7ddca] flex items-center justify-between gap-2">
-                    <div>
-                      <div className="text-base font-black text-[#234931] font-mono leading-tight">
+                  <div className="pt-3 border-t border-[#e7ddca] flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 min-w-0">
+                    <div className="min-w-0">
+                      <div className="text-base font-black text-[#234931] font-mono leading-tight truncate">
                         {formatMoney(product.price)}
                       </div>
-                      <div className="text-[10px] text-[#877a6b] font-medium">
+                      <div className="text-[10px] text-[#877a6b] font-medium truncate">
                         {product.taxRate > 0 ? `TVA ${Math.round(product.taxRate * 100)}%` : 'Exonéré TVA'}
                       </div>
                     </div>
 
                     {/* Cart Controls with accessible touch targets (all >= 44x44px) */}
                     {inCartQty > 0 ? (
-                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-2xl overflow-hidden p-0.5 shadow-2xs">
+                      <div className="inline-flex items-center bg-[#faeee2] border border-[#f0d4ba] rounded-2xl overflow-hidden p-0.5 shadow-2xs shrink-0">
                         <button
                           type="button"
                           onClick={() => decrementQuantity(product.id)}
@@ -593,13 +604,13 @@ export const ProductCatalogView: React.FC = () => {
                         onClick={() => addToCart(product, 1)}
                         disabled={isOutOfStock}
                         aria-label={`Ajouter ${product.name} au panier`}
-                        className={`touch-btn min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-xs ${
+                        className={`touch-btn min-h-[44px] min-w-[44px] inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all cursor-pointer shadow-xs shrink-0 ${
                           isOutOfStock
                             ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
                             : 'sherwood-btn-forest'
                         }`}
                       >
-                        <ShoppingCart className="w-4 h-4" />
+                        <ShoppingCart className="w-4 h-4 shrink-0" />
                         <span>Ajouter</span>
                       </button>
                     )}

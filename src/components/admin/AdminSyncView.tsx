@@ -518,37 +518,37 @@ export const AdminSyncView: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
       {/* Top Banner with Global Sherwood Theme */}
-      <div className="sherwood-panel flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
-        <div>
+      <div className="sherwood-panel flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden w-full min-w-0">
+        <div className="min-w-0">
           <div className="sherwood-badge-forest mb-2">
-            <Server className="w-3.5 h-3.5 text-[#234931]" />
+            <Server className="w-3.5 h-3.5 text-[#234931] shrink-0" />
             <span>Cloud Supabase & Moteur POS Décentralisé</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight truncate">
             Panneau Cloud Supabase & Synchronisation Multi-Postes
           </h2>
-          <p className="text-xs sm:text-sm text-[#605547] mt-1 max-w-2xl font-medium">
+          <p className="text-xs sm:text-sm text-[#605547] mt-1 max-w-2xl font-medium leading-relaxed">
             Connectez votre base PostgreSQL Supabase, déployez le schéma des tables et synchronisez vos données de caisse en temps réel ou hors-ligne.
           </p>
         </div>
 
         {/* Offline Toggle Switch with Sherwood Styling */}
-        <div className="sherwood-panel-subtle p-3.5 flex items-center justify-between gap-4 shrink-0">
-          <div className="flex items-center gap-2.5">
+        <div className="sherwood-panel-subtle p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shrink-0 w-full md:w-auto">
+          <div className="flex items-center gap-3 min-w-0">
             {isOffline ? (
-              <div className="w-10 h-10 rounded-2xl bg-[#fef4ea] border border-[#f5cf9e] text-[#8f521b] flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-[#fef4ea] border border-[#f5cf9e] text-[#8f521b] flex items-center justify-center shrink-0 shadow-2xs">
                 <WifiOff className="w-5 h-5" />
               </div>
             ) : (
-              <div className="w-10 h-10 rounded-2xl bg-[#eaf2e8] border border-[#cbe0cb] text-[#234931] flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-[#eaf2e8] border border-[#cbe0cb] text-[#234931] flex items-center justify-center shrink-0 shadow-2xs">
                 <Wifi className="w-5 h-5" />
               </div>
             )}
-            <div>
-              <div className="text-xs font-bold text-[#2c241c]">
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-[#2c241c] truncate">
                 {isOffline ? 'Mode Hors-Ligne (Autonome)' : 'En Ligne (Cloud Connecté)'}
               </div>
-              <div className="text-[11px] text-[#605547] font-medium">
+              <div className="text-[11px] text-[#605547] font-medium truncate">
                 {pendingSyncCount} vente(s) en attente de synk
               </div>
             </div>
@@ -557,9 +557,9 @@ export const AdminSyncView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsOffline(!isOffline)}
-            className={`touch-btn px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer w-full sm:w-auto flex items-center justify-center ${
               isOffline
-                ? 'sherwood-btn-wood text-white'
+                ? 'sherwood-btn-wood text-white shadow-xs'
                 : 'sherwood-btn-outline'
             }`}
           >
@@ -568,100 +568,102 @@ export const AdminSyncView: React.FC = () => {
         </div>
       </div>
 
-      {/* Navigation Sub-Tabs with min 44px touch targets and accessible chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1.5 border-b border-[#e7ddca]">
-        <button
-          type="button"
-          onClick={() => setActiveTab('cloud')}
-          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'cloud'
-              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
-          }`}
-        >
-          <Cloud className="w-4 h-4" />
-          <span>Connexion Cloud & Synk</span>
-        </button>
+      {/* Navigation Sub-Tabs with min 44px touch targets and container bounds */}
+      <div className="w-full min-w-0 border-b border-[#e7ddca] pb-2">
+        <div className="flex items-center gap-2 overflow-x-auto max-w-full scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab('cloud')}
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'cloud'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+                : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
+            }`}
+          >
+            <Cloud className="w-4 h-4 shrink-0" />
+            <span>Connexion Cloud & Synk</span>
+          </button>
 
-        <button
-          type="button"
-          onClick={() => setActiveTab('schema')}
-          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'schema'
-              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
-          }`}
-        >
-          <FileCode className="w-4 h-4" />
-          <span>Script SQL des Tables</span>
-          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'schema' ? 'bg-white/20 text-white' : 'bg-[#faeee2] text-[#85522b]'}`}>
-            10 tables
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('printer')}
-          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'printer'
-              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
-          }`}
-        >
-          <Printer className="w-4 h-4" />
-          <span>Imprimante Thermique</span>
-          <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'printer' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
-            {printerForm.paperWidth}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('benchmark')}
-          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'benchmark'
-              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
-          }`}
-        >
-          <Database className="w-4 h-4" />
-          <span>Moteur Local (IndexedDB)</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('logs')}
-          className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'logs'
-              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
-              : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
-          }`}
-        >
-          <Terminal className="w-4 h-4" />
-          <span>Journal d'Activité</span>
-          {logs.length > 0 && (
-            <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'logs' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
-              {logs.length}
+          <button
+            type="button"
+            onClick={() => setActiveTab('schema')}
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'schema'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+                : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
+            }`}
+          >
+            <FileCode className="w-4 h-4 shrink-0" />
+            <span>Script SQL des Tables</span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'schema' ? 'bg-white/20 text-white' : 'bg-[#faeee2] text-[#85522b]'}`}>
+              10 tables
             </span>
-          )}
-        </button>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('printer')}
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'printer'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+                : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
+            }`}
+          >
+            <Printer className="w-4 h-4 shrink-0" />
+            <span>Imprimante Thermique</span>
+            <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'printer' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
+              {printerForm.paperWidth}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('benchmark')}
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'benchmark'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+                : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
+            }`}
+          >
+            <Database className="w-4 h-4 shrink-0" />
+            <span>Moteur Local (IndexedDB)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('logs')}
+            className={`touch-btn min-h-[44px] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              activeTab === 'logs'
+                ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+                : 'bg-[#fdfbf7] text-[#483d31] hover:bg-[#f7f2e7] border border-[#d8cdba]'
+            }`}
+          >
+            <Terminal className="w-4 h-4 shrink-0" />
+            <span>Journal d'Activité</span>
+            {logs.length > 0 && (
+              <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold ${activeTab === 'logs' ? 'bg-white/20 text-white' : 'bg-[#eaf2e8] text-[#234931]'}`}>
+                {logs.length}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* TAB 1: CLOUD CONNECTION & SYNC */}
       {activeTab === 'cloud' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full min-w-0">
           {/* Main Config Form */}
-          <div className="lg:col-span-2 sherwood-panel space-y-5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#e7ddca]">
-              <div className="flex items-center gap-2.5">
-                <div className="w-10 h-10 rounded-2xl bg-[#eaf2e8] text-[#234931] flex items-center justify-center font-bold shrink-0 shadow-2xs">
+          <div className="lg:col-span-2 sherwood-panel space-y-6 w-full min-w-0 overflow-hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#e7ddca] min-w-0">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-11 h-11 rounded-2xl bg-[#eaf2e8] text-[#234931] flex items-center justify-center font-bold shrink-0 shadow-2xs border border-[#cbe0cb]">
                   <Cloud className="w-5 h-5" />
                 </div>
-                <div>
-                  <h3 className="font-serif-title font-black text-base text-[#234931]">
+                <div className="min-w-0">
+                  <h3 className="font-serif-title font-black text-base sm:text-lg text-[#234931] truncate">
                     Identifiants du Projet Supabase
                   </h3>
-                  <p className="text-[11px] text-[#605547]">
+                  <p className="text-xs text-[#605547] font-medium truncate">
                     Réplication PostgreSQL & Gestion décentralisée des ventes
                   </p>
                 </div>
@@ -671,36 +673,36 @@ export const AdminSyncView: React.FC = () => {
                 type="button"
                 disabled={isSyncing || isOffline}
                 onClick={handleSyncNow}
-                className={`touch-btn min-h-[44px] px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer w-full sm:w-auto ${
+                className={`touch-btn min-h-[46px] px-5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer w-full sm:w-auto shrink-0 ${
                   isOffline
                     ? 'bg-[#e2d7c2] text-[#877a6b] cursor-not-allowed'
                     : 'sherwood-btn-forest'
                 }`}
               >
-                <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-                <span>{isSyncing ? 'Synchronisation...' : 'Synchroniser Maintenant'}</span>
+                <RefreshCw className={`w-4 h-4 shrink-0 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span className="whitespace-nowrap">{isSyncing ? 'Synchronisation...' : 'Synchroniser Maintenant'}</span>
               </button>
             </div>
 
             {/* Sync progress indicator */}
             {isSyncing && (
-              <div className="sherwood-panel-subtle p-3 space-y-1.5 animate-in fade-in duration-200">
+              <div className="sherwood-panel-subtle p-3.5 space-y-2 animate-in fade-in duration-200">
                 <div className="flex justify-between text-xs text-[#234931] font-bold">
                   <span>Synchronisation Cloud en cours...</span>
                   <span className="font-mono">{syncProgress}%</span>
                 </div>
                 <div className="w-full bg-[#e2d7c2] rounded-full h-2 overflow-hidden">
                   <div
-                    className="bg-[#234931] h-full transition-all duration-300"
+                    className="bg-[#234931] h-full transition-all duration-300 rounded-full"
                     style={{ width: `${syncProgress}%` }}
                   />
                 </div>
               </div>
             )}
 
-            <form onSubmit={handleSaveConfig} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#483d31] mb-1">
+            <form onSubmit={handleSaveConfig} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#483d31]">
                   URL du projet Supabase
                 </label>
                 <div className="relative">
@@ -710,19 +712,19 @@ export const AdminSyncView: React.FC = () => {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     placeholder="https://xyzcompany.supabase.co"
-                    className="w-full pl-3.5 pr-10 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
+                    className="w-full pl-3.5 pr-10 py-3 min-h-[46px] sherwood-input text-xs sm:text-sm font-mono"
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[#877a6b]">
+                  <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#877a6b] pointer-events-none">
                     <Server className="w-4 h-4" />
                   </div>
                 </div>
-                <span className="text-[11px] text-[#877a6b] mt-1 block">
+                <span className="text-[11px] text-[#877a6b] block font-medium leading-normal">
                   Accessible depuis votre tableau de bord Supabase : Project Settings → API → Project URL
                 </span>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-[#483d31] mb-1">
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-[#483d31]">
                   Clé Publique Anonyme (Anon Key)
                 </label>
                 <div className="relative">
@@ -731,32 +733,32 @@ export const AdminSyncView: React.FC = () => {
                     required
                     value={anonKey}
                     onChange={(e) => setAnonKey(e.target.value)}
-                    placeholder="eyJhbGciOiJIUzI1NiIsIn..."
-                    className="w-full pl-3.5 pr-12 py-2.5 sherwood-input text-xs sm:text-sm font-mono"
+                    placeholder="••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••••"
+                    className="w-full pl-3.5 pr-12 py-3 min-h-[46px] sherwood-input text-xs sm:text-sm font-mono tracking-wider"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAnonKey(!showAnonKey)}
                     aria-label={showAnonKey ? 'Masquer la clé' : 'Afficher la clé'}
-                    className="touch-btn absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-[#877a6b] hover:text-[#2c241c] rounded-lg transition-colors cursor-pointer"
+                    className="touch-btn absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 min-w-[40px] min-h-[40px] flex items-center justify-center text-[#877a6b] hover:text-[#2c241c] rounded-xl transition-colors cursor-pointer"
                   >
                     {showAnonKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-                <span className="text-[11px] text-[#877a6b] mt-1 block">
+                <span className="text-[11px] text-[#877a6b] block font-medium leading-normal">
                   Clé de niveau client pour la synchronisation POS sécurisée par RLS (Row Level Security).
                 </span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-[#483d31] mb-1">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#483d31]">
                     Direction du Flux
                   </label>
                   <select
                     value={syncDirection}
                     onChange={(e) => setSyncDirection(e.target.value as any)}
-                    className="w-full min-h-[44px] px-3 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
+                    className="w-full min-h-[46px] px-3.5 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
                   >
                     <option value="BIDIRECTIONAL">Bidirectionnel (Cloud ⇄ Local)</option>
                     <option value="CLOUD_TO_LOCAL">Descendant (Cloud → Caisse Locale)</option>
@@ -764,14 +766,14 @@ export const AdminSyncView: React.FC = () => {
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-[#483d31] mb-1">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-[#483d31]">
                     Synchronisation Automatique
                   </label>
                   <select
                     value={autoSync ? 'true' : 'false'}
                     onChange={(e) => setAutoSync(e.target.value === 'true')}
-                    className="w-full min-h-[44px] px-3 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
+                    className="w-full min-h-[46px] px-3.5 py-2.5 sherwood-input text-xs font-bold cursor-pointer"
                   >
                     <option value="true">Automatique (À chaque vente)</option>
                     <option value="false">Manuelle uniquement</option>
@@ -784,22 +786,22 @@ export const AdminSyncView: React.FC = () => {
                 <div
                   role="status"
                   aria-live="polite"
-                  className={`p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between gap-2 animate-in fade-in duration-150 ${
+                  className={`p-3.5 rounded-2xl text-xs font-bold flex items-center justify-between gap-3 animate-in fade-in duration-150 ${
                     testResult.success
                       ? 'bg-[#eaf2e8] text-[#234931] border border-[#cbe0cb]'
                       : 'bg-[#fef2f2] text-[#991b1b] border border-[#fecaca]'
                   }`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5 min-w-0">
                     {testResult.success ? (
                       <CheckCircle2 className="w-4 h-4 text-[#234931] shrink-0" />
                     ) : (
                       <AlertTriangle className="w-4 h-4 text-[#dc2626] shrink-0" />
                     )}
-                    <span>{testResult.message}</span>
+                    <span className="truncate">{testResult.message}</span>
                   </div>
                   {testResult.latencyMs !== undefined && (
-                    <span className="font-mono text-[11px] px-2.5 py-0.5 rounded-full bg-white/80 border border-[#cbe0cb] font-black shrink-0">
+                    <span className="font-mono text-[11px] px-2.5 py-1 rounded-full bg-white/80 border border-[#cbe0cb] font-black shrink-0">
                       {testResult.latencyMs} ms
                     </span>
                   )}
@@ -807,33 +809,33 @@ export const AdminSyncView: React.FC = () => {
               )}
 
               {/* Responsive actions bar: full-width stacked on mobile, inline on sm+ */}
-              <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-t border-[#e7ddca]">
                 <button
                   type="button"
                   disabled={isTesting}
                   onClick={handleTestConnection}
-                  className="touch-btn min-h-[46px] px-4 py-2.5 sherwood-btn-outline text-xs font-bold flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="touch-btn min-h-[46px] px-5 py-2.5 sherwood-btn-outline text-xs font-bold flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
-                  <RefreshCw className={`w-4 h-4 ${isTesting ? 'animate-spin' : ''}`} />
-                  <span>{isTesting ? 'Vérification en cours...' : 'Tester la Connexion'}</span>
+                  <RefreshCw className={`w-4 h-4 shrink-0 ${isTesting ? 'animate-spin' : ''}`} />
+                  <span className="whitespace-nowrap">{isTesting ? 'Vérification en cours...' : 'Tester la Connexion'}</span>
                 </button>
 
                 <button
                   type="submit"
                   className="touch-btn min-h-[46px] px-6 py-2.5 sherwood-btn-forest text-xs font-bold shadow-xs flex items-center justify-center gap-2 w-full sm:w-auto"
                 >
-                  <Save className="w-4 h-4" />
-                  <span>Sauvegarder les Paramètres</span>
+                  <Save className="w-4 h-4 shrink-0" />
+                  <span className="whitespace-nowrap">Sauvegarder les Paramètres</span>
                 </button>
               </div>
             </form>
           </div>
 
           {/* Quick Stats & Cloud Topology Card */}
-          <div className="space-y-5">
-            <div className="sherwood-panel p-5 space-y-4">
-              <div className="flex items-center gap-2.5 pb-2 border-b border-[#e7ddca]">
-                <div className="w-8 h-8 rounded-xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+          <div className="space-y-5 w-full min-w-0">
+            <div className="sherwood-panel p-5 space-y-4 w-full min-w-0">
+              <div className="flex items-center gap-2.5 pb-3 border-b border-[#e7ddca]">
+                <div className="w-9 h-9 rounded-xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold shrink-0 border border-[#f0d4ba]">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <h3 className="font-serif-title font-black text-sm text-[#234931]">
@@ -842,26 +844,26 @@ export const AdminSyncView: React.FC = () => {
               </div>
 
               <div className="space-y-2.5 text-xs">
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
                   <span className="text-[#483d31] font-bold">Fournisseur Cloud</span>
                   <span className="font-extrabold text-[#234931]">Supabase PostgreSQL</span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
                   <span className="text-[#483d31] font-bold">Sécurité RLS</span>
-                  <span className="font-black text-emerald-800 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  <span className="font-black text-emerald-800 flex items-center gap-1.5 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
                     <Check className="w-3.5 h-3.5" />
                     <span>Activée (10 tables)</span>
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
                   <span className="text-[#483d31] font-bold">File d'attente locale</span>
-                  <span className="font-mono font-black text-[#85522b] bg-[#faeee2] px-2.5 py-0.5 rounded-full border border-[#f0d4ba]">
+                  <span className="font-mono font-black text-[#85522b] bg-[#faeee2] px-2.5 py-1 rounded-xl border border-[#f0d4ba]">
                     {pendingSyncCount} ticket(s)
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-3 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
+                <div className="flex items-center justify-between p-3.5 rounded-2xl bg-white border border-[#d8cdba] shadow-2xs">
                   <span className="text-[#483d31] font-bold">Articles synchronisables</span>
-                  <span className="font-mono font-black text-[#234931] bg-[#eaf2e8] px-2.5 py-0.5 rounded-full border border-[#cbe0cb]">
+                  <span className="font-mono font-black text-[#234931] bg-[#eaf2e8] px-2.5 py-1 rounded-xl border border-[#cbe0cb]">
                     {products.length} articles
                   </span>
                 </div>
@@ -873,7 +875,7 @@ export const AdminSyncView: React.FC = () => {
                   onClick={() => setActiveTab('schema')}
                   className="w-full touch-btn min-h-[44px] py-2.5 sherwood-btn-wood text-xs font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
                 >
-                  <FileCode className="w-4 h-4" />
+                  <FileCode className="w-4 h-4 shrink-0" />
                   <span>Voir le Script de Création SQL</span>
                 </button>
               </div>
