@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { usePos } from '../../context/PosContext';
 import { supabaseSyncService, SyncLogEntry } from '../../services/supabaseSyncService';
+import { PaperWidth, PrinterInterface, ThermalPrinterSettings } from '../../types';
+import { SHERWOOD_ASSETS } from '../../assets/images';
 import {
   Cloud,
   Database,
@@ -25,6 +27,15 @@ import {
   ExternalLink,
   Layers,
   Sparkles,
+  Printer,
+  Image as ImageIcon,
+  Sliders,
+  Scissors,
+  Upload,
+  Trash2,
+  FileText,
+  Eye,
+  Info,
 } from 'lucide-react';
 
 const SUPABASE_SCHEMA_SQL = `-- ============================================================
@@ -305,16 +316,28 @@ export const AdminSyncView: React.FC = () => {
     triggerSyncNow,
     bulkAddBenchmarkProducts,
     resetDemoData,
+    printerSettings,
+    updatePrinterSettings,
   } = usePos();
 
   // Active sub-tab
-  const [activeTab, setActiveTab] = useState<'cloud' | 'schema' | 'benchmark' | 'logs'>('cloud');
+  const [activeTab, setActiveTab] = useState<'cloud' | 'schema' | 'printer' | 'benchmark' | 'logs'>('cloud');
 
   // Supabase form state
   const [url, setUrl] = useState(supabaseConfig.url);
   const [anonKey, setAnonKey] = useState(supabaseConfig.anonKey);
   const [syncDirection, setSyncDirection] = useState(supabaseConfig.syncDirection);
   const [autoSync, setAutoSync] = useState(supabaseConfig.autoSyncEnabled);
+
+  // Thermal Printer form state
+  const [printerForm, setPrinterForm] = useState<ThermalPrinterSettings>(printerSettings);
+  const [printerSaveSuccess, setPrinterSaveSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync printer form when context updates
+  useEffect(() => {
+    setPrinterForm(printerSettings);
+  }, [printerSettings]);
 
   // Statuses
   const [isTesting, setIsTesting] = useState(false);
@@ -336,6 +359,74 @@ export const AdminSyncView: React.FC = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  // Handle saving printer settings
+  const handleSavePrinterSettings = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    updatePrinterSettings(printerForm);
+    setPrinterSaveSuccess(true);
+    supabaseSyncService.addLog(
+      'SUCCESS',
+      `Paramètres imprimante thermique enregistrés : ${printerForm.paperWidth} • ${printerForm.printerName}`
+    );
+    setTimeout(() => setPrinterSaveSuccess(false), 3000);
+  };
+
+  // Logo file upload handler
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez sélectionner un fichier image valide (PNG, JPG, SVG).');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setPrinterForm((prev) => ({
+          ...prev,
+          logoDataUrl: reader.result as string,
+          printLogo: true,
+        }));
+        supabaseSyncService.addLog('INFO', `Nouveau logo chargé (${file.name}) pour les tickets thermiques.`);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Use Sherwood Island mascot as logo
+  const handleSetSherwoodLogo = () => {
+    setPrinterForm((prev) => ({
+      ...prev,
+      logoDataUrl: SHERWOOD_ASSETS.shopkeeper,
+      printLogo: true,
+    }));
+    supabaseSyncService.addLog('INFO', 'Logo Sherwood Island (Figurine Mascotte) activé pour les tickets.');
+  };
+
+  // Remove receipt logo
+  const handleRemoveLogo = () => {
+    setPrinterForm((prev) => ({
+      ...prev,
+      logoDataUrl: undefined,
+      printLogo: false,
+    }));
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    supabaseSyncService.addLog('INFO', 'Logo retiré des tickets thermiques.');
+  };
+
+  // Thermal test print trigger
+  const handlePrintTestReceipt = () => {
+    // Save first to ensure sync
+    updatePrinterSettings(printerForm);
+    supabaseSyncService.addLog(
+      'INFO',
+      `Impression ticket test ${printerForm.paperWidth} envoyée vers ${printerForm.printerName}...`
+    );
+    window.print();
+  };
 
   // Save config
   const handleSaveConfig = (e: React.FormEvent) => {
@@ -501,6 +592,22 @@ export const AdminSyncView: React.FC = () => {
           <span>Script SQL des Tables</span>
           <span className="px-1.5 py-0.2 rounded-full bg-[#faeee2] text-[#85522b] text-[10px] font-mono">
             10 tables
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('printer')}
+          className={`touch-btn px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+            activeTab === 'printer'
+              ? 'bg-[#234931] text-[#fdfbf7] shadow-sm'
+              : 'bg-[#fdfbf7] text-[#605547] hover:bg-[#f7f2e7] border border-[#e2d7c2]'
+          }`}
+        >
+          <Printer className="w-4 h-4" />
+          <span>Imprimante Thermique</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-[#eaf2e8] text-[#234931] text-[10px] font-mono">
+            {printerForm.paperWidth}
           </span>
         </button>
 
@@ -856,6 +963,630 @@ export const AdminSyncView: React.FC = () => {
                 <p className="text-[11px] text-[#605547] leading-relaxed">
                   Collez le script SQL et cliquez sur <strong>Run</strong>. Toutes les tables, index et règles RLS sont créées.
                 </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB: THERMAL PRINTER SETTINGS (80mm / 58mm, LOGO, HARDWARE) */}
+      {activeTab === 'printer' && (
+        <div className="space-y-6">
+          {printerSaveSuccess && (
+            <div className="p-4 bg-[#eaf2e8] border border-[#cbe0cb] text-[#234931] rounded-2xl flex items-center justify-between text-xs font-bold animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <span>Paramètres d'impression thermique enregistrés avec succès dans la mémoire locale de la caisse.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPrinterSaveSuccess(false)}
+                className="text-[#234931] hover:underline"
+              >
+                Fermer
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left 7 cols: Controls & Settings */}
+            <form onSubmit={handleSavePrinterSettings} className="lg:col-span-7 space-y-5">
+              {/* Card 1: Format Papier Thermique (80mm vs 58mm) */}
+              <div className="sherwood-panel space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e7ddca]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                      <Sliders className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                        1. Format du Rouleau Thermique
+                      </h3>
+                      <p className="text-[11px] text-[#605547]">
+                        Choisissez la largeur du papier selon votre matériel de caisse
+                      </p>
+                    </div>
+                  </div>
+                  <span className="sherwood-badge-forest text-[11px]">
+                    Actif : {printerForm.paperWidth}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* 80mm Option */}
+                  <div
+                    onClick={() => setPrinterForm((prev) => ({ ...prev, paperWidth: '80mm' }))}
+                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                      printerForm.paperWidth === '80mm'
+                        ? 'bg-[#eaf2e8] border-[#234931] shadow-sm'
+                        : 'bg-[#fdfbf7] border-[#e2d7c2] hover:border-[#85522b]/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="font-black text-sm text-[#234931] font-mono">80 mm</div>
+                      {printerForm.paperWidth === '80mm' && (
+                        <span className="w-5 h-5 rounded-full bg-[#234931] text-white flex items-center justify-center text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-bold text-[#2c241c] mt-1">
+                      Standard Caisse & Supermarché
+                    </div>
+                    <p className="text-[11px] text-[#605547] mt-1 leading-relaxed">
+                      Largeur d'impression 72 à 80 mm. Format standard pour commerce de détail, jusqu'à 48 caractères par ligne.
+                    </p>
+                    <div className="mt-2.5 pt-2 border-t border-[#d8cdba] flex items-center justify-between text-[10px] text-[#85522b] font-mono font-bold">
+                      <span>48 Colonnes</span>
+                      <span>Rouleau Ø 80mm</span>
+                    </div>
+                  </div>
+
+                  {/* 58mm Option */}
+                  <div
+                    onClick={() => setPrinterForm((prev) => ({ ...prev, paperWidth: '58mm' }))}
+                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer relative ${
+                      printerForm.paperWidth === '58mm'
+                        ? 'bg-[#eaf2e8] border-[#234931] shadow-sm'
+                        : 'bg-[#fdfbf7] border-[#e2d7c2] hover:border-[#85522b]/40'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="font-black text-sm text-[#234931] font-mono">58 mm</div>
+                      {printerForm.paperWidth === '58mm' && (
+                        <span className="w-5 h-5 rounded-full bg-[#234931] text-white flex items-center justify-center text-xs">
+                          ✓
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs font-bold text-[#2c241c] mt-1">
+                      Format Économique & Mobile
+                    </div>
+                    <p className="text-[11px] text-[#605547] mt-1 leading-relaxed">
+                      Largeur d'impression 48 à 58 mm. Idéal pour terminaux mobiles, kiosques et caisses compactes (32 colonnes).
+                    </p>
+                    <div className="mt-2.5 pt-2 border-t border-[#d8cdba] flex items-center justify-between text-[10px] text-[#85522b] font-mono font-bold">
+                      <span>32 Colonnes</span>
+                      <span>Rouleau Ø 50mm</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 2: Sélection Imprimante & Interface */}
+              <div className="sherwood-panel space-y-4">
+                <div className="flex items-center gap-2.5 pb-3 border-b border-[#e7ddca]">
+                  <div className="w-9 h-9 rounded-2xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                    <Printer className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                      2. Imprimante par Défaut & Interface Matérielle
+                    </h3>
+                    <p className="text-[11px] text-[#605547]">
+                      Protocole ESC/POS ou gestionnaire d'impression standard
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {/* Preset Dropdown */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#2c241c] mb-1">
+                      Modèle d'imprimante
+                    </label>
+                    <select
+                      value={printerForm.printerName}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, printerName: e.target.value }))}
+                      className="w-full px-3 py-2 text-xs font-semibold bg-[#f7f2e7] border border-[#d8cdba] rounded-xl text-[#2c241c] focus:outline-hidden focus:border-[#234931]"
+                    >
+                      <option value="EPSON TM-T20III (USB/Ethernet)">EPSON TM-T20III (Standard de caisse)</option>
+                      <option value="EPSON TM-T88VI (Ultra-rapide 350mm/s)">EPSON TM-T88VI (Haut débit)</option>
+                      <option value="Star Micronics TSP143III (USB/LAN/BT)">Star Micronics TSP143III</option>
+                      <option value="Bixolon SRP-330II (ESC/POS)">Bixolon SRP-330II</option>
+                      <option value="Xprinter XP-N160M / XP-58 (Économique)">Xprinter XP-N160M / XP-58</option>
+                      <option value="Sunmi T2 / V2 Pro (POS Tactile)">Sunmi T2 / V2 Pro</option>
+                      <option value="Imprimante Système Standard (Spooler OS)">Imprimante Système Standard (Spooler)</option>
+                    </select>
+                  </div>
+
+                  {/* Custom Name */}
+                  <div>
+                    <label className="block text-xs font-bold text-[#2c241c] mb-1">
+                      Nom affiché sur les rapports
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.printerName}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, printerName: e.target.value }))}
+                      placeholder="Nom de l'imprimante caisse..."
+                      className="w-full px-3 py-2 text-xs sherwood-input"
+                    />
+                  </div>
+                </div>
+
+                {/* Interface Selector Buttons */}
+                <div>
+                  <label className="block text-xs font-bold text-[#2c241c] mb-2">
+                    Liaison matérielle
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                    {[
+                      { id: 'SYSTEM_DEFAULT', label: 'Navigateur / OS', desc: 'Boîte système' },
+                      { id: 'USB_RAW', label: 'USB Direct', desc: 'ESC/POS natif' },
+                      { id: 'NETWORK_IP', label: 'Réseau IP', desc: 'Ethernet / Wi-Fi' },
+                      { id: 'BLUETOOTH', label: 'Bluetooth', desc: 'Imprimante mobile' },
+                    ].map((it) => (
+                      <button
+                        key={it.id}
+                        type="button"
+                        onClick={() => setPrinterForm((prev) => ({ ...prev, printerInterface: it.id as PrinterInterface }))}
+                        className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                          printerForm.printerInterface === it.id
+                            ? 'bg-[#234931] text-[#fdfbf7] border-[#234931] shadow-2xs'
+                            : 'bg-[#fdfbf7] border-[#d8cdba] text-[#483d31] hover:bg-[#f7f2e7]'
+                        }`}
+                      >
+                        <div className="font-bold text-[11px] leading-tight">{it.label}</div>
+                        <div className={`text-[10px] ${printerForm.printerInterface === it.id ? 'text-[#c5ddc5]' : 'text-[#877a6b]'}`}>
+                          {it.desc}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* If Network IP selected, show IP & Port inputs */}
+                {printerForm.printerInterface === 'NETWORK_IP' && (
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-[#f7f2e7] border border-[#e2d7c2] rounded-xl text-xs">
+                    <div className="sm:col-span-2">
+                      <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                        Adresse IP de l'imprimante
+                      </label>
+                      <input
+                        type="text"
+                        value={printerForm.printerIp}
+                        onChange={(e) => setPrinterForm((prev) => ({ ...prev, printerIp: e.target.value }))}
+                        placeholder="192.168.1.200"
+                        className="w-full px-3 py-1.5 font-mono text-xs bg-white border border-[#d8cdba] rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                        Port Raw (9100)
+                      </label>
+                      <input
+                        type="number"
+                        value={printerForm.printerPort}
+                        onChange={(e) => setPrinterForm((prev) => ({ ...prev, printerPort: Number(e.target.value) }))}
+                        placeholder="9100"
+                        className="w-full px-3 py-1.5 font-mono text-xs bg-white border border-[#d8cdba] rounded-lg"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Card 3: Logo du Ticket de Caisse */}
+              <div className="sherwood-panel space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-[#e7ddca]">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-2xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                      <ImageIcon className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                        3. Logo Personnalisé du Ticket
+                      </h3>
+                      <p className="text-[11px] text-[#605547]">
+                        Téléchargez votre propre image pour l'en-tête thermique
+                      </p>
+                    </div>
+                  </div>
+
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#234931]">
+                    <input
+                      type="checkbox"
+                      checked={printerForm.printLogo}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, printLogo: e.target.checked }))}
+                      className="w-4 h-4 accent-[#234931] rounded"
+                    />
+                    <span>Activer sur les tickets</span>
+                  </label>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  {/* Logo Preview Thumbnail */}
+                  <div className="w-24 h-24 rounded-2xl bg-white border-2 border-dashed border-[#d8cdba] flex items-center justify-center overflow-hidden shrink-0 shadow-inner p-1">
+                    {printerForm.logoDataUrl ? (
+                      <img
+                        src={printerForm.logoDataUrl}
+                        alt="Logo Ticket"
+                        className="w-full h-full object-contain filter contrast-125"
+                      />
+                    ) : (
+                      <div className="text-center text-[#877a6b] text-[10px] p-1 font-medium">
+                        <ImageIcon className="w-6 h-6 mx-auto mb-1 text-[#c7baa3]" />
+                        Sans logo
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upload and quick buttons */}
+                  <div className="flex-1 space-y-2.5 w-full">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/svg+xml,image/webp"
+                      onChange={handleLogoUpload}
+                      className="hidden"
+                    />
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="touch-btn px-3.5 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Téléverser mon Logo</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleSetSherwoodLogo}
+                        className="touch-btn px-3 py-2 sherwood-btn-outline text-xs font-semibold flex items-center gap-1.5"
+                        title="Activer la mascotte Sherwood Island HD"
+                      >
+                        <span>🍃 Figurine Sherwood HD</span>
+                      </button>
+
+                      {printerForm.logoDataUrl && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveLogo}
+                          className="touch-btn px-2.5 py-2 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-semibold flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>Supprimer</span>
+                        </button>
+                      )}
+                    </div>
+
+                    <p className="text-[11px] text-[#605547] leading-relaxed">
+                      Format recommandé : image PNG ou JPG carrée ou panoramique (environ 250×150 px). Le logo est automatiquement converti en niveaux de gris pour l'impression thermique.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 4: Coordonnées du Magasin */}
+              <div className="sherwood-panel space-y-3.5">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-[#e7ddca]">
+                  <div className="w-8 h-8 rounded-xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                      4. Coordonnées & En-tête Imprimé
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Nom de l'enseigne
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.storeName}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, storeName: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Sous-titre / Activité
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.storeSubtitle}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, storeSubtitle: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Adresse
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.storeAddress}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, storeAddress: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Téléphone
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.storePhone}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, storePhone: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Identifiants fiscaux (NIF, RC, NIS)
+                    </label>
+                    <input
+                      type="text"
+                      value={printerForm.storeTaxId}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, storeTaxId: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input font-mono text-[11px]"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="block text-[11px] font-bold text-[#2c241c] mb-1">
+                      Message de pied de ticket
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={printerForm.receiptFooterMessage}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, receiptFooterMessage: e.target.value }))}
+                      className="w-full px-3 py-1.5 sherwood-input text-[11px]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Card 5: Options Matérielles (Découpe, Tiroir, Exemplaires) */}
+              <div className="sherwood-panel space-y-3">
+                <div className="flex items-center gap-2.5 pb-2 border-b border-[#e7ddca]">
+                  <div className="w-8 h-8 rounded-xl bg-[#faeee2] text-[#85522b] flex items-center justify-center font-bold">
+                    <Scissors className="w-4 h-4" />
+                  </div>
+                  <h3 className="font-serif-title font-black text-sm text-[#234931]">
+                    5. Automatismes Caisse & Tiroir
+                  </h3>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <label className="p-3 bg-[#f7f2e7] border border-[#e2d7c2] rounded-xl flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={printerForm.autoCut}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, autoCut: e.target.checked }))}
+                      className="w-4 h-4 accent-[#234931] rounded"
+                    />
+                    <div>
+                      <div className="font-bold text-[#2c241c]">Découpe Papier</div>
+                      <div className="text-[10px] text-[#605547]">Commande ESC/POS GS V</div>
+                    </div>
+                  </label>
+
+                  <label className="p-3 bg-[#f7f2e7] border border-[#e2d7c2] rounded-xl flex items-center gap-2.5 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={printerForm.openCashDrawer}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, openCashDrawer: e.target.checked }))}
+                      className="w-4 h-4 accent-[#234931] rounded"
+                    />
+                    <div>
+                      <div className="font-bold text-[#2c241c]">Tiroir-Caisse</div>
+                      <div className="text-[10px] text-[#605547]">Impulsion ESC p (Pin 2)</div>
+                    </div>
+                  </label>
+
+                  <div className="p-3 bg-[#f7f2e7] border border-[#e2d7c2] rounded-xl flex items-center justify-between">
+                    <div>
+                      <div className="font-bold text-[#2c241c]">Exemplaires</div>
+                      <div className="text-[10px] text-[#605547]">Nombre de tickets</div>
+                    </div>
+                    <select
+                      value={printerForm.printCopies}
+                      onChange={(e) => setPrinterForm((prev) => ({ ...prev, printCopies: Number(e.target.value) }))}
+                      className="px-2 py-1 bg-white border border-[#d8cdba] rounded-lg text-xs font-bold"
+                    >
+                      <option value={1}>1 ticket</option>
+                      <option value={2}>2 tickets</option>
+                      <option value={3}>3 tickets</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Buttons */}
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="submit"
+                  className="touch-btn flex-1 py-3 px-5 sherwood-btn-forest text-xs font-bold flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>Enregistrer la Configuration Imprimante</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePrintTestReceipt}
+                  className="touch-btn py-3 px-4 sherwood-btn-wood text-xs font-bold flex items-center gap-2 shadow-md cursor-pointer shrink-0"
+                >
+                  <Printer className="w-4 h-4" />
+                  <span>Imprimer Ticket de Test ({printerForm.paperWidth})</span>
+                </button>
+              </div>
+            </form>
+
+            {/* Right 5 cols: Authentic Live Thermal Ticket Slip Visualizer */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="sherwood-panel space-y-3">
+                <div className="flex items-center justify-between pb-2 border-b border-[#e7ddca]">
+                  <div className="flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-[#234931]" />
+                    <h4 className="font-serif-title font-black text-xs text-[#234931]">
+                      Aperçu Réel du Ticket Thermique
+                    </h4>
+                  </div>
+                  <span className="font-mono text-[10px] bg-[#faeee2] text-[#85522b] px-2 py-0.5 rounded-md font-bold">
+                    Format : {printerForm.paperWidth}
+                  </span>
+                </div>
+
+                <div className="bg-[#ede6d8] p-4 rounded-2xl flex justify-center overflow-x-auto">
+                  {/* Calibrated Thermal Ticket Slip */}
+                  <div
+                    className={`bg-white rounded-lg shadow-md border border-[#d6cbba] font-mono text-slate-900 transition-all ${
+                      printerForm.paperWidth === '58mm'
+                        ? 'w-[230px] p-3 text-[10px] space-y-2.5'
+                        : 'w-[310px] p-4 text-xs space-y-3.5'
+                    }`}
+                  >
+                    {/* Thermal Cut Mark */}
+                    <div className="text-center text-[9px] text-slate-400 border-b border-dashed border-slate-300 pb-1">
+                      ✂ - - - - - - DÉCOUPE TICKET - - - - - - ✂
+                    </div>
+
+                    {/* Logo if enabled */}
+                    {printerForm.printLogo && printerForm.logoDataUrl && (
+                      <div className="flex justify-center pb-1">
+                        <img
+                          src={printerForm.logoDataUrl}
+                          alt="Logo Ticket"
+                          className="max-h-14 max-w-[140px] object-contain filter contrast-150 grayscale"
+                        />
+                      </div>
+                    )}
+
+                    {/* Header Store Info */}
+                    <div className="text-center space-y-0.5 border-b border-dashed border-slate-300 pb-2">
+                      <div className="font-black text-slate-900 tracking-wider uppercase text-sm">
+                        {printerForm.storeName || 'SHERWOOD POS MODULE'}
+                      </div>
+                      <div className="text-[10px] text-slate-600 font-medium">
+                        {printerForm.storeSubtitle || 'Commerce Général & Épicerie'}
+                      </div>
+                      <div className="text-[9px] text-slate-500">
+                        {printerForm.storeAddress || '14 Rue de Sherwood, Alger'}
+                      </div>
+                      <div className="text-[9px] text-slate-500">
+                        Tél : {printerForm.storePhone || '+213 21 00 00 00'}
+                      </div>
+                      <div className="text-[8px] text-slate-400 pt-0.5">
+                        {printerForm.storeTaxId || 'NIF: 001916010042879 • RC: 16/00-098234B19'}
+                      </div>
+                    </div>
+
+                    {/* Ticket Meta */}
+                    <div className="text-[10px] space-y-0.5 border-b border-dashed border-slate-300 pb-2">
+                      <div className="flex justify-between font-bold">
+                        <span>Ticket N° :</span>
+                        <span>TEST-{new Date().getFullYear()}-001</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Date :</span>
+                        <span>{new Date().toLocaleDateString('fr-FR')} {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Imprimante :</span>
+                        <span className="truncate max-w-[140px]">{printerForm.printerName.split(' ')[0]}</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600">
+                        <span>Gabarit :</span>
+                        <span className="font-bold text-[#234931]">{printerForm.paperWidth} ESC/POS</span>
+                      </div>
+                    </div>
+
+                    {/* Sample Items Table */}
+                    <div className="space-y-1 border-b border-dashed border-slate-300 pb-2 text-[10px]">
+                      <div className="flex justify-between font-bold text-slate-500 border-b border-slate-200 pb-0.5">
+                        <span>Article</span>
+                        <span>Total</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between">
+                          <span className="truncate max-w-[150px]">Huile d'olive vierge 1L</span>
+                          <span>950 DA</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400">1 x 950 DA (TVA 19%)</div>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between">
+                          <span className="truncate max-w-[150px]">Café Moulu Familial 250g</span>
+                          <span>420 DA</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400">2 x 210 DA (TVA 9%)</div>
+                      </div>
+                    </div>
+
+                    {/* Totals */}
+                    <div className="space-y-1 border-b border-dashed border-slate-300 pb-2 text-[11px]">
+                      <div className="flex justify-between text-slate-600 text-[10px]">
+                        <span>Sous-total HT :</span>
+                        <span>1 184 DA</span>
+                      </div>
+                      <div className="flex justify-between text-slate-600 text-[10px]">
+                        <span>TVA :</span>
+                        <span>186 DA</span>
+                      </div>
+                      <div className="flex justify-between font-black text-sm pt-0.5 border-t border-slate-300">
+                        <span>TOTAL TTC :</span>
+                        <span>1 370 DA</span>
+                      </div>
+                      <div className="flex justify-between text-[10px] text-slate-600 pt-0.5">
+                        <span>Mode Règlement :</span>
+                        <span>ESPÈCES</span>
+                      </div>
+                    </div>
+
+                    {/* Footer barcode & custom message */}
+                    <div className="text-center space-y-1.5 pt-1">
+                      {/* Barcode line mock */}
+                      <div className="font-mono text-[9px] tracking-widest text-slate-700 font-bold">
+                        |||||| | |||||||| || ||||||||| |
+                      </div>
+                      <div className="text-[9px] text-slate-500 font-mono">
+                        *613000000001*
+                      </div>
+                      <p className="text-[9px] text-slate-600 leading-tight">
+                        {printerForm.receiptFooterMessage || "Merci de votre confiance ! À bientôt."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-center pt-1">
+                  <button
+                    type="button"
+                    onClick={handlePrintTestReceipt}
+                    className="w-full py-2.5 sherwood-btn-outline text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-[#234931]" />
+                    <span>Lancer le Test d'Impression ({printerForm.paperWidth})</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>

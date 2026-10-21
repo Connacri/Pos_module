@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { usePos } from '../../context/PosContext';
 import {
   Printer,
@@ -37,7 +37,10 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
     selectedCustomerId,
     customers,
     orderNote,
+    printerSettings,
   } = usePos();
+
+  const [activeWidth, setActiveWidth] = useState<'80mm' | '58mm'>(printerSettings.paperWidth || '80mm');
 
   const customer = customers.find((c) => c.id === selectedCustomerId);
 
@@ -85,6 +88,8 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
     window.print();
   };
 
+  const is58mm = activeWidth === '58mm';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-3 sm:p-4 overflow-y-auto">
       <div className="bg-[#fdfbf7] w-full max-w-lg rounded-3xl shadow-2xl border border-[#e5dcce] overflow-hidden my-4 flex flex-col max-h-[94vh]">
@@ -95,42 +100,74 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
               <Eye className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm font-serif-title">🍃 Aperçu Ticket Thermique 80mm</h3>
+              <h3 className="font-bold text-sm font-serif-title">🍃 Aperçu Ticket Thermique ({activeWidth})</h3>
               <p className="text-[11px] text-[#c5ddc5]">
-                Format Rouleau Thermique 80mm • Boutique Sherwood
+                Format {activeWidth} ESC/POS • {printerSettings.printerName.split(' ')[0]}
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="touch-btn p-1 text-[#c5ddc5] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#284f35]"
-            aria-label="Fermer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Quick 80mm / 58mm switcher */}
+            <div className="flex items-center bg-[#172f20] border border-[#2b5437] rounded-lg p-0.5 text-[10px]">
+              <button
+                type="button"
+                onClick={() => setActiveWidth('80mm')}
+                className={`px-2 py-0.5 rounded font-mono font-bold transition-colors cursor-pointer ${
+                  activeWidth === '80mm'
+                    ? 'bg-[#fdfbf7] text-[#1f3d29]'
+                    : 'text-[#c5ddc5] hover:text-white'
+                }`}
+              >
+                80mm
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveWidth('58mm')}
+                className={`px-2 py-0.5 rounded font-mono font-bold transition-colors cursor-pointer ${
+                  activeWidth === '58mm'
+                    ? 'bg-[#fdfbf7] text-[#1f3d29]'
+                    : 'text-[#c5ddc5] hover:text-white'
+                }`}
+              >
+                58mm
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="touch-btn p-1 text-[#c5ddc5] hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-[#284f35]"
+              aria-label="Fermer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
-        {/* 80mm Format Notice Banner (Hidden during print) */}
+        {/* Format Notice Banner (Hidden during print) */}
         <div className="no-print bg-[#fbf4e8] px-5 py-2.5 border-b border-[#eddabb] flex items-center justify-between text-xs text-[#70481f]">
           <div className="flex items-center gap-2 font-medium">
             <AlertCircle className="w-4 h-4 text-[#8d5732] shrink-0" />
             <span>
-              <strong>Gabarit 80mm calibré :</strong> Largeur d'impression 72-80 mm. Ticket de la boutique Sherwood.
+              <strong>Gabarit {activeWidth} calibré :</strong> Largeur d'impression {is58mm ? '48-58 mm' : '72-80 mm'} • Imprimante : {printerSettings.printerName}
             </span>
           </div>
           <span className="hidden sm:inline-block font-mono text-[10px] bg-[#eddabb] text-[#5c3713] px-2 py-0.5 rounded-md font-bold">
-            80mm Roll
+            {activeWidth} Roll
           </span>
         </div>
 
         {/* Scrollable Receipt Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#ede6d8] flex justify-center">
-          {/* Authentic 80mm Thermal Slip Container */}
+          {/* Authentic Thermal Slip Container */}
           <div
             id="thermal-preview-receipt"
-            className="w-full max-w-[340px] bg-white p-5 rounded-xl shadow-md border border-[#d6cbba] font-mono text-xs text-slate-800 space-y-3.5 relative"
-            style={{ width: '80mm' }}
+            className={`bg-white rounded-xl shadow-md border border-[#d6cbba] font-mono text-slate-800 transition-all ${
+              is58mm
+                ? 'w-[230px] p-3 text-[10px] space-y-2.5'
+                : 'w-[320px] p-5 text-xs space-y-3.5'
+            }`}
           >
             {/* Specimen watermark pill */}
             <div className="text-center pb-2 border-b border-dashed border-slate-300">
@@ -139,27 +176,38 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
               </span>
             </div>
 
+            {/* Optional Monochromatic Receipt Logo */}
+            {printerSettings.printLogo && printerSettings.logoDataUrl && (
+              <div className="flex justify-center pb-1">
+                <img
+                  src={printerSettings.logoDataUrl}
+                  alt="Logo Enseigne"
+                  className="max-h-14 max-w-[150px] object-contain filter contrast-125 grayscale"
+                />
+              </div>
+            )}
+
             {/* Store Information Header */}
-            <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-1">
-              <div className="font-black text-base text-slate-900 tracking-wider font-serif-title">
-                BOUTIQUE SHERWOOD
+            <div className="text-center pb-2 border-b border-dashed border-slate-300 space-y-0.5">
+              <div className="font-black text-sm tracking-wider uppercase text-slate-900">
+                {printerSettings.storeName || 'BOUTIQUE SHERWOOD'}
               </div>
-              <div className="text-[11px] text-slate-600 font-medium">
-                Commerce Artisanal & Produits de l'Île
+              <div className="text-[10px] text-slate-600 font-medium">
+                {printerSettings.storeSubtitle || "Commerce Artisanal & Produits de l'Île"}
               </div>
-              <div className="text-[10px] text-slate-500">
-                Place du Village, Sherwood Island
+              <div className="text-[9px] text-slate-500">
+                {printerSettings.storeAddress || 'Place du Village, Sherwood Island'}
               </div>
-              <div className="text-[10px] text-slate-500">
-                Tél : +213 (0) 21 73 45 67 • DA-1234-9101
+              <div className="text-[9px] text-slate-500">
+                Tél : {printerSettings.storePhone || '+213 (0) 21 73 45 67'}
               </div>
-              <div className="text-[9px] text-slate-400 pt-0.5">
-                NIF: 001916010042879 • RC: 16/00-098234B19
+              <div className="text-[8px] text-slate-400 pt-0.5">
+                {printerSettings.storeTaxId || 'NIF: 001916010042879 • RC: 16/00-098234B19'}
               </div>
             </div>
 
             {/* Ticket Metadata */}
-            <div className="text-[11px] space-y-1 pb-2 border-b border-dashed border-slate-300">
+            <div className="text-[10px] space-y-1 pb-2 border-b border-dashed border-slate-300">
               <div className="flex justify-between font-bold text-slate-900">
                 <span>Réf. Projetée :</span>
                 <span className="font-mono">{previewTicketNumber}</span>
@@ -173,152 +221,124 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
                     year: 'numeric',
                     hour: '2-digit',
                     minute: '2-digit',
-                    second: '2-digit',
                   })}
                 </span>
               </div>
               <div className="flex justify-between text-slate-600">
                 <span>Poste Caisse :</span>
-                <span>Caisse #01 • Amine K.</span>
+                <span>Caisse #01 • Robin</span>
               </div>
               <div className="flex justify-between text-slate-700 font-medium pt-0.5">
                 <span>Client :</span>
-                <span>{customer?.name || 'Client Passager (Comptoir)'}</span>
+                <span className="truncate max-w-[130px]">{customer?.name || 'Client Passager'}</span>
               </div>
               {orderNote && (
-                <div className="flex justify-between text-slate-500 italic text-[10px]">
+                <div className="flex justify-between text-slate-500 italic text-[9px]">
                   <span>Note :</span>
-                  <span>{orderNote}</span>
+                  <span className="truncate max-w-[140px]">{orderNote}</span>
                 </div>
               )}
             </div>
 
-            {/* Items Table Formatted for 80mm */}
-            <div className="space-y-1.5 pb-2.5 border-b border-dashed border-slate-300">
+            {/* Items Table Formatted */}
+            <div className="space-y-1 pb-2.5 border-b border-dashed border-slate-300">
               <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase pb-1 border-b border-slate-200">
                 <span>Désignation</span>
                 <span>Total TTC</span>
               </div>
 
-              {cart.map((item, idx) => {
-                const lineOriginal = item.unitPrice * item.quantity;
-                const lineNet = lineOriginal * (1 - item.discountPercent / 100);
-
-                return (
-                  <div key={idx} className="space-y-0.5">
-                    <div className="flex justify-between font-semibold text-slate-900 text-[11px]">
-                      <span className="truncate pr-2">{item.product.name}</span>
-                      <span className="shrink-0 font-bold">{formatMoney(lineNet)}</span>
-                    </div>
-                    <div className="flex justify-between text-[10px] text-slate-500">
-                      <span>
-                        {item.quantity} x {formatMoney(item.unitPrice)}
-                        {item.product.taxRate > 0
-                          ? ` (TVA ${Math.round(item.product.taxRate * 100)}%)`
-                          : ' (TVA 0%)'}
-                      </span>
-                      {item.discountPercent > 0 && (
-                        <span className="text-emerald-700 font-bold">
-                          Remise -{item.discountPercent}%
+              <div className="space-y-1 pt-1">
+                {cart.map((item) => {
+                  const lineOriginal = item.unitPrice * item.quantity;
+                  const lineNet = lineOriginal * (1 - item.discountPercent / 100);
+                  return (
+                    <div key={item.product.id} className="space-y-0.5">
+                      <div className="flex justify-between items-baseline gap-1">
+                        <span className="font-semibold text-slate-900 truncate">
+                          {item.product.name}
                         </span>
-                      )}
+                        <span className="font-bold text-slate-900 shrink-0">
+                          {formatMoney(lineNet)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-[9px] text-slate-500">
+                        <span>
+                          {item.quantity} x {formatMoney(item.unitPrice)}
+                          {item.discountPercent > 0 && ` (-${item.discountPercent}%)`}
+                        </span>
+                        <span>TVA {Math.round(item.product.taxRate * 100)}%</span>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Tax Calculation Breakdown (Ventilation TVA) */}
-            <div className="text-[10px] space-y-1 pb-2 border-b border-dashed border-slate-300 bg-slate-50 p-2 rounded-xl">
-              <div className="font-bold text-slate-700 text-[10px] uppercase tracking-wider mb-1">
-                Ventilation Taxes (TVA 80mm)
-              </div>
-              <div className="grid grid-cols-4 font-semibold text-slate-500 border-b border-slate-200 pb-0.5">
-                <span>Taux</span>
-                <span className="text-right">Base HT</span>
-                <span className="text-right">Montant</span>
-                <span className="text-right">Total TTC</span>
-              </div>
-              {taxBreakdown.map((t, idx) => (
-                <div key={idx} className="grid grid-cols-4 text-slate-700">
-                  <span className="font-bold">{t.rate}%</span>
-                  <span className="text-right">{formatMoney(t.baseHT)}</span>
-                  <span className="text-right">{formatMoney(t.taxAmount)}</span>
-                  <span className="text-right font-medium">{formatMoney(t.totalTTC)}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Totals & Payment Method */}
-            <div className="space-y-1.5 pt-1 text-xs">
+            {/* Financial Summary */}
+            <div className="space-y-1 pb-3 border-b border-dashed border-slate-300 text-[10px]">
               <div className="flex justify-between text-slate-600">
-                <span>Total Brut HT :</span>
+                <span>Sous-total Brut (HT) :</span>
                 <span>{formatMoney(cartSummary.subtotalHT)}</span>
               </div>
+              <div className="flex justify-between text-slate-600">
+                <span>TVA globale :</span>
+                <span>{formatMoney(cartSummary.totalTax)}</span>
+              </div>
               {cartSummary.discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-700 font-bold">
-                  <span>Remise accordée :</span>
+                <div className="flex justify-between text-emerald-700 font-semibold">
+                  <span>Remise déduite :</span>
                   <span>-{formatMoney(cartSummary.discountAmount)}</span>
                 </div>
               )}
-              <div className="flex justify-between text-slate-600">
-                <span>Total TVA :</span>
-                <span>{formatMoney(cartSummary.totalTax)}</span>
-              </div>
-              <div className="flex justify-between text-slate-700 font-medium">
-                <span>Articles :</span>
-                <span>{cartSummary.totalItems} unité(s) ({cart.length} réf.)</span>
-              </div>
-
-              {/* Big Total TTC */}
-              <div className="pt-2 border-t-2 border-slate-900 flex justify-between items-baseline text-sm font-black text-slate-900">
+              <div className="flex justify-between text-sm font-black text-slate-900 pt-1.5 border-t border-slate-300">
                 <span>TOTAL NET TTC :</span>
-                <span className="text-lg text-indigo-700">{formatMoney(cartSummary.totalTTC)}</span>
-              </div>
-
-              {/* Planned Settlement Breakdown */}
-              <div className="pt-2 text-[11px] space-y-1 border-t border-slate-200">
-                <div className="flex justify-between text-slate-800 font-medium">
-                  <span>Règlement prévu :</span>
-                  <span className="font-bold uppercase">
-                    {paymentMethod === 'CASH'
-                      ? 'Espèces'
-                      : paymentMethod === 'CARD'
-                      ? 'Carte CIB / Edahabia'
-                      : 'Chèque / Virement'}
-                  </span>
-                </div>
-                {paymentMethod === 'CASH' && (
-                  <>
-                    <div className="flex justify-between text-slate-600">
-                      <span>Espèces remises :</span>
-                      <span>{formatMoney(amountTendered || cartSummary.totalTTC)}</span>
-                    </div>
-                    {changeToReturn > 0 && (
-                      <div className="flex justify-between text-emerald-700 font-black">
-                        <span>Monnaie à rendre :</span>
-                        <span>{formatMoney(changeToReturn)}</span>
-                      </div>
-                    )}
-                  </>
-                )}
+                <span>{formatMoney(cartSummary.totalTTC)}</span>
               </div>
             </div>
 
+            {/* Payment & Change Tendered */}
+            <div className="space-y-1 pb-2 border-b border-dashed border-slate-300 text-[10px]">
+              <div className="flex justify-between text-slate-700 font-bold">
+                <span>Mode Règlement :</span>
+                <span>
+                  {paymentMethod === 'CASH'
+                    ? 'ESPÈCES'
+                    : paymentMethod === 'CARD'
+                    ? 'CARTE BANCAIRE / CIB'
+                    : 'CHÈQUE'}
+                </span>
+              </div>
+              {paymentMethod === 'CASH' && (
+                <>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Espèces Reçues :</span>
+                    <span>{formatMoney(amountTendered)}</span>
+                  </div>
+                  {changeToReturn > 0 && (
+                    <div className="flex justify-between font-bold text-emerald-800">
+                      <span>Monnaie à Rendre :</span>
+                      <span>{formatMoney(changeToReturn)}</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
             {/* Barcode representation */}
-            <div className="pt-3 border-t border-dashed border-slate-300 text-center space-y-2">
+            <div className="pt-2 border-t border-dashed border-slate-300 text-center space-y-1.5">
               <div className="flex flex-col items-center justify-center">
-                <div className="flex items-center gap-0.5 tracking-[4px] font-mono text-base font-black text-slate-800 select-all">
+                <div className="font-mono text-xs tracking-widest text-slate-700 font-bold">
                   ||||| | |||| ||| |||||
                 </div>
-                <div className="text-[9px] text-slate-400 font-mono mt-0.5">
+                <div className="text-[8px] text-slate-400 font-mono mt-0.5">
                   {previewTicketNumber}
                 </div>
               </div>
-              <div className="text-[10px] text-slate-500 leading-tight">
-                Gabarit d'impression conforme aux spécifications thermiques 80mm (ESC/POS).
-              </div>
-              <div className="text-[10px] font-bold text-slate-800">
+              <p className="text-[9px] text-slate-600 leading-tight">
+                {printerSettings.receiptFooterMessage ||
+                  "Gabarit d'impression conforme aux spécifications thermiques ESC/POS."}
+              </p>
+              <div className="text-[9px] font-bold text-[#234931]">
                 *** MERCI DE VOTRE VISITE ET À BIENTÔT ***
               </div>
             </div>
@@ -330,7 +350,7 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
           <button
             type="button"
             onClick={onClose}
-            className="touch-btn px-4 py-2 border border-[#e2d6c1] bg-[#f7f2e7] hover:bg-[#ede4d4] text-[#5d5244] rounded-xl text-xs font-bold transition-colors cursor-pointer"
+            className="touch-btn px-4 py-2 sherwood-btn-outline text-xs font-bold"
           >
             Retour / Modifier
           </button>
@@ -339,19 +359,19 @@ export const TransactionPrintPreviewModal: React.FC<TransactionPrintPreviewModal
             <button
               type="button"
               onClick={handlePrint}
-              className="touch-btn px-4 py-2.5 bg-[#8d5732] hover:bg-[#784624] text-[#fff6ec] border border-[#6d3e1d] rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-xs"
+              className="touch-btn px-4 py-2.5 sherwood-btn-wood text-xs font-bold flex items-center gap-2"
               title="Tester l'impression sur imprimante thermique"
             >
               <Printer className="w-4 h-4 text-[#fcdbb6]" />
-              <span>Imprimer Ticket Test (80mm)</span>
+              <span>Imprimer Ticket Test ({activeWidth})</span>
             </button>
 
             <button
               type="button"
               onClick={onConfirmPayment}
-              className="touch-btn px-5 py-2.5 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] rounded-xl text-xs font-bold shadow-md transition-all flex items-center gap-2 cursor-pointer border border-[#21402b]"
+              className="touch-btn px-5 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center gap-2"
             >
-              <CheckCircle2 className="w-4 h-4 text-[#a8d3a8]" />
+              <CheckCircle2 className="w-4 h-4" />
               <span>Confirmer & Encaisser 🍃</span>
             </button>
           </div>

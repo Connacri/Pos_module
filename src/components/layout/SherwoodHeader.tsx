@@ -10,6 +10,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
+import { SHERWOOD_ASSETS } from '../../assets/images';
 
 export const SherwoodHeader: React.FC = () => {
   const {
@@ -50,9 +51,16 @@ export const SherwoodHeader: React.FC = () => {
   }, []);
 
   return (
-    <header className="px-4 sm:px-8 py-3.5 bg-[#f4efe4] border-b border-[#e5dcce] flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30">
+    <header className="relative px-4 sm:px-8 py-3.5 bg-[#f4efe4] border-b border-[#e5dcce] flex flex-wrap items-center justify-between gap-4 sticky top-0 z-30 overflow-hidden shadow-2xs">
+      {/* HD Landscape Background Panorama with soft artistic blend */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-20 bg-cover bg-center mix-blend-multiply"
+        style={{ backgroundImage: `url(${SHERWOOD_ASSETS.headerBg})` }}
+      />
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#f4efe4]/95 via-[#f4efe4]/85 to-[#f4efe4]/90" />
+
       {/* Left: Greeting & Welcome Banner matching Sherwood image */}
-      <div className="flex items-center gap-3">
+      <div className="relative z-10 flex items-center gap-3">
         {/* Mobile Hamburger toggle */}
         <button
           type="button"
@@ -79,9 +87,9 @@ export const SherwoodHeader: React.FC = () => {
       </div>
 
       {/* Right: Date, Season, Time, Cashier Profile, Cart & Sync */}
-      <div className="flex items-center gap-2 sm:gap-3 flex-wrap ml-auto">
+      <div className="relative z-10 flex items-center gap-2 sm:gap-3 flex-wrap ml-auto">
         {/* Date Pill */}
-        <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#fdfbf7] border border-[#e5dcce] rounded-full text-xs font-semibold text-[#483d31] shadow-2xs">
+        <div className="hidden md:flex items-center gap-1.5 px-3 py-1.5 bg-[#fdfbf7] border border-[#e5dcce] rounded-full text-xs font-bold text-[#483d31] shadow-2xs">
           <CalendarIcon className="w-3.5 h-3.5 text-[#527d52]" />
           <span>{currentDate || '20 oct. 2026'}</span>
         </div>
@@ -107,7 +115,7 @@ export const SherwoodHeader: React.FC = () => {
               ? 'bg-[#fef4ea] border-[#f5cf9e] text-[#8f521b]'
               : 'bg-[#edf5ec] border-[#cce4ca] text-[#245229]'
           }`}
-          title="Gestion synchronisation"
+          title="Gestion synchronisation & Cloud Supabase"
         >
           {isOffline ? (
             <>
@@ -147,10 +155,17 @@ export const SherwoodHeader: React.FC = () => {
           </span>
         </button>
 
-        {/* Cashier Profile Badge with Robin Hood / Villager Green Cap */}
+        {/* Cashier Profile Badge with HD Robin Hood Villager Figurine */}
         <div className="flex items-center gap-2 pl-1 sm:pl-2">
-          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#f4ebd9] border-2 border-[#547f54] p-0.5 shadow-sm flex items-center justify-center text-xl overflow-hidden cursor-pointer hover:rotate-6 transition-transform" title="Caissier Robin • Sherwood">
-            🧝
+          <div
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#f4ebd9] border-2 border-[#547f54] shadow-md flex items-center justify-center overflow-hidden cursor-pointer hover:scale-105 transition-transform"
+            title="Caissier Robin • Sherwood Island (Figurine HD)"
+          >
+            <img
+              src={SHERWOOD_ASSETS.cashierVillager}
+              alt="Robin Villager"
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </div>

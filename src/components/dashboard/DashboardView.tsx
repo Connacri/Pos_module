@@ -22,6 +22,7 @@ import {
   Gift,
   HelpCircle,
 } from 'lucide-react';
+import { SHERWOOD_ASSETS } from '../../assets/images';
 
 export const DashboardView: React.FC = () => {
   const { todayStats, sales, products, categories, setActiveView } = usePos();
@@ -100,15 +101,17 @@ export const DashboardView: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Sherwood Hero Banner */}
+      {/* Sherwood Hero Banner with HD Forest Landscape Background */}
       <div className="bg-[#1f3d29] text-[#fcfbf7] rounded-3xl p-5 sm:p-6 shadow-lg border border-[#16311f] flex flex-col md:flex-row items-start md:items-center justify-between gap-6 relative overflow-hidden">
-        {/* Subtle decorative leaf watermark in background */}
-        <div className="absolute right-0 top-0 text-[#295137] text-9xl font-black select-none pointer-events-none -mr-8 -mt-8 opacity-40">
-          🍃
-        </div>
+        {/* HD Background Landscape Image */}
+        <div
+          className="absolute inset-0 pointer-events-none opacity-30 bg-cover bg-center"
+          style={{ backgroundImage: `url(${SHERWOOD_ASSETS.headerBg})` }}
+        />
+        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-[#173020]/95 via-[#1b3825]/90 to-[#1f3d29]/75" />
 
         <div className="relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2a5438] text-[#c7e5c7] text-xs font-bold mb-2 border border-[#3b6f4c]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#2a5438]/90 text-[#c7e5c7] text-xs font-bold mb-2 border border-[#3b6f4c]">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             Session de Caisse Ouverte • Boutique Sherwood
           </div>
@@ -551,7 +554,33 @@ export const DashboardView: React.FC = () => {
 
           {/* Villagers grid with circular avatars matching the reference */}
           <div className="grid grid-cols-4 gap-3 text-center">
-            {villagers.map((v) => (
+            {/* VIP Figurine 1: Robin Hood Cashier */}
+            <div
+              className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
+              onClick={() => setActiveView('customers')}
+            >
+              <div className="w-12 h-12 rounded-full bg-[#f4ebe0] border-2 border-[#547f54] flex items-center justify-center overflow-hidden mx-auto shadow-xs group-hover:scale-105 transition-transform">
+                <img src={SHERWOOD_ASSETS.cashierVillager} alt="Robin" className="w-full h-full object-cover" />
+              </div>
+              <div className="text-xs font-bold text-[#233d2a] mt-1.5">Robin</div>
+              <div className="text-[10px] text-[#234931] font-bold">Chef Caisse</div>
+              <div className="text-[10px] text-[#706456] font-mono">4 200 pts</div>
+            </div>
+
+            {/* VIP Figurine 2: Tanuki Shopkeeper */}
+            <div
+              className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
+              onClick={() => setActiveView('customers')}
+            >
+              <div className="w-12 h-12 rounded-full bg-[#f4ebe0] border-2 border-[#a66a3d] flex items-center justify-center overflow-hidden mx-auto shadow-xs group-hover:scale-105 transition-transform">
+                <img src={SHERWOOD_ASSETS.shopkeeper} alt="Tanuki" className="w-full h-full object-cover" />
+              </div>
+              <div className="text-xs font-bold text-[#233d2a] mt-1.5">Tanuki</div>
+              <div className="text-[10px] text-[#8d5732] font-bold">Gérant Île</div>
+              <div className="text-[10px] text-[#706456] font-mono">9 999 pts</div>
+            </div>
+
+            {villagers.slice(0, 6).map((v) => (
               <div
                 key={v.name}
                 className="p-2 bg-[#fdfbf7] hover:bg-[#f7f2e7] rounded-2xl border border-[#ece2d1] transition-all cursor-pointer group"
@@ -561,8 +590,8 @@ export const DashboardView: React.FC = () => {
                   {v.emoji}
                 </div>
                 <div className="text-xs font-bold text-[#233d2a] mt-1.5">{v.name}</div>
-                <div className="text-[9px] text-[#8d5732] font-semibold">{v.badge}</div>
-                <div className="text-[9px] text-[#706456] font-mono">{v.points} pts</div>
+                <div className="text-[10px] text-[#8d5732] font-semibold">{v.badge}</div>
+                <div className="text-[10px] text-[#706456] font-mono">{v.points} pts</div>
               </div>
             ))}
           </div>
@@ -576,6 +605,31 @@ export const DashboardView: React.FC = () => {
             <span>🍃</span>
             <span>Bjud in fler invånare (Nouveau Client)</span>
           </button>
+        </div>
+      </div>
+
+      {/* MIN Ö - CARTE HD DE L'ÎLE SHERWOOD (Directement inspirée de la photo de référence) */}
+      <div className="sherwood-card p-5 space-y-3">
+        <div className="flex items-center justify-between pb-2 border-b border-[#ece2d1]">
+          <div className="flex items-center gap-2 font-bold text-sm text-[#233d2a] font-serif-title">
+            <span>🍃</span>
+            <span>Min ö • Carte & Lieux de Sherwood Island</span>
+          </div>
+          <span className="text-xs text-[#8d5732] font-bold flex items-center gap-1 font-mono">
+            DA-1234-5678-9101
+          </span>
+        </div>
+
+        <div className="relative rounded-2xl overflow-hidden border-2 border-[#e5dcce] shadow-sm max-h-[360px] group">
+          <img
+            src={SHERWOOD_ASSETS.islandMap}
+            alt="Sherwood Island HD Map"
+            className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-500"
+          />
+          <div className="absolute bottom-3 right-3 bg-[#fdfbf7]/90 backdrop-blur-xs px-3 py-1.5 rounded-xl border border-[#e5dcce] text-xs font-bold text-[#234931] shadow-md flex items-center gap-1.5">
+            <span>🌲</span>
+            <span>Sherwood Island • 5 Étoiles</span>
+          </div>
         </div>
       </div>
 

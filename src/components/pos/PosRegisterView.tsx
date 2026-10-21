@@ -19,6 +19,8 @@ import {
   Keyboard,
   HelpCircle,
   ArrowRight,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 export const PosRegisterView: React.FC = () => {
@@ -27,7 +29,6 @@ export const PosRegisterView: React.FC = () => {
     categories,
     cart,
     addToCart,
-    clearCart,
     initiateCheckout,
     isCheckoutOpen,
     setIsCheckoutOpen,
@@ -43,6 +44,7 @@ export const PosRegisterView: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCatId, setSelectedCatId] = useState<number | 'ALL'>('ALL');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [showDemoEanBar, setShowDemoEanBar] = useState(false);
   const [scanFeedback, setScanFeedback] = useState<{
     message: string;
     type: 'success' | 'error' | 'warning';
@@ -77,6 +79,7 @@ export const PosRegisterView: React.FC = () => {
   };
 
   // Keyboard shortcut mapping system (F1, F2, Esc) & Barcode Scanner Buffer
+  // NOTE: Per design critique, Esc ONLY closes modals/drawers and NEVER erases the cart!
   useEffect(() => {
     let buffer = '';
     let lastKeyTime = Date.now();
@@ -119,7 +122,7 @@ export const PosRegisterView: React.FC = () => {
         return;
       }
 
-      // 3. Esc (Escape): Clear current cart or dismiss modals
+      // 3. Esc (Escape): Safely dismiss modals and drawers only
       if (e.key === 'Escape') {
         if (isPrintPreviewOpen) {
           e.preventDefault();
@@ -141,15 +144,9 @@ export const PosRegisterView: React.FC = () => {
           setIsCartDrawerOpen(false);
           return;
         }
-        if (cart.length > 0) {
-          e.preventDefault();
-          clearCart();
-          setShortcutFeedback({
-            key: 'Échap',
-            label: 'Panier de vente réinitialisé',
-            type: 'warning',
-          });
-          setTimeout(() => setShortcutFeedback(null), 2200);
+        // Unfocus active inputs if pressed with no modal open
+        if (document.activeElement instanceof HTMLElement) {
+          document.activeElement.blur();
         }
         return;
       }
@@ -192,7 +189,6 @@ export const PosRegisterView: React.FC = () => {
     showShortcutGuideModal,
     isCartDrawerOpen,
     initiateCheckout,
-    clearCart,
     setIsCheckoutOpen,
     setIsPrintPreviewOpen,
     setIsCartDrawerOpen,
@@ -260,241 +256,218 @@ export const PosRegisterView: React.FC = () => {
   }, [products, selectedCatId, searchQuery]);
 
   return (
-    <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px]">
-      {/* Left Column: Product Selection & Barcode scanner */}
-      <div className="flex-1 flex flex-col sherwood-panel p-4 sm:p-5 overflow-hidden">
-        {/* Top Header & Barcode scanner tool */}
-        <div className="space-y-3 pb-3 border-b border-[#e7ddca]">
-          {/* Barcode scanner form with latency indicator */}
-          <form onSubmit={handleFormSubmit} className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Barcode className="w-5 h-5 text-[#234931] absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                ref={barcodeInputRef}
-                type="text"
-                value={barcodeInput}
-                onChange={(e) => setBarcodeInput(e.target.value)}
-                placeholder="Scanner un code-barres EAN (ou tapez SKU / EAN et Entrée)..."
-                className="w-full pl-11 pr-24 py-2.5 bg-[#f7f2e7] border border-[#d8cdba] rounded-2xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-[#877a6b] focus:outline-hidden focus:border-[#234931] focus:ring-2 focus:ring-[#234931]/15"
-              />
-              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <span className="hidden sm:inline-flex items-center gap-1 text-[10px] font-bold text-[#234931] bg-[#eaf2e8] px-2 py-0.5 rounded-md border border-[#cbe0cb]">
-                  <Zap className="w-3 h-3 text-[#234931]" />
-                  Auto-Scan Actif
-                </span>
-              </div>
+    <div className="flex flex-col lg:flex-row items-stretch gap-6 h-[calc(100vh-140px)] min-h-[620px] relative">
+      {/* FLOATING OVERLAY NOTIFICATIONS (Scan & Stock Warnings) - Does NOT push or jump product grid */}
+      <div className="fixed top-20 right-6 z-50 space-y-2 max-w-sm pointer-events-none">
+        {scanFeedback && (
+          <div
+            className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between shadow-lg pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-150 ${
+              scanFeedback.type === 'success'
+                ? 'bg-[#1f3d29] text-[#fcfbf7] border border-[#2b5437]'
+                : 'bg-[#b91c1c] text-white border border-rose-800'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Volume2 className="w-4 h-4 shrink-0 text-[#a8d3a8]" />
+              <span>{scanFeedback.message}</span>
             </div>
-
-            <button
-              type="submit"
-              className="touch-btn px-4 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5 shrink-0"
-            >
-              <Barcode className="w-4 h-4" />
-              <span>Valider</span>
-            </button>
-          </form>
-
-          {/* Quick Barcode Test Chips */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px]">
-            <span className="text-[#877a6b] font-bold shrink-0 flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-[#d97706]" />
-              Test rapide EAN :
-            </span>
-            <button
-              type="button"
-              onClick={() => executeScan('613000000001')}
-              className="px-2.5 py-1 bg-[#fdfbf7] hover:bg-[#faeee2] border border-[#d8cdba] hover:border-[#85522b] text-[#2c241c] hover:text-[#85522b] rounded-xl font-mono transition-colors shrink-0 cursor-pointer font-bold"
-            >
-              Coca-Cola (613000000001)
-            </button>
-            <button
-              type="button"
-              onClick={() => executeScan('613000000004')}
-              className="px-2.5 py-1 bg-[#fdfbf7] hover:bg-[#faeee2] border border-[#d8cdba] hover:border-[#85522b] text-[#2c241c] hover:text-[#85522b] rounded-xl font-mono transition-colors shrink-0 cursor-pointer font-bold"
-            >
-              Huile Olive (613000000004)
-            </button>
-            <button
-              type="button"
-              onClick={() => executeScan('613000000012')}
-              className="px-2.5 py-1 bg-[#fdfbf7] hover:bg-[#faeee2] border border-[#d8cdba] hover:border-[#85522b] text-[#2c241c] hover:text-[#85522b] rounded-xl font-mono transition-colors shrink-0 cursor-pointer font-bold"
-            >
-              Écouteurs BT (613000000012)
-            </button>
-            <button
-              type="button"
-              onClick={() => executeScan('613000000013')}
-              className="px-2.5 py-1 bg-[#fdfbf7] hover:bg-[#fef2f2] border border-[#d8cdba] hover:border-[#fca5a5] text-[#2c241c] hover:text-[#b91c1c] rounded-xl font-mono transition-colors shrink-0 cursor-pointer font-bold"
-            >
-              Pain Rupture (613000000013)
-            </button>
+            {scanFeedback.latencyMs !== undefined && (
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-white/20 text-white shrink-0 ml-2">
+                ⚡ {scanFeedback.latencyMs} ms
+              </span>
+            )}
           </div>
+        )}
 
-          {/* Barcode feedback banner */}
-          {scanFeedback && (
-            <div
-              className={`p-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-in fade-in zoom-in-95 duration-150 ${
-                scanFeedback.type === 'success'
-                  ? 'bg-[#eaf2e8] text-[#234931] border border-[#cbe0cb]'
-                  : 'bg-[#fef2f2] text-[#991b1b] border border-[#fecaca]'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Volume2 className="w-4 h-4 shrink-0" />
-                <span>{scanFeedback.message}</span>
-              </div>
-              {scanFeedback.latencyMs !== undefined && (
-                <span className="font-mono text-[10px] px-2 py-0.5 rounded-md bg-white/80 shadow-2xs">
-                  ⚡ {scanFeedback.latencyMs} ms
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Low Stock Threshold Warning Toast */}
-          {stockWarningToast && (
-            <div className="p-3 bg-[#fffbeb] text-[#92400e] border-2 border-[#fde68a] rounded-2xl text-xs font-bold flex items-center justify-between shadow-md animate-in slide-in-from-top-2 duration-200">
-              <div className="flex items-center gap-2.5">
-                <AlertCircle className="w-5 h-5 text-[#d97706] shrink-0" />
-                <div>
-                  <div className="font-extrabold text-[#78350f]">
-                    ⚠️ Attention : Seuil Minimal de Stock Dépassé !
-                  </div>
-                  <div className="text-[11px] font-normal text-[#92400e]">
-                    "{stockWarningToast.productName}" ne dispose plus que de{' '}
-                    <strong className="font-bold underline">{stockWarningToast.stock} unité(s)</strong>{' '}
-                    en stock (seuil minimal d'alerte : {stockWarningToast.threshold}).
-                  </div>
+        {stockWarningToast && (
+          <div className="p-3 bg-[#fffbeb] text-[#92400e] border-2 border-[#fde68a] rounded-2xl text-xs font-bold flex items-center justify-between shadow-xl pointer-events-auto animate-in slide-in-from-top-2 duration-200">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-5 h-5 text-[#d97706] shrink-0" />
+              <div>
+                <div className="font-extrabold text-[#78350f]">
+                  ⚠️ Seuil Minimal Atteint
+                </div>
+                <div className="text-[11px] font-normal text-[#92400e]">
+                  "{stockWarningToast.productName}" : {stockWarningToast.stock} restant(s).
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setStockWarningToast(null)}
-                className="touch-btn p-1 text-[#b45309] hover:text-[#78350f] transition-colors cursor-pointer"
-                title="Ignorer l'alerte"
-              >
-                <X className="w-4 h-4" />
-              </button>
             </div>
-          )}
+            <button
+              type="button"
+              onClick={() => setStockWarningToast(null)}
+              className="touch-btn p-1 text-[#b45309] hover:text-[#78350f] cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
-          {/* Search Input with F1 shortcut badge */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+        {shortcutFeedback && (
+          <div
+            className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-lg pointer-events-auto animate-in fade-in slide-in-from-top-1 duration-150 ${
+              shortcutFeedback.type === 'success'
+                ? 'bg-[#234931] text-[#fdfbf7]'
+                : shortcutFeedback.type === 'warning'
+                ? 'bg-[#8d5732] text-white'
+                : 'bg-[#2c241c] text-[#fdfbf7]'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <kbd className="font-mono bg-white/20 px-2 py-0.5 rounded text-[11px] font-black">
+                {shortcutFeedback.key}
+              </kbd>
+              <span>{shortcutFeedback.label}</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Left Column: Product Selection & Barcode scanner */}
+      <div className="flex-1 flex flex-col sherwood-panel p-4 sm:p-5 overflow-hidden">
+        {/* Streamlined Top Bar (Dual Barcode & Search) */}
+        <div className="space-y-2.5 pb-3 border-b border-[#e7ddca]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            {/* Barcode scanner form */}
+            <form onSubmit={handleFormSubmit} className="flex-1 flex items-center gap-2">
+              <div className="relative flex-1">
+                <Barcode className="w-4 h-4 text-[#234931] absolute left-3 top-1/2 -translate-y-1/2" />
+                <input
+                  ref={barcodeInputRef}
+                  type="text"
+                  value={barcodeInput}
+                  onChange={(e) => setBarcodeInput(e.target.value)}
+                  placeholder="Scanner un code EAN ou tapez réf... [Entrée]"
+                  className="w-full pl-9 pr-20 py-2 bg-[#f7f2e7] border border-[#d8cdba] rounded-xl text-xs sm:text-sm font-mono placeholder:font-sans placeholder:text-[#877a6b] focus:outline-hidden focus:border-[#234931]"
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
+                  <span className="hidden md:inline-flex items-center gap-1 text-[9px] font-bold text-[#234931] bg-[#eaf2e8] px-1.5 py-0.5 rounded border border-[#cbe0cb]">
+                    <Zap className="w-2.5 h-2.5 text-[#234931]" />
+                    Auto-Scan
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="touch-btn px-3.5 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1 shrink-0"
+              >
+                <Barcode className="w-3.5 h-3.5" />
+                <span className="hidden xs:inline">Valider</span>
+              </button>
+            </form>
+
+            {/* Filter Search Input */}
+            <div className="relative sm:w-64">
               <Search className="w-4 h-4 text-[#877a6b] absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filtrer les articles par nom ou référence... [F1]"
-                className="w-full pl-9 pr-12 py-2 sherwood-input text-xs"
+                placeholder="Filtrer par nom... [F1]"
+                className="w-full pl-9 pr-10 py-2 sherwood-input text-xs"
               />
-              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-[10px] text-[#234931] bg-[#eaf2e8] border border-[#cbe0cb] px-1.5 py-0.5 rounded shadow-2xs">
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 font-mono font-bold text-[9px] text-[#234931] bg-[#eaf2e8] border border-[#cbe0cb] px-1 py-0.5 rounded">
                 F1
               </span>
             </div>
 
-            {/* Mobile View Cart Button */}
-            <button
-              type="button"
-              onClick={() => setIsCartDrawerOpen(true)}
-              className="lg:hidden touch-btn px-3 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5 cursor-pointer shrink-0"
-            >
-              <ShoppingCart className="w-4 h-4 text-[#faeee2]" />
-              <span>Panier ({cartSummary.totalItems})</span>
-            </button>
+            {/* Controls: Raccourcis + Démo EAN toggle + Mobile Cart */}
+            <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowShortcutGuideModal(true)}
+                className="touch-btn px-2.5 py-2 sherwood-btn-outline text-[11px] font-bold flex items-center gap-1"
+                title="Consulter les raccourcis clavier"
+              >
+                <Keyboard className="w-3.5 h-3.5 text-[#234931]" />
+                <span className="hidden xl:inline">Raccourcis</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowDemoEanBar(!showDemoEanBar)}
+                className={`touch-btn px-2.5 py-2 rounded-xl text-[11px] font-bold border transition-colors flex items-center gap-1 cursor-pointer ${
+                  showDemoEanBar
+                    ? 'bg-[#faeee2] text-[#85522b] border-[#e2c7ac]'
+                    : 'bg-[#fdfbf7] text-[#605547] border-[#d8cdba] hover:bg-[#f7f2e7]'
+                }`}
+                title="Codes-barres démo pour tests rapides"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-[#d97706]" />
+                <span className="hidden md:inline">EAN Démo</span>
+                {showDemoEanBar ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+              </button>
+
+              {/* Mobile View Cart Button */}
+              <button
+                type="button"
+                onClick={() => setIsCartDrawerOpen(true)}
+                className="lg:hidden touch-btn px-3 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5 shrink-0"
+              >
+                <ShoppingCart className="w-4 h-4 text-[#faeee2]" />
+                <span>({cartSummary.totalItems})</span>
+              </button>
+            </div>
           </div>
 
-          {/* Keyboard Shortcuts Mapping Bar */}
-          <div className="flex items-center justify-between sherwood-panel-subtle px-3 py-1.5 text-xs">
-            <div className="flex items-center gap-2 overflow-x-auto text-[11px]">
-              <span className="font-bold text-[#605547] flex items-center gap-1 shrink-0">
-                <Keyboard className="w-3.5 h-3.5 text-[#234931]" />
-                Raccourcis :
+          {/* Collapsible Demo EAN Chips (Hidden by default to save space) */}
+          {showDemoEanBar && (
+            <div className="p-2.5 bg-[#faeee2]/80 border border-[#eddabb] rounded-xl flex items-center gap-2 overflow-x-auto text-[11px] animate-in fade-in slide-in-from-top-1 duration-150">
+              <span className="text-[#85522b] font-bold shrink-0 flex items-center gap-1">
+                <Sparkles className="w-3 h-3" />
+                Tests rapides EAN :
               </span>
               <button
                 type="button"
-                onClick={() => {
-                  searchInputRef.current?.focus();
-                  searchInputRef.current?.select();
-                }}
-                className="inline-flex items-center gap-1 bg-[#fdfbf7] hover:bg-[#f4efe4] px-2 py-0.5 rounded-lg border border-[#e2d7c2] shadow-2xs transition-colors cursor-pointer"
-                title="Cibler la recherche produit"
+                onClick={() => executeScan('613000000001')}
+                className="px-2 py-0.5 bg-white hover:bg-[#faeee2] border border-[#d8cdba] text-[#2c241c] rounded-lg font-mono font-bold transition-colors shrink-0 cursor-pointer"
               >
-                <kbd className="font-mono font-black text-[10px] bg-[#eaf2e8] text-[#234931] px-1 rounded">F1</kbd>
-                <span className="text-[#2c241c] font-semibold">Recherche</span>
+                Coca-Cola (613000000001)
               </button>
               <button
                 type="button"
-                onClick={initiateCheckout}
-                className="inline-flex items-center gap-1 bg-[#fdfbf7] hover:bg-[#f4efe4] px-2 py-0.5 rounded-lg border border-[#e2d7c2] shadow-2xs transition-colors cursor-pointer"
-                title="Initier l'encaissement"
+                onClick={() => executeScan('613000000004')}
+                className="px-2 py-0.5 bg-white hover:bg-[#faeee2] border border-[#d8cdba] text-[#2c241c] rounded-lg font-mono font-bold transition-colors shrink-0 cursor-pointer"
               >
-                <kbd className="font-mono font-black text-[10px] bg-[#eaf2e8] text-[#234931] px-1 rounded">F2</kbd>
-                <span className="text-[#2c241c] font-semibold">Encaisser</span>
+                Huile Olive (613000000004)
               </button>
               <button
                 type="button"
-                onClick={clearCart}
-                disabled={cart.length === 0}
-                className="inline-flex items-center gap-1 bg-[#fdfbf7] hover:bg-[#f4efe4] disabled:opacity-40 px-2 py-0.5 rounded-lg border border-[#e2d7c2] shadow-2xs transition-colors cursor-pointer"
-                title="Vider le panier"
+                onClick={() => executeScan('613000000012')}
+                className="px-2 py-0.5 bg-white hover:bg-[#faeee2] border border-[#d8cdba] text-[#2c241c] rounded-lg font-mono font-bold transition-colors shrink-0 cursor-pointer"
               >
-                <kbd className="font-mono font-black text-[10px] bg-[#faeee2] text-[#85522b] px-1 rounded">Échap</kbd>
-                <span className="text-[#2c241c] font-semibold">Vider Panier</span>
+                Écouteurs BT (613000000012)
               </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowShortcutGuideModal(true)}
-              className="text-[11px] font-bold text-[#234931] hover:underline flex items-center gap-1 shrink-0 cursor-pointer ml-2"
-              title="Guide des raccourcis caisse"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Guide Raccourcis</span>
-            </button>
-          </div>
-
-          {/* Keyboard shortcut feedback toast */}
-          {shortcutFeedback && (
-            <div
-              className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-1 duration-150 ${
-                shortcutFeedback.type === 'success'
-                  ? 'bg-[#eaf2e8] text-[#234931] border border-[#cbe0cb]'
-                  : shortcutFeedback.type === 'warning'
-                  ? 'bg-[#fffbeb] text-[#92400e] border border-[#fde68a]'
-                  : 'bg-[#faeee2] text-[#85522b] border border-[#f0d4ba]'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <kbd className="font-mono bg-white px-2 py-0.5 rounded-md border border-[#d8cdba] shadow-2xs font-black">
-                  {shortcutFeedback.key}
-                </kbd>
-                <span>{shortcutFeedback.label}</span>
-              </div>
+              <button
+                type="button"
+                onClick={() => executeScan('613000000013')}
+                className="px-2 py-0.5 bg-white hover:bg-rose-50 border border-rose-200 text-rose-700 rounded-lg font-mono font-bold transition-colors shrink-0 cursor-pointer"
+              >
+                Pain Rupture (613000000013)
+              </button>
             </div>
           )}
 
           {/* Category Chips scroll */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-xs">
             <button
               type="button"
               onClick={() => setSelectedCatId('ALL')}
-              className={`touch-btn px-3.5 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`touch-btn px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer text-xs ${
                 selectedCatId === 'ALL'
                   ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
                   : 'sherwood-btn-outline'
               }`}
             >
-              Tous
+              Tous ({products.length})
             </button>
             {categories.map((c) => (
               <button
                 key={c.id}
                 type="button"
                 onClick={() => setSelectedCatId(c.id)}
-                className={`touch-btn px-3.5 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer ${
+                className={`touch-btn px-3 py-1.5 rounded-xl font-bold transition-all whitespace-nowrap cursor-pointer text-xs ${
                   selectedCatId === c.id
                     ? 'bg-[#234931] text-[#fdfbf7] shadow-xs'
                     : 'sherwood-btn-outline'
@@ -506,8 +479,8 @@ export const PosRegisterView: React.FC = () => {
           </div>
         </div>
 
-        {/* Product Grid (Fast Touch-friendly tiles) */}
-        <div className="flex-1 overflow-y-auto pt-3 pr-1">
+        {/* Product Grid (Fast Touch-friendly tiles directly under categories) */}
+        <div className="flex-1 overflow-y-auto pt-2.5 pr-1">
           {filteredProducts.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center p-8 text-center text-[#877a6b]">
               <Package className="w-10 h-10 mb-2 text-[#c7baa3]" />
@@ -572,14 +545,14 @@ export const PosRegisterView: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Details */}
+                    {/* Details - line-clamp-2 ensures complete readable names */}
                     <div>
-                      <h4 className="font-bold text-xs text-[#2c241c] line-clamp-1">
+                      <h4 className="font-bold text-xs text-[#2c241c] line-clamp-2 min-h-[2.2rem] leading-snug">
                         {p.name}
                       </h4>
-                      <div className="text-[10px] text-[#877a6b] font-mono mt-0.5 flex items-center justify-between">
+                      <div className="text-[10px] text-[#605547] font-mono mt-0.5 flex items-center justify-between">
                         <span>{p.sku}</span>
-                        <span className="text-[9px] text-[#877a6b]">{p.barcode.slice(-4)}</span>
+                        <span className="text-[9px] text-[#877a6b] font-semibold">{p.barcode.slice(-4)}</span>
                       </div>
                     </div>
 
@@ -612,13 +585,15 @@ export const PosRegisterView: React.FC = () => {
       {/* Mobile Cart Slide-over Drawer / Bottom Sheet */}
       {isCartDrawerOpen && (
         <div className="fixed inset-0 z-50 lg:hidden bg-black/50 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-[#fdfbf7] rounded-t-3xl max-h-[92vh] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
-            <div className="p-3 bg-[#f7f2e7] border-b border-[#e7ddca] flex items-center justify-between relative">
-              <span className="w-10 h-1 bg-[#d8cdba] rounded-full mx-auto block mb-1"></span>
+          <div className="relative bg-[#fdfbf7] rounded-t-3xl max-h-[92vh] h-[85vh] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-200">
+            {/* Sheet Handle and Close button inside the sheet header */}
+            <div className="relative p-3 bg-[#f7f2e7] border-b border-[#e7ddca] flex items-center justify-between">
+              <span className="w-12 h-1.5 bg-[#d8cdba] rounded-full mx-auto block"></span>
               <button
                 type="button"
                 onClick={() => setIsCartDrawerOpen(false)}
-                className="touch-btn p-1 text-[#605547] hover:text-[#2c241c] absolute right-3 top-2"
+                className="touch-btn p-1.5 text-[#605547] hover:text-[#2c241c] hover:bg-[#e7ddca] rounded-xl absolute right-3 top-2 transition-colors cursor-pointer"
+                aria-label="Fermer le panier"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -637,7 +612,7 @@ export const PosRegisterView: React.FC = () => {
             <div className="px-5 py-4 bg-[#1f3d29] text-white flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Keyboard className="w-5 h-5 text-emerald-300" />
-                <h3 className="font-bold text-sm">Raccourcis Clavier du Poste Caisse</h3>
+                <h3 className="font-bold text-sm font-serif-title">Raccourcis Clavier du Poste Caisse</h3>
               </div>
               <button
                 type="button"
@@ -650,7 +625,7 @@ export const PosRegisterView: React.FC = () => {
 
             <div className="p-5 space-y-4">
               <p className="text-xs text-[#605547] font-medium">
-                Utilisez ces raccourcis clavier pour accélérer les opérations en caisse sans toucher à la souris :
+                Utilisez ces touches pour accélérer la saisie sans quitter le clavier des yeux :
               </p>
 
               <div className="space-y-2.5">
@@ -658,7 +633,7 @@ export const PosRegisterView: React.FC = () => {
                   <div>
                     <div className="font-bold text-xs text-[#2c241c]">Cibler la Recherche Produit</div>
                     <div className="text-[11px] text-[#605547] mt-0.5">
-                      Place le focus et sélectionne le texte du champ de recherche d'articles.
+                      Place le curseur dans le champ de recherche pour filtrer instantanément.
                     </div>
                   </div>
                   <kbd className="font-mono font-bold text-xs bg-[#eaf2e8] text-[#234931] px-2 py-1 rounded-lg border border-[#cbe0cb] shadow-2xs shrink-0">
@@ -670,7 +645,7 @@ export const PosRegisterView: React.FC = () => {
                   <div>
                     <div className="font-bold text-xs text-[#2c241c]">Initier l'Encaissement (Transaction)</div>
                     <div className="text-[11px] text-[#605547] mt-0.5">
-                      Ouvre la fenêtre de règlement et de paiement pour la commande en cours.
+                      Ouvre la fenêtre de règlement et de calcul de monnaie.
                     </div>
                   </div>
                   <kbd className="font-mono font-bold text-xs bg-[#eaf2e8] text-[#234931] px-2 py-1 rounded-lg border border-[#cbe0cb] shadow-2xs shrink-0">
@@ -680,9 +655,9 @@ export const PosRegisterView: React.FC = () => {
 
                 <div className="flex items-start justify-between gap-3 p-3 rounded-xl sherwood-panel-subtle">
                   <div>
-                    <div className="font-bold text-xs text-[#2c241c]">Vider le Panier / Fermer Modales</div>
+                    <div className="font-bold text-xs text-[#2c241c]">Fermer les Fenêtres & Tiroirs</div>
                     <div className="text-[11px] text-[#605547] mt-0.5">
-                      Ferme les dialogues ouverts ou réinitialise immédiatement le panier de vente.
+                      Ferme en toute sécurité les modales ou aperçus ouverts (sans jamais effacer le panier).
                     </div>
                   </div>
                   <kbd className="font-mono font-bold text-xs bg-[#faeee2] text-[#85522b] px-2 py-1 rounded-lg border border-[#f0d4ba] shadow-2xs shrink-0">
@@ -694,7 +669,7 @@ export const PosRegisterView: React.FC = () => {
                   <div>
                     <div className="font-bold text-xs text-[#2c241c]">Lecteur Code-barres USB / Bluetooth</div>
                     <div className="text-[11px] text-[#605547] mt-0.5">
-                      Validation automatique lors du scan d'un code EAN-13 ou code-barres.
+                      Ajout instantané avec bip sonore dès la lecture optique.
                     </div>
                   </div>
                   <kbd className="font-mono font-bold text-xs bg-white text-[#2c241c] px-2 py-1 rounded-lg border border-[#d8cdba] shadow-2xs shrink-0">
@@ -709,7 +684,7 @@ export const PosRegisterView: React.FC = () => {
                   onClick={() => setShowShortcutGuideModal(false)}
                   className="w-full py-2.5 sherwood-btn-forest text-xs font-bold"
                 >
-                  Compris
+                  Fermer le Guide
                 </button>
               </div>
             </div>

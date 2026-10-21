@@ -10,6 +10,7 @@ import {
   Sparkles,
   ShoppingBag,
 } from 'lucide-react';
+import { SHERWOOD_ASSETS } from '../../assets/images';
 
 export const SherwoodSidebar: React.FC = () => {
   const { activeView, setActiveView } = usePos();
@@ -95,9 +96,13 @@ export const SherwoodSidebar: React.FC = () => {
         {/* Daily Tip Widget matching the Tom Nook card in the reference */}
         <div className="bg-[#172f20] rounded-2xl p-3 border border-[#264b32] relative overflow-hidden text-left shadow-inner">
           <div className="flex items-center gap-2.5 mb-1.5">
-            {/* Friendly shopkeeper avatar with green apron */}
-            <div className="w-10 h-10 rounded-full bg-[#3d2716] border-2 border-[#a66a3d] flex items-center justify-center text-lg shadow-sm shrink-0 overflow-hidden">
-              🦝
+            {/* Friendly shopkeeper avatar with green apron (HD Tanuki Figurine) */}
+            <div className="w-12 h-12 rounded-full bg-[#f4ebd9] border-2 border-[#a66a3d] flex items-center justify-center shadow-md shrink-0 overflow-hidden">
+              <img
+                src={SHERWOOD_ASSETS.shopkeeper}
+                alt="Tanuki Shopkeeper"
+                className="w-full h-full object-cover"
+              />
             </div>
             <div>
               <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8d3a8] flex items-center gap-1">

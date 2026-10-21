@@ -18,7 +18,9 @@ import {
   Star,
   ShieldCheck,
   ArrowRight,
+  Smile,
 } from 'lucide-react';
+import { SHERWOOD_ASSETS } from '../../assets/images';
 
 export const CustomersView: React.FC = () => {
   const { customers, addCustomer, sales, setSelectedCustomerId, setActiveView } = usePos();
@@ -41,6 +43,18 @@ export const CustomersView: React.FC = () => {
     }).format(val) + ' DA';
   };
 
+  // Animal Crossing villager avatars matching the reference photo
+  const villagerAvatars = [
+    { emoji: '🦌', name: 'Fauna', bg: 'bg-[#f5e6d3]' },
+    { emoji: '🦌', name: 'Beau', bg: 'bg-[#faeee2]' },
+    { emoji: '🦏', name: 'Merengue', bg: 'bg-[#fde8e8]' },
+    { emoji: '🐿️', name: 'Marshal', bg: 'bg-[#f4efe4]' },
+    { emoji: '🐿️', name: 'Filbert', bg: 'bg-[#e0f2fe]' },
+    { emoji: '🐙', name: 'Zucker', bg: 'bg-[#fef3c7]' },
+    { emoji: '🦌', name: 'Erik', bg: 'bg-[#e2e8f0]' },
+    { emoji: '🐰', name: 'Bunnie', bg: 'bg-[#ffedd5]' },
+  ];
+
   // Helper function to calculate points and tier
   const getCustomerLoyalty = (cust: Customer) => {
     const custSales = sales.filter((s) => s.customerId === cust.id);
@@ -50,23 +64,23 @@ export const CustomersView: React.FC = () => {
     const points = (cust.loyaltyPoints || 0) + Math.floor(totalSpent / 100);
 
     let tier: 'Bronze' | 'Argent' | 'Or' | 'Diamant' = 'Bronze';
-    let tierColor = 'bg-amber-100 text-amber-800 border-amber-300';
+    let tierColor = 'bg-[#faeee2] text-[#85522b] border-[#eddabb]';
     let nextTierThreshold = 250;
     let nextTierName = 'Argent';
 
     if (points >= 1500) {
       tier = 'Diamant';
-      tierColor = 'bg-cyan-100 text-cyan-800 border-cyan-300';
+      tierColor = 'bg-[#e0f2fe] text-[#0369a1] border-[#bae6fd]';
       nextTierThreshold = 3000;
       nextTierName = 'Privilège';
     } else if (points >= 750) {
       tier = 'Or';
-      tierColor = 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      tierColor = 'bg-[#fef3c7] text-[#92400e] border-[#fde68a]';
       nextTierThreshold = 1500;
       nextTierName = 'Diamant';
     } else if (points >= 250) {
       tier = 'Argent';
-      tierColor = 'bg-slate-200 text-slate-800 border-slate-300';
+      tierColor = 'bg-[#eaf2e8] text-[#234931] border-[#cbe0cb]';
       nextTierThreshold = 750;
       nextTierName = 'Or';
     }
@@ -137,29 +151,29 @@ export const CustomersView: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       {/* Header & Loyalty Overview Banner */}
-      <div className="sherwood-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="sherwood-panel p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 relative overflow-hidden">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#fbf4e8] border border-[#eddabb] text-[#70481f] text-xs font-bold mb-2">
-            <Gift className="w-3.5 h-3.5 text-[#8d5732]" />
-            <span>🍃 Programme de Fidélité Sherwood (1 Clochette / 100 DA)</span>
+          <div className="sherwood-badge-wood mb-2">
+            <Gift className="w-3.5 h-3.5 text-[#85522b]" />
+            <span>🍃 Programme Fidélité Sherwood (1 Clochette / 100 DA)</span>
           </div>
-          <h2 className="text-xl sm:text-2xl font-black text-[#233d2a] font-serif-title tracking-tight flex items-center gap-2">
+          <h2 className="text-xl sm:text-2xl font-black text-[#234931] font-serif-title tracking-tight flex items-center gap-2">
             <span>🍃</span>
             <span>Invånare • Clients & Fidélité de l'Île</span>
           </h2>
-          <p className="text-xs text-[#6e6354] mt-1 max-w-xl">
-            Suivi des comptes villageois et professionnels, clochettes de fidélité et remises automatiques.
+          <p className="text-xs sm:text-sm text-[#605547] mt-1 max-w-xl font-medium">
+            Suivi des comptes clients particuliers et professionnels, clochettes de fidélité et remises automatiques.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="bg-[#f7f2e7] border border-[#e5dcce] rounded-2xl p-3 text-right">
-            <div className="text-[10px] text-[#6e6354] font-bold uppercase tracking-wider">
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="sherwood-panel-subtle p-3 text-right">
+            <div className="text-[10px] text-[#877a6b] font-bold uppercase tracking-wider">
               Total Points Distribués
             </div>
-            <div className="text-lg font-black text-[#8d5732] flex items-center justify-end gap-1">
+            <div className="text-lg font-black text-[#85522b] flex items-center justify-end gap-1 font-mono">
               <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
               <span>{totalLoyaltyPoints.toLocaleString('fr-FR')} pts</span>
             </div>
@@ -168,7 +182,7 @@ export const CustomersView: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsAddingCustomer(true)}
-            className="touch-btn px-4 py-2.5 bg-[#2d563a] hover:bg-[#23442e] text-[#fdfbf7] rounded-2xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer border border-[#21402b]"
+            className="touch-btn px-4 py-2.5 sherwood-btn-forest text-xs font-bold flex items-center gap-2 shadow-sm"
           >
             <Plus className="w-4 h-4" />
             <span>Nouveau Client 🍃</span>
@@ -177,93 +191,103 @@ export const CustomersView: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="sherwood-card p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="sherwood-panel p-3.5 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
         <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+          <Search className="w-4 h-4 text-[#877a6b] absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par nom, entreprise, téléphone..."
-            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-hidden"
+            className="w-full pl-10 pr-4 py-2 sherwood-input text-xs sm:text-sm"
           />
         </div>
 
         {/* Tier filter pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-semibold">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs font-bold">
           <button
             type="button"
             onClick={() => setTierFilter('ALL')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+            className={`touch-btn px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
               tierFilter === 'ALL'
-                ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#234931] text-[#fdfbf7] border-[#234931] shadow-2xs'
+                : 'sherwood-btn-outline'
             }`}
           >
-            Tous les clients ({customers.length})
+            Tous ({customers.length})
           </button>
           <button
             type="button"
             onClick={() => setTierFilter('GOLD')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
               tierFilter === 'GOLD'
-                ? 'bg-yellow-500 text-white border-yellow-500 shadow-2xs'
-                : 'bg-white text-yellow-700 border-yellow-200 hover:bg-yellow-50'
+                ? 'bg-[#85522b] text-white border-[#85522b] shadow-2xs'
+                : 'sherwood-btn-outline'
             }`}
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            Palier Or & VIP
+            <Sparkles className="w-3.5 h-3.5 text-[#d97706]" />
+            <span>Or & VIP</span>
           </button>
           <button
             type="button"
             onClick={() => setTierFilter('SILVER')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
               tierFilter === 'SILVER'
-                ? 'bg-slate-700 text-white border-slate-700 shadow-2xs'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                ? 'bg-[#234931] text-white border-[#234931] shadow-2xs'
+                : 'sherwood-btn-outline'
             }`}
           >
-            <Award className="w-3.5 h-3.5" />
-            Palier Argent
+            <Award className="w-3.5 h-3.5 text-[#234931]" />
+            <span>Argent</span>
           </button>
           <button
             type="button"
             onClick={() => setTierFilter('BRONZE')}
-            className={`px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+            className={`touch-btn px-3 py-1.5 rounded-xl border transition-all cursor-pointer whitespace-nowrap flex items-center gap-1 ${
               tierFilter === 'BRONZE'
-                ? 'bg-amber-700 text-white border-amber-700 shadow-2xs'
-                : 'bg-white text-amber-800 border-amber-200 hover:bg-amber-50'
+                ? 'bg-[#483d31] text-white border-[#483d31] shadow-2xs'
+                : 'sherwood-btn-outline'
             }`}
           >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            Palier Bronze
+            <ShieldCheck className="w-3.5 h-3.5 text-[#605547]" />
+            <span>Bronze</span>
           </button>
         </div>
       </div>
 
       {/* Customers Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {filteredCustomers.map((cust) => {
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredCustomers.map((cust, idx) => {
           const loyalty = getCustomerLoyalty(cust);
+          const avatar = villagerAvatars[idx % villagerAvatars.length];
 
           return (
             <div
               key={cust.id}
-              className="bg-white/90 backdrop-blur-xl rounded-3xl p-5 border border-white shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4 relative overflow-hidden"
+              className="sherwood-card p-5 transition-all flex flex-col justify-between space-y-4 hover:shadow-md"
             >
               <div>
-                {/* Header info */}
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-sm text-slate-900 truncate">{cust.name}</h3>
-                    {cust.company ? (
-                      <div className="text-xs text-indigo-600 font-semibold flex items-center gap-1 mt-0.5 truncate">
-                        <Building className="w-3.5 h-3.5 shrink-0" />
-                        <span className="truncate">{cust.company}</span>
-                      </div>
-                    ) : (
-                      <div className="text-[11px] text-slate-400 mt-0.5">Particulier</div>
-                    )}
+                {/* Header info with Villager Avatar Figurine */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className={`w-11 h-11 rounded-2xl ${avatar.bg} border-2 border-[#d8cdba] flex items-center justify-center text-xl shadow-inner shrink-0`}
+                      title={`${avatar.name} • Résident Sherwood`}
+                    >
+                      {avatar.emoji}
+                    </div>
+
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-sm text-[#2c241c] truncate">{cust.name}</h3>
+                      {cust.company ? (
+                        <div className="text-xs text-[#85522b] font-semibold flex items-center gap-1 mt-0.5 truncate">
+                          <Building className="w-3 h-3 shrink-0" />
+                          <span className="truncate">{cust.company}</span>
+                        </div>
+                      ) : (
+                        <div className="text-[11px] text-[#605547] mt-0.5">Particulier</div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Loyalty Tier Badge */}
@@ -276,26 +300,26 @@ export const CustomersView: React.FC = () => {
                 </div>
 
                 {/* Loyalty Points Card Box */}
-                <div className="mt-3.5 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/80 rounded-2xl p-3.5 space-y-2">
+                <div className="mt-3.5 sherwood-panel-subtle p-3.5 space-y-2">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="font-bold text-amber-950 flex items-center gap-1.5">
-                      <Gift className="w-4 h-4 text-amber-600" />
+                    <span className="font-bold text-[#234931] flex items-center gap-1.5">
+                      <Gift className="w-4 h-4 text-[#85522b]" />
                       Solde Fidélité
                     </span>
-                    <span className="text-base font-black text-amber-700 font-mono">
+                    <span className="text-base font-black text-[#85522b] font-mono">
                       {loyalty.points} pts
                     </span>
                   </div>
 
                   {/* Progress bar to next tier */}
                   <div className="space-y-1">
-                    <div className="w-full bg-amber-200/60 rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full bg-[#d8cdba]/60 rounded-full h-1.5 overflow-hidden">
                       <div
-                        className="bg-amber-600 h-full rounded-full transition-all duration-300"
+                        className="bg-[#234931] h-full rounded-full transition-all duration-300"
                         style={{ width: `${loyalty.progressToNext}%` }}
                       ></div>
                     </div>
-                    <div className="flex justify-between text-[10px] text-amber-800/80 font-medium">
+                    <div className="flex justify-between text-[10px] text-[#605547] font-medium">
                       <span>Valeur: {formatMoney(loyalty.discountValueDA)}</span>
                       <span>
                         {loyalty.points} / {loyalty.nextTierThreshold} pts ({loyalty.nextTierName})
@@ -305,22 +329,22 @@ export const CustomersView: React.FC = () => {
                 </div>
 
                 {/* Contact info */}
-                <div className="mt-3 space-y-1.5 text-xs text-slate-600">
+                <div className="mt-3 space-y-1.5 text-xs text-[#483d31]">
                   {cust.phone && (
                     <div className="flex items-center gap-2">
-                      <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{cust.phone}</span>
+                      <Phone className="w-3.5 h-3.5 text-[#877a6b] shrink-0" />
+                      <span className="font-mono">{cust.phone}</span>
                     </div>
                   )}
                   {cust.email && (
                     <div className="flex items-center gap-2">
-                      <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <Mail className="w-3.5 h-3.5 text-[#877a6b] shrink-0" />
                       <span className="truncate">{cust.email}</span>
                     </div>
                   )}
                   {cust.address && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <MapPin className="w-3.5 h-3.5 text-[#877a6b] shrink-0" />
                       <span className="truncate">{cust.address}</span>
                     </div>
                   )}
@@ -328,12 +352,12 @@ export const CustomersView: React.FC = () => {
               </div>
 
               {/* Card Footer: Purchase history + Action */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+              <div className="pt-3 border-t border-[#e7ddca] flex items-center justify-between gap-2">
                 <div>
-                  <div className="text-[10px] text-slate-400 font-semibold uppercase">
+                  <div className="text-[10px] text-[#877a6b] font-semibold uppercase">
                     Achats Cumulés
                   </div>
-                  <div className="text-xs font-black text-slate-900">
+                  <div className="text-xs font-black text-[#234931] font-mono">
                     {formatMoney(loyalty.totalSpent)} ({loyalty.salesCount} ventes)
                   </div>
                 </div>
@@ -344,7 +368,7 @@ export const CustomersView: React.FC = () => {
                     setSelectedCustomerId(cust.id);
                     setActiveView('pos');
                   }}
-                  className="touch-btn px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold cursor-pointer transition-colors whitespace-nowrap"
+                  className="touch-btn px-3 py-1.5 sherwood-btn-forest text-xs font-bold whitespace-nowrap"
                 >
                   Ouvrir Caisse
                 </button>
@@ -356,17 +380,17 @@ export const CustomersView: React.FC = () => {
 
       {/* Add Customer Modal */}
       {isAddingCustomer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
-              <h3 className="font-bold text-sm flex items-center gap-2">
-                <Users className="w-4 h-4 text-indigo-400" />
-                Nouveau Client (+50 Pts Offerts)
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="sherwood-panel w-full max-w-md p-0 overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 bg-[#1f3d29] text-[#fcfbf7] flex items-center justify-between border-b border-[#16311f]">
+              <h3 className="font-bold text-sm flex items-center gap-2 font-serif-title">
+                <Users className="w-4 h-4 text-[#a8d3a8]" />
+                Nouveau Client (+50 Pts Offerts 🍃)
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddingCustomer(false)}
-                className="touch-btn p-1 text-slate-400 hover:text-white"
+                className="touch-btn p-1 text-[#c5ddc5] hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -374,7 +398,7 @@ export const CustomersView: React.FC = () => {
 
             <form onSubmit={handleSubmitNew} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-[#2c241c] mb-1">
                   Nom & Prénom *
                 </label>
                 <input
@@ -382,96 +406,78 @@ export const CustomersView: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Ex: Ahmed Bouzid"
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+                  placeholder="Ex: Samira Belkacem"
+                  className="w-full px-3 py-2 text-xs sherwood-input"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Entreprise (Optionnel)
+                  <label className="block text-xs font-bold text-[#2c241c] mb-1">
+                    Entreprise / Société
                   </label>
                   <input
                     type="text"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    placeholder="SARL..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                    placeholder="Optionnel"
+                    className="w-full px-3 py-2 text-xs sherwood-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    NIF / Fiscal
-                  </label>
-                  <input
-                    type="text"
-                    value={taxId}
-                    onChange={(e) => setTaxId(e.target.value)}
-                    placeholder="0019..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-[#2c241c] mb-1">
                     Téléphone
                   </label>
                   <input
-                    type="tel"
+                    type="text"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="0550..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    E-mail
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="contact@..."
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                    placeholder="0550 12 34 56"
+                    className="w-full px-3 py-2 text-xs sherwood-input font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Adresse
+                <label className="block text-xs font-bold text-[#2c241c] mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="contact@exemple.com"
+                  className="w-full px-3 py-2 text-xs sherwood-input"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#2c241c] mb-1">
+                  Adresse de livraison / Facturation
                 </label>
                 <input
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  placeholder="Ville, Wilaya..."
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm"
+                  placeholder="Ex: 12 Rue Didouche Mourad, Alger"
+                  className="w-full px-3 py-2 text-xs sherwood-input"
                 />
               </div>
 
-              <div className="p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center gap-2 text-xs text-amber-900 font-semibold">
-                <Gift className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>50 points de fidélité de bienvenue crédités à l'inscription.</span>
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-[#e7ddca]">
                 <button
                   type="button"
                   onClick={() => setIsAddingCustomer(false)}
-                  className="touch-btn px-4 py-2 text-xs font-semibold text-slate-600"
+                  className="touch-btn px-4 py-2 sherwood-btn-outline text-xs font-bold"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="touch-btn px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs"
+                  className="touch-btn px-5 py-2 sherwood-btn-forest text-xs font-bold flex items-center gap-1.5"
                 >
-                  Enregistrer
+                  <Check className="w-4 h-4" />
+                  <span>Créer le Compte Client</span>
                 </button>
               </div>
             </form>

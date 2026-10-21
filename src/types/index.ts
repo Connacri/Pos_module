@@ -85,3 +85,26 @@ export interface DailyRevenueStat {
   orders: number;
   unitsSold: number;
 }
+
+export type PaperWidth = '80mm' | '58mm';
+export type PrinterInterface = 'SYSTEM_DEFAULT' | 'USB_RAW' | 'NETWORK_IP' | 'BLUETOOTH';
+
+export interface ThermalPrinterSettings {
+  paperWidth: PaperWidth;
+  printerInterface: PrinterInterface;
+  printerName: string;
+  printerIp: string;
+  printerPort: number;
+  autoCut: boolean;
+  openCashDrawer: boolean;
+  printLogo: boolean;
+  logoDataUrl?: string;
+  storeName: string;
+  storeSubtitle: string;
+  storeAddress: string;
+  storePhone: string;
+  storeTaxId: string;
+  receiptFooterMessage: string;
+  printCopies: number;
+}
+

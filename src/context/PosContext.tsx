@@ -8,6 +8,7 @@ import {
   SaleItem,
   PaymentMethod,
   DailyRevenueStat,
+  ThermalPrinterSettings,
 } from '../types';
 import {
   INITIAL_CATEGORIES,
@@ -29,6 +30,25 @@ interface CartSummary {
 }
 
 export type ViewType = 'dashboard' | 'pos' | 'catalog' | 'sales' | 'customers' | 'admin';
+
+export const DEFAULT_PRINTER_SETTINGS: ThermalPrinterSettings = {
+  paperWidth: '80mm',
+  printerInterface: 'SYSTEM_DEFAULT',
+  printerName: 'Imprimante Thermique Système (80mm ESC/POS)',
+  printerIp: '192.168.1.200',
+  printerPort: 9100,
+  autoCut: true,
+  openCashDrawer: true,
+  printLogo: true,
+  logoDataUrl: '',
+  storeName: 'SHERWOOD ISLAND POS',
+  storeSubtitle: 'Boutique & Caisse Artisanale',
+  storeAddress: '14 Boulevard Zighout Youcef, 16000 Alger',
+  storePhone: '+213 (0) 21 73 45 67',
+  storeTaxId: 'NIF: 099900112233001 • RC: 16/00-0987654',
+  receiptFooterMessage: 'Merci de votre visite à Sherwood Island ! Articles échangeables sous 15 jours sur présentation du ticket.',
+  printCopies: 1,
+};
 
 interface PosContextType {
   // Navigation & Active View
@@ -77,7 +97,7 @@ interface PosContextType {
   decrementQuantity: (productId: number) => void;
   setItemDiscount: (productId: number, discountPercent: number) => void;
   removeFromCart: (productId: number) => void;
-  clearCart: () => void;
+  clearCart: (saveForUndo?: boolean) => void;
 
   // High-performance barcode scanner action
   scanAndAddToCart: (
@@ -117,6 +137,14 @@ interface PosContextType {
   updateSupabaseConfig: (cfg: SupabaseConfig) => void;
   triggerSyncNow: () => Promise<{ success: boolean; pushedCount: number; pulledCount: number }>;
 
+  // Thermal Printer settings
+  printerSettings: ThermalPrinterSettings;
+  updatePrinterSettings: (settings: ThermalPrinterSettings) => void;
+
+  // Cart Undo & Safety
+  canUndoClearCart: boolean;
+  undoClearCart: () => void;
+
   resetDemoData: () => void;
 }
 
@@ -131,6 +159,7 @@ const STORAGE_KEYS = {
   NOTE: 'pos_module_order_note_v3',
   DISCOUNT: 'pos_module_global_discount_v3',
   SIMULATED_OFFLINE: 'pos_module_sim_offline_v3',
+  PRINTER_SETTINGS: 'pos_module_printer_settings_v2',
 };
 
 export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -283,6 +312,37 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return res;
   };
 
+  // Thermal Printer Settings state
+  const [printerSettings, setPrinterSettings] = useState<ThermalPrinterSettings>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PRINTER_SETTINGS);
+      if (saved) {
+        return { ...DEFAULT_PRINTER_SETTINGS, ...JSON.parse(saved) };
+      }
+    } catch {}
+    return DEFAULT_PRINTER_SETTINGS;
+  });
+
+  const updatePrinterSettings = (newSettings: ThermalPrinterSettings) => {
+    setPrinterSettings(newSettings);
+    try {
+      localStorage.setItem(STORAGE_KEYS.PRINTER_SETTINGS, JSON.stringify(newSettings));
+    } catch {}
+  };
+
+  // Cart Undo State & Recovery
+  const [previousCart, setPreviousCart] = useState<CartItem[] | null>(null);
+  const [canUndoClearCart, setCanUndoClearCart] = useState<boolean>(false);
+
+  const undoClearCart = () => {
+    if (previousCart && previousCart.length > 0) {
+      setCart(previousCart);
+      setPreviousCart(null);
+      setCanUndoClearCart(false);
+      posSounds.playCartAdd();
+    }
+  };
+
   // LocalStorage sync
   useEffect(() => {
     try {
@@ -422,7 +482,14 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCart((prev) => prev.filter((it) => it.product.id !== productId));
   };
 
-  const clearCart = () => {
+  const clearCart = (saveForUndo = true) => {
+    if (saveForUndo && cart.length > 0) {
+      setPreviousCart([...cart]);
+      setCanUndoClearCart(true);
+      setTimeout(() => {
+        setCanUndoClearCart(false);
+      }, 6000);
+    }
     setCart([]);
     setGlobalDiscountPercent(0);
     setOrderNote('');
@@ -757,6 +824,10 @@ export const PosProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabaseConfig,
         updateSupabaseConfig,
         triggerSyncNow,
+        printerSettings,
+        updatePrinterSettings,
+        canUndoClearCart,
+        undoClearCart,
         resetDemoData,
       }}
     >
