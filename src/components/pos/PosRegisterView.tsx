@@ -378,17 +378,21 @@ export const PosRegisterView: React.FC = () => {
             </div>
           )}
 
-          {/* Search + Category chips */}
+          {/* Search Input with F1 shortcut badge */}
           <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filtrer les articles par nom ou référence..."
-                className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden"
+                placeholder="Filtrer les articles par nom ou référence... [F1]"
+                className="w-full pl-9 pr-12 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
               />
+              <span className="absolute right-2.5 top-1/2 -translate-y-1/2 font-mono font-bold text-[10px] text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded shadow-2xs">
+                F1
+              </span>
             </div>
 
             {/* Mobile View Cart Button */}
@@ -401,6 +405,76 @@ export const PosRegisterView: React.FC = () => {
               <span>Panier ({cartSummary.totalItems})</span>
             </button>
           </div>
+
+          {/* Keyboard Shortcuts Mapping Bar */}
+          <div className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs">
+            <div className="flex items-center gap-2 overflow-x-auto text-[11px]">
+              <span className="font-bold text-slate-500 flex items-center gap-1 shrink-0">
+                <Keyboard className="w-3.5 h-3.5 text-indigo-600" />
+                Raccourcis :
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  searchInputRef.current?.focus();
+                  searchInputRef.current?.select();
+                }}
+                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                title="Cibler la recherche produit"
+              >
+                <kbd className="font-mono font-black text-[10px] bg-indigo-50 text-indigo-700 px-1 rounded">F1</kbd>
+                <span className="text-slate-700">Recherche</span>
+              </button>
+              <button
+                type="button"
+                onClick={initiateCheckout}
+                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                title="Initier l'encaissement"
+              >
+                <kbd className="font-mono font-black text-[10px] bg-emerald-50 text-emerald-800 px-1 rounded">F2</kbd>
+                <span className="text-slate-700">Encaisser</span>
+              </button>
+              <button
+                type="button"
+                onClick={clearCart}
+                disabled={cart.length === 0}
+                className="inline-flex items-center gap-1 bg-white hover:bg-slate-100 disabled:opacity-40 px-2 py-0.5 rounded-lg border border-slate-200 shadow-2xs transition-colors cursor-pointer"
+                title="Vider le panier"
+              >
+                <kbd className="font-mono font-black text-[10px] bg-rose-50 text-rose-800 px-1 rounded">Échap</kbd>
+                <span className="text-slate-700">Vider Panier</span>
+              </button>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowShortcutGuideModal(true)}
+              className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 shrink-0 cursor-pointer ml-2"
+              title="Guide des raccourcis caisse"
+            >
+              <HelpCircle className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Guide Raccourcis</span>
+            </button>
+          </div>
+
+          {/* Keyboard shortcut feedback toast */}
+          {shortcutFeedback && (
+            <div
+              className={`p-2.5 rounded-xl text-xs font-bold flex items-center justify-between shadow-sm animate-in fade-in slide-in-from-top-1 duration-150 ${
+                shortcutFeedback.type === 'success'
+                  ? 'bg-emerald-50 text-emerald-900 border border-emerald-300'
+                  : shortcutFeedback.type === 'warning'
+                  ? 'bg-amber-50 text-amber-900 border border-amber-300'
+                  : 'bg-indigo-50 text-indigo-900 border border-indigo-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <kbd className="font-mono bg-white px-2 py-0.5 rounded-md border border-slate-300 shadow-2xs font-black">
+                  {shortcutFeedback.key}
+                </kbd>
+                <span>{shortcutFeedback.label}</span>
+              </div>
+            </div>
+          )}
 
           {/* Category Chips scroll */}
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
@@ -551,6 +625,93 @@ export const PosRegisterView: React.FC = () => {
             </div>
             <div className="flex-1 overflow-hidden">
               <CartPanel />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Keyboard Shortcuts Guide Modal */}
+      {showShortcutGuideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 animate-in fade-in duration-150">
+          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+            <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Keyboard className="w-5 h-5 text-indigo-400" />
+                <h3 className="font-bold text-sm">Raccourcis Clavier du Poste Caisse</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowShortcutGuideModal(false)}
+                className="text-slate-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-5 space-y-4">
+              <p className="text-xs text-slate-500">
+                Utilisez ces raccourcis clavier pour accélérer les opérations en caisse sans toucher à la souris :
+              </p>
+
+              <div className="space-y-2.5">
+                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div>
+                    <div className="font-bold text-xs text-slate-800">Cibler la Recherche Produit</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Place le focus et sélectionne le texte du champ de recherche d'articles.
+                    </div>
+                  </div>
+                  <kbd className="font-mono font-bold text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded-lg border border-indigo-200 shadow-2xs shrink-0">
+                    F1
+                  </kbd>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div>
+                    <div className="font-bold text-xs text-slate-800">Initier l'Encaissement (Transaction)</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Ouvre la fenêtre de règlement et de paiement pour la commande en cours.
+                    </div>
+                  </div>
+                  <kbd className="font-mono font-bold text-xs bg-emerald-50 text-emerald-800 px-2 py-1 rounded-lg border border-emerald-200 shadow-2xs shrink-0">
+                    F2
+                  </kbd>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div>
+                    <div className="font-bold text-xs text-slate-800">Vider le Panier / Fermer Modales</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Ferme les dialogues ouverts ou réinitialise immédiatement le panier de vente.
+                    </div>
+                  </div>
+                  <kbd className="font-mono font-bold text-xs bg-rose-50 text-rose-800 px-2 py-1 rounded-lg border border-rose-200 shadow-2xs shrink-0">
+                    Échap / Esc
+                  </kbd>
+                </div>
+
+                <div className="flex items-start justify-between gap-3 p-3 rounded-xl bg-slate-50 border border-slate-200/80">
+                  <div>
+                    <div className="font-bold text-xs text-slate-800">Lecteur Code-barres USB / Bluetooth</div>
+                    <div className="text-[11px] text-slate-500 mt-0.5">
+                      Validation automatique lors du scan d'un code EAN-13 ou code-barres.
+                    </div>
+                  </div>
+                  <kbd className="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-2 py-1 rounded-lg border border-slate-300 shadow-2xs shrink-0">
+                    Entrée ↵
+                  </kbd>
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowShortcutGuideModal(false)}
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Compris
+                </button>
+              </div>
             </div>
           </div>
         </div>

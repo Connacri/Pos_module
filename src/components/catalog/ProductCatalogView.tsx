@@ -16,7 +16,9 @@ import {
   Edit2,
   X,
   Truck,
+  Camera,
 } from 'lucide-react';
+import { CameraBarcodeScannerModal } from './CameraBarcodeScannerModal';
 
 export const ProductCatalogView: React.FC = () => {
   const {
@@ -40,6 +42,7 @@ export const ProductCatalogView: React.FC = () => {
   // Modal states
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [isCameraScannerOpen, setIsCameraScannerOpen] = useState(false);
 
   // Format currency
   const formatMoney = (val: number) => {
@@ -128,7 +131,17 @@ export const ProductCatalogView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setIsCameraScannerOpen(true)}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold shadow-2xs transition-all cursor-pointer"
+            title="Ouvrir le scanner caméra pour scanner un code-barres"
+          >
+            <Camera className="w-4 h-4 text-indigo-600" />
+            <span>Scanner Caméra</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setIsCreatingNew(true)}
@@ -155,25 +168,37 @@ export const ProductCatalogView: React.FC = () => {
       <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
         {/* Row 1: Search + Sort + Stock Filter */}
         <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
-          {/* Search Input */}
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Rechercher par nom, SKU (ex: REF-0001) ou code-barres..."
-              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            )}
+          {/* Search Input with inline camera scanner trigger */}
+          <div className="relative flex-1 flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Rechercher par nom, SKU (ex: REF-0001) ou code-barres..."
+                className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-800 placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsCameraScannerOpen(true)}
+              className="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all cursor-pointer shrink-0"
+              title="Scanner une étiquette physique avec la caméra"
+            >
+              <Camera className="w-4 h-4" />
+              <span className="hidden sm:inline">Scanner</span>
+            </button>
           </div>
 
           {/* Stock status filter pills */}
@@ -585,6 +610,17 @@ export const ProductCatalogView: React.FC = () => {
           }}
         />
       )}
+
+      {/* Camera-based Barcode Scanner Overlay Modal */}
+      <CameraBarcodeScannerModal
+        isOpen={isCameraScannerOpen}
+        onClose={() => setIsCameraScannerOpen(false)}
+        onSelectProduct={(prod) => {
+          setSearchQuery(prod.barcode);
+          setSelectedCategoryId('ALL');
+          setStockFilter('ALL');
+        }}
+      />
     </div>
   );
 };
